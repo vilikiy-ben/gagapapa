@@ -16,6 +16,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Дополнительные стили для исправления проблем в Telegram -->
+  <link rel="stylesheet" href="telegram-fix.css">
+  <!-- Встроенные стили для критичных элементов -->
+  <style>
+    /* Принудительное применение стилей для мобильной версии Telegram */
+    .toggle-container label {
+      color: white !important;
+    }
+    .toggle-container input[type="radio"]:checked + label {
+      background-color: #4a90e2 !important;
+      color: white !important;
+    }
+    .calendar-day.selected {
+      background-color: #4a90e2 !important;
+      color: white !important;
+    }
+    .tab-btn.active {
+      color: #4a90e2 !important;
+    }
+    .tab-btn.active svg {
+      color: #4a90e2 !important;
+      opacity: 1 !important;
+    }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -180,14 +204,14 @@
               <label>Периодичность</label>
               <div class="toggle-container">
                 <input type="radio" id="monthly" name="period" value="monthly" checked>
-                <label for="monthly">Ежемесячно</label>
+                <label for="monthly" style="color: white !important;">Ежемесячно</label>
                 <input type="radio" id="yearly" name="period" value="yearly">
-                <label for="yearly">Ежегодно</label>
+                <label for="yearly" style="color: white !important;">Ежегодно</label>
               </div>
             </div>
             <div class="form-group">
               <label for="billing-date">Дата списания</label>
-              <input type="date" id="billing-date" required>
+              <input type="date" id="billing-date" required style="color: white !important;">
             </div>
             <div class="form-group">
               <label for="color">Цвет</label>
@@ -205,7 +229,7 @@
             </div>
             <div class="form-actions">
               <button type="button" class="cancel-btn" id="cancel-form-btn">Отмена</button>
-              <button type="submit" class="submit-btn" id="form-submit-btn">Добавить</button>
+              <button type="submit" class="submit-btn" id="form-submit-btn" style="background-color: #4a90e2 !important; color: white !important;">Добавить</button>
             </div>
           </form>
         </div>
@@ -226,5 +250,46 @@
   </div>
 
   <script src="app.js"></script>
+  <!-- Дополнительный скрипт для форсирования стилей -->
+  <script>
+    // Принудительно применяем стили при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+      // Исправляем стили при работе в мобильной версии Telegram
+      if (window.Telegram && window.Telegram.WebApp) {
+        // Форсируем стили для селектов периодичности и календаря
+        const fixStyles = function() {
+          // Для переключателей
+          const checkedLabels = document.querySelectorAll('.toggle-container input[type="radio"]:checked + label');
+          checkedLabels.forEach(label => {
+            label.style.backgroundColor = '#4a90e2'; 
+            label.style.color = 'white';
+          });
+          
+          // Для календаря
+          const selectedDays = document.querySelectorAll('.calendar-day.selected');
+          selectedDays.forEach(day => {
+            day.style.backgroundColor = '#4a90e2';
+            day.style.color = 'white';
+          });
+          
+          // Для активных вкладок
+          const activeTabs = document.querySelectorAll('.tab-btn.active');
+          activeTabs.forEach(tab => {
+            tab.style.color = '#4a90e2';
+            const svg = tab.querySelector('svg');
+            if (svg) svg.style.color = '#4a90e2';
+          });
+        };
+        
+        // Применяем сразу и с небольшой задержкой (после полной загрузки DOM)
+        fixStyles();
+        setTimeout(fixStyles, 500);
+        
+        // Переопределяем стили при изменении содержимого
+        const observer = new MutationObserver(fixStyles);
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    });
+  </script>
 </body>
 </html> 

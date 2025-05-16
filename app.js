@@ -9,6 +9,48 @@ if (tg) {
   document.documentElement.style.setProperty('--primary-color', tg.themeParams.button_color || '#4a90e2');
   document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color || '#e0e0e0');
   document.documentElement.style.setProperty('--dark-bg', tg.themeParams.bg_color || '#0d0d0d');
+  
+  // Функция для принудительного применения стилей на мобильных устройствах
+  const forceMobileStyles = () => {
+    // Определяем мобильное устройство
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Исправляем проблемы со стилями на мобильных устройствах
+      document.querySelectorAll('.toggle-container label').forEach(label => {
+        label.style.color = 'white';
+      });
+      
+      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
+        label.style.backgroundColor = '#4a90e2';
+        label.style.color = 'white';
+      });
+      
+      document.querySelectorAll('.calendar-day.selected').forEach(day => {
+        day.style.backgroundColor = '#4a90e2';
+        day.style.color = 'white';
+      });
+      
+      document.querySelectorAll('.tab-btn.active').forEach(btn => {
+        btn.style.color = '#4a90e2';
+        const svg = btn.querySelector('svg');
+        if (svg) svg.style.color = '#4a90e2';
+      });
+      
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.style.color = 'white';
+      });
+    }
+  };
+  
+  // Вызываем функцию сразу и добавляем в список обработчиков событий
+  forceMobileStyles();
+  
+  // Добавляем наблюдателя за изменениями DOM
+  const observer = new MutationObserver(() => {
+    forceMobileStyles();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 // Основные переменные приложения
@@ -68,6 +110,16 @@ async function initApp() {
     setTimeout(() => {
       loadingElement.style.display = 'none';
     }, 300);
+  }
+  
+  // Исправляем стили для мобильной версии после инициализации
+  if (tg) {
+    setTimeout(() => {
+      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
+        label.style.backgroundColor = '#4a90e2';
+        label.style.color = 'white';
+      });
+    }, 500);
   }
 }
 
@@ -132,6 +184,41 @@ function setupEventListeners() {
       const color = option.getAttribute('data-color');
       selectColor(color);
     });
+  });
+  
+  // Обработчики для переключения периодичности (с принудительным применением стилей)
+  document.getElementById('monthly').addEventListener('change', function() {
+    if (this.checked && tg) {
+      setTimeout(() => {
+        const label = document.querySelector('label[for="monthly"]');
+        if (label) {
+          label.style.backgroundColor = '#4a90e2';
+          label.style.color = 'white';
+        }
+        const yearlyLabel = document.querySelector('label[for="yearly"]');
+        if (yearlyLabel) {
+          yearlyLabel.style.backgroundColor = '';
+          yearlyLabel.style.color = 'white';
+        }
+      }, 10);
+    }
+  });
+  
+  document.getElementById('yearly').addEventListener('change', function() {
+    if (this.checked && tg) {
+      setTimeout(() => {
+        const label = document.querySelector('label[for="yearly"]');
+        if (label) {
+          label.style.backgroundColor = '#4a90e2';
+          label.style.color = 'white';
+        }
+        const monthlyLabel = document.querySelector('label[for="monthly"]');
+        if (monthlyLabel) {
+          monthlyLabel.style.backgroundColor = '';
+          monthlyLabel.style.color = 'white';
+        }
+      }, 10);
+    }
   });
   
   // Закрытие формы при клике вне её содержимого
