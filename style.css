@@ -58,7 +58,7 @@ body.telegram-app {
 }
 
 .telegram-app .app-title {
-  color: var(--tg-theme-button-color, var(--primary-color));
+  color: var(--primary-color);
 }
 
 .telegram-app .app-logo {
@@ -76,9 +76,9 @@ body.telegram-app {
 
 /* Fix для выбранных элементов в Telegram Mini App */
 .telegram-app .toggle-container input[type="radio"]:checked + label {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color) !important;
   color: white !important;
-  border-color: var(--primary-color);
+  border: 1px solid var(--primary-color) !important;
 }
 
 .telegram-app .calendar-day.selected {
@@ -95,6 +95,12 @@ body.telegram-app {
 .telegram-app .tab-btn.active svg {
   color: var(--text-color) !important;
   opacity: 1;
+}
+
+/* Новый стиль для сегодняшнего дня в календаре в контексте Telegram */
+.telegram-app .calendar-day.today {
+  border: 1px solid var(--primary-color) !important;
+  color: var(--primary-color) !important;
 }
 
 /* App Container */
