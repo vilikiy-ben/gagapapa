@@ -32,21 +32,15 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   color: #4a90e2 !important;
 }
 
-/* ========= НОВОЕ РЕШЕНИЕ ДЛЯ ВКЛАДОК ========= */
-/* Основной подход - разделение иконки и индикатора на разные элементы */
-
-/* Базовые стили для всех табов (неактивное состояние) */
+/* Исправления для избежания залипания стилей */
 .tab-btn {
   color: var(--text-muted) !important;
-  position: relative !important;
 }
 
 .tab-btn svg {
   color: var(--text-muted) !important;
-  opacity: 0.7 !important;
 }
 
-/* Явное переопределение стилей для активных табов */
 .tab-btn.active {
   color: #4a90e2 !important;
 }
@@ -54,20 +48,22 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 .tab-btn.active svg {
   color: #4a90e2 !important;
   opacity: 1 !important;
-  fill: #4a90e2 !important;
-  stroke: #4a90e2 !important;
 }
 
-/* Полностью переопределяем индикатор, делая его отдельным элементом */
+/* Исправление фона для индикатора активной вкладки - делаем его синим */
+.tab-btn.active::before,
 .tab-indicator {
-  position: absolute !important;
-  width: 38px !important;
-  height: 38px !important;
   background-color: #4a90e2 !important;
   opacity: 0.3 !important;
-  border-radius: 50% !important;
-  z-index: -1 !important; /* Гарантирует что индикатор будет под иконкой */
-  pointer-events: none !important; /* Индикатор не блокирует клики */
+  z-index: -1 !important;
+}
+
+/* Исправление видимости иконок в активных вкладках */
+.tab-btn.active svg {
+  color: #4a90e2 !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 /* Стили для кнопок периодичности */
@@ -109,12 +105,6 @@ input[type="date"] {
   background-color: rgba(30, 30, 30, 0.9) !important;
 }
 
-/* Фикс для кнопки отправки формы */
-.telegram-app .submit-btn {
-  background-color: #4a90e2 !important;
-  color: white !important;
-}
-
 /* Фикс для выпадающих меню и списков */
 select, option {
   color: white !important;
@@ -124,6 +114,12 @@ select, option {
 /* Усиленный контраст для лучшей видимости */
 label, .form-title, .section-title {
   color: #ffffff !important;
+}
+
+/* Фикс для кнопки отправки формы */
+.telegram-app .submit-btn {
+  background-color: #4a90e2 !important;
+  color: white !important;
 }
 
 /* Более глобальные селекторы для переопределения стилей Telegram */
@@ -175,11 +171,8 @@ body.telegram-app * {
     stroke-width: 0 !important;
   }
   
-  /* Специфичные настройки для iOS Safari */
-  .tab-btn.active svg {
-    color: #4a90e2 !important;
-    opacity: 1 !important;
-    fill: #4a90e2 !important;
-    stroke: #4a90e2 !important;
+  .tab-btn.active::before {
+    opacity: 0.3 !important;
+    background-color: #4a90e2 !important;
   }
 } 
