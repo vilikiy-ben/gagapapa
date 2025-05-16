@@ -59,7 +59,12 @@ if (tg) {
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
         btn.style.color = '#4a90e2';
         const svg = btn.querySelector('svg');
-        if (svg) svg.style.color = '#4a90e2';
+        if (svg) {
+          svg.style.color = '#4a90e2';
+          // Добавляем высокий z-index для SVG и позиционирование, чтобы он был над индикатором
+          svg.style.position = 'relative';
+          svg.style.zIndex = '5';
+        }
         // Явное добавление видимого индикатора активности
         btn.style.position = 'relative';
         const tabIndicator = btn.querySelector('.tab-indicator');
@@ -71,7 +76,7 @@ if (tg) {
           indicator.style.height = '38px';
           indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
           indicator.style.borderRadius = '50%';
-          indicator.style.zIndex = '-1';
+          indicator.style.zIndex = '1'; // Меняем на положительный z-index, но ниже, чем у SVG
           indicator.style.top = '50%';
           indicator.style.left = '50%';
           indicator.style.transform = 'translate(-50%, -50%)';
@@ -351,7 +356,7 @@ function switchTab(tabId) {
       svg.style.color = '#4a90e2';
       // Важно: устанавливаем более высокий z-index для SVG, чтобы он был поверх индикатора
       svg.style.position = 'relative';
-      svg.style.zIndex = '2';
+      svg.style.zIndex = '5';
     }
     
     // Добавляем видимый индикатор активности для мобильных
@@ -364,7 +369,7 @@ function switchTab(tabId) {
       indicator.style.backgroundColor = '#4a90e2';
       indicator.style.opacity = '0.3';
       indicator.style.borderRadius = '50%';
-      indicator.style.zIndex = '-1'; // Уже отрицательный z-index
+      indicator.style.zIndex = '1'; // Устанавливаем положительный z-index, но ниже чем у SVG
       indicator.style.top = '50%';
       indicator.style.left = '50%';
       indicator.style.transform = 'translate(-50%, -50%)';

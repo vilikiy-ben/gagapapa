@@ -40,7 +40,7 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 .tab-btn svg {
   color: var(--text-muted) !important;
   position: relative !important;
-  z-index: 2 !important;
+  z-index: 5 !important;
 }
 
 .tab-btn.active {
@@ -51,7 +51,7 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   color: #4a90e2 !important;
   opacity: 1 !important;
   position: relative !important;
-  z-index: 2 !important;
+  z-index: 5 !important;
 }
 
 /* Исправление фона для индикатора активной вкладки - делаем его синим */
@@ -167,8 +167,27 @@ body.telegram-app * {
     stroke-width: 0 !important;
   }
   
+  /* Для индикатора в iOS Safari */
   .tab-btn.active::before {
     opacity: 0.3 !important;
     background-color: #4a90e2 !important;
+    z-index: 1 !important;
+  }
+  
+  /* Специальные стили для iOS Safari */
+  .tab-btn svg {
+    position: relative !important;
+    z-index: 5 !important;
+  }
+  
+  .tab-btn.active svg {
+    position: relative !important;
+    z-index: 5 !important;
+    color: #4a90e2 !important;
+  }
+  
+  .tab-indicator {
+    z-index: 1 !important;
+    opacity: 0.3 !important;
   }
 } 
