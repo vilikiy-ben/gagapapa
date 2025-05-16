@@ -754,6 +754,8 @@ body.telegram-app {
 .tab-btn.active svg {
   opacity: 1;
   color: var(--primary-color);
+  position: relative;
+  z-index: 1;
 }
 
 /* Modal */

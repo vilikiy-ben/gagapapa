@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.1";
+const APP_VERSION = "v1.0.5";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -60,25 +60,6 @@ if (tg) {
         btn.style.color = '#4a90e2';
         const svg = btn.querySelector('svg');
         if (svg) svg.style.color = '#4a90e2';
-        // Явное добавление видимого индикатора активности
-        btn.style.position = 'relative';
-        const tabIndicator = btn.querySelector('.tab-indicator');
-        if (!tabIndicator) {
-          const indicator = document.createElement('span');
-          indicator.className = 'tab-indicator';
-          indicator.style.position = 'absolute';
-          indicator.style.width = '38px';
-          indicator.style.height = '38px';
-          indicator.style.backgroundColor = '#4a90e2';
-          indicator.style.opacity = '0.3';
-          indicator.style.borderRadius = '50%';
-          indicator.style.zIndex = '-1';
-          indicator.style.top = '50%';
-          indicator.style.left = '50%';
-          indicator.style.transform = 'translate(-50%, -50%)';
-          btn.style.position = 'relative';
-          btn.prepend(indicator);
-        }
       });
       
       document.querySelectorAll('input[type="date"]').forEach(input => {
@@ -351,24 +332,6 @@ function switchTab(tabId) {
     const svg = selectedButton.querySelector('svg');
     if (svg) {
       svg.style.color = '#4a90e2';
-    }
-    
-    // Добавляем видимый индикатор активности для мобильных
-    if (!selectedButton.querySelector('.tab-indicator')) {
-      const indicator = document.createElement('span');
-      indicator.className = 'tab-indicator';
-      indicator.style.position = 'absolute';
-      indicator.style.width = '38px';
-      indicator.style.height = '38px';
-      indicator.style.backgroundColor = '#4a90e2';
-      indicator.style.opacity = '0.3';
-      indicator.style.borderRadius = '50%';
-      indicator.style.zIndex = '-1';
-      indicator.style.top = '50%';
-      indicator.style.left = '50%';
-      indicator.style.transform = 'translate(-50%, -50%)';
-      selectedButton.style.position = 'relative';
-      selectedButton.prepend(indicator);
     }
   }
 }

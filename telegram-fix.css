@@ -55,7 +55,6 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 .tab-indicator {
   background-color: #4a90e2 !important;
   opacity: 0.3 !important;
-  z-index: -1 !important;
 }
 
 /* Стили для кнопок периодичности */
