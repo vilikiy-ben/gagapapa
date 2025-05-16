@@ -32,9 +32,9 @@ if (tg) {
       });
       
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
-        btn.style.color = '#4a90e2';
+        btn.style.color = 'white';
         const svg = btn.querySelector('svg');
-        if (svg) svg.style.color = '#4a90e2';
+        if (svg) svg.style.color = 'white';
       });
       
       document.querySelectorAll('input[type="date"]').forEach(input => {
