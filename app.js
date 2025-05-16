@@ -24,8 +24,8 @@ let tg = window.Telegram?.WebApp;
           
           if (el.tagName === 'path' || el.tagName === 'rect' || el.tagName === 'circle' || el.tagName === 'line') {
             const isActive = btn.classList.contains('active');
-            el.style.stroke = isActive ? 'white' : 'currentColor';
-            el.setAttribute('stroke', isActive ? 'white' : 'currentColor');
+            el.style.stroke = 'currentColor';
+            el.setAttribute('stroke', 'currentColor');
             el.setAttribute('stroke-width', '1.5');
             
             // Добавляем атрибуты для улучшения внешнего вида
@@ -95,8 +95,8 @@ if (tg) {
           // Устанавливаем одинаковые стили для всех SVG
           svg.style.fill = 'none';
           svg.setAttribute('fill', 'none');
-          svg.style.stroke = isActive ? 'white' : 'currentColor';
-          svg.style.color = isActive ? 'white' : 'currentColor';
+          svg.style.stroke = 'currentColor';
+          svg.style.color = 'currentColor';
           svg.setAttribute('stroke-width', '1.5');
           
           // Обрабатываем все дочерние элементы SVG
@@ -104,12 +104,12 @@ if (tg) {
           elements.forEach(el => {
             el.style.fill = 'none';
             el.setAttribute('fill', 'none');
-            el.style.stroke = isActive ? 'white' : 'currentColor';
-            el.style.color = isActive ? 'white' : 'currentColor';
+            el.style.stroke = 'currentColor';
+            el.style.color = 'currentColor';
             
             // Принудительно устанавливаем атрибуты
             if (el.hasAttribute('stroke')) {
-              el.setAttribute('stroke', isActive ? 'white' : 'currentColor');
+              el.setAttribute('stroke', 'currentColor');
             }
             if (!el.hasAttribute('stroke-width')) {
               el.setAttribute('stroke-width', '1.5');
