@@ -53,45 +53,45 @@ body, html {
 
 /* Telegram Mini App specific styles */
 body.telegram-app {
-  background-color: #0d0d0d !important;
-  color: #e0e0e0 !important;
+  background-color: var(--tg-theme-bg-color, var(--dark-bg));
+  color: var(--tg-theme-text-color, var(--text-color));
 }
 
 .telegram-app .app-title {
-  color: #4a90e2 !important;
+  color: var(--tg-theme-button-color, var(--primary-color));
 }
 
 .telegram-app .app-logo {
-  color: #4a90e2 !important;
+  color: var(--tg-theme-button-color, var(--primary-color));
 }
 
 .telegram-app .submit-btn,
 .telegram-app .tab-btn.active {
-  background-color: #4a90e2 !important;
-  color: white !important;
+  background-color: var(--tg-theme-button-color, var(--primary-color));
+  color: var(--tg-theme-button-text-color, white) !important;
 }
 
 /* Fix для выбранных элементов в Telegram Mini App */
 .telegram-app .toggle-container input[type="radio"]:checked + label {
-  background-color: #4a90e2 !important;
-  color: white !important;
-  border-color: #4a90e2 !important;
+  background-color: var(--tg-theme-button-color, var(--primary-color));
+  color: var(--tg-theme-button-text-color, white) !important;
+  border-color: var(--tg-theme-button-color, var(--primary-color));
 }
 
 .telegram-app .calendar-day.selected {
-  background-color: #4a90e2 !important;
-  color: white !important;
-  font-weight: 600 !important;
+  background-color: var(--tg-theme-button-color, var(--primary-color));
+  color: var(--tg-theme-button-text-color, white) !important;
+  font-weight: 600;
 }
 
 .telegram-app .color-option.selected {
-  border-color: white !important;
-  box-shadow: 0 0 0 2px #4a90e2 !important;
+  border-color: var(--tg-theme-button-text-color, white);
+  box-shadow: 0 0 0 2px var(--tg-theme-button-color, var(--primary-color));
 }
 
 .telegram-app .tab-btn.active svg {
-  color: white !important;
-  opacity: 1 !important;
+  color: var(--tg-theme-button-text-color, white) !important;
+  opacity: 1;
 }
 
 /* App Container */
@@ -723,8 +723,6 @@ body.telegram-app {
   height: 26px;
   opacity: 0.7;
   transition: all 0.25s ease;
-  position: relative;
-  z-index: 10;
 }
 
 .tab-btn:hover {
@@ -740,39 +738,22 @@ body.telegram-app {
   color: var(--primary-color);
 }
 
-/* Используем ::before для фонового индикатора */
-.tab-btn.active::before,
-.tab-btn.tab-active::before {
+.tab-btn.active::before {
   content: '';
   position: absolute;
   width: 38px;
   height: 38px;
-  background-color: rgba(74, 144, 226, 0.3); 
+  background-color: rgba(74, 144, 226, 0.15);
   border-radius: 50%;
-  z-index: 1; /* Низкий z-index для фона */
+  z-index: -1;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: none; /* Не перехватываем события */
 }
 
 .tab-btn.active svg {
   opacity: 1;
   color: var(--primary-color);
-  position: relative;
-  z-index: 10; /* Высокий z-index для активного SVG */
-}
-
-/* Дополнительный класс для активных вкладок */
-.tab-btn.tab-active {
-  color: var(--primary-color);
-}
-
-.tab-btn.tab-active svg {
-  opacity: 1;
-  color: var(--primary-color);
-  position: relative;
-  z-index: 10; /* Высокий z-index для активного SVG */
 }
 
 /* Modal */
@@ -1144,35 +1125,4 @@ input[type="date"]:focus {
 
 .danger-btn:hover {
   background-color: #c0392b;
-}
-
-/* Индикатор версии */
-.app-version {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-left: auto;
-  padding-right: var(--space-md);
-  font-weight: 500;
-}
-
-.telegram-app .app-version {
-  color: var(--tg-theme-hint-color, var(--text-muted));
-}
-
-/* Общие правила для устранения эффекта "залипания" после тапа */
-button, input, .tab-btn, .calendar-day, .subscription-card, .fab-button {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  outline: none !important;
-}
-
-button:focus, .tab-btn:focus, .calendar-day:focus {
-  outline: none !important;
-}
-
-/* Решение для Safari и iOS */
-@supports (-webkit-touch-callout: none) {
-  button, input, .tab-btn, .calendar-day, .subscription-card, .fab-button {
-    -webkit-tap-highlight-color: transparent;
-    outline: none !important;
-  }
 } 
