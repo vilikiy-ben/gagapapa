@@ -4,25 +4,79 @@ let tg = window.Telegram?.WebApp;
 
 // Немедленное исправление стилей для иконки главной вкладки
 (function() {
-  const overviewTabBtn = document.querySelector('.tab-btn.active[data-tab="tab-overview"]');
-  if (overviewTabBtn) {
-    const svg = overviewTabBtn.querySelector('svg');
-    if (svg) {
-      svg.style.color = 'white';
-      svg.style.fill = 'none';
-      svg.setAttribute('fill', 'none');
-      svg.setAttribute('stroke', 'currentColor');
-      
-      const paths = svg.querySelectorAll('path');
-      paths.forEach(path => {
-        path.style.stroke = 'white';
-        path.style.fill = 'none';
-        path.style.color = 'white';
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'currentColor');
-      });
+  // Исправляем стили для всех иконок вкладок
+  const fixTabIcons = () => {
+    // Исправляем иконку домика (обзор)
+    const overviewTabBtn = document.querySelector('.tab-btn[data-tab="tab-overview"]');
+    if (overviewTabBtn) {
+      const svg = overviewTabBtn.querySelector('svg');
+      if (svg) {
+        svg.style.fill = 'none';
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        
+        const allElements = svg.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.fill = 'none';
+          if (el.tagName === 'path' || el.tagName === 'rect' || el.tagName === 'circle') {
+            el.style.stroke = overviewTabBtn.classList.contains('active') ? 'white' : 'currentColor';
+            el.setAttribute('fill', 'none');
+          }
+        });
+      }
     }
-  }
+    
+    // Исправляем иконку календаря
+    const calendarTabBtn = document.querySelector('.tab-btn[data-tab="tab-calendar"]');
+    if (calendarTabBtn) {
+      const svg = calendarTabBtn.querySelector('svg');
+      if (svg) {
+        svg.style.fill = 'none';
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        
+        const allElements = svg.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.fill = 'none';
+          if (el.tagName === 'path' || el.tagName === 'rect' || el.tagName === 'circle') {
+            el.style.stroke = calendarTabBtn.classList.contains('active') ? 'white' : 'currentColor';
+            el.setAttribute('fill', 'none');
+          }
+        });
+      }
+    }
+    
+    // Исправляем иконку статистики
+    const statsTabBtn = document.querySelector('.tab-btn[data-tab="tab-stats"]');
+    if (statsTabBtn) {
+      const svg = statsTabBtn.querySelector('svg');
+      if (svg) {
+        svg.style.fill = 'none';
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        
+        const allElements = svg.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.fill = 'none';
+          if (el.tagName === 'path' || el.tagName === 'rect' || el.tagName === 'circle') {
+            el.style.stroke = statsTabBtn.classList.contains('active') ? 'white' : 'currentColor';
+            el.setAttribute('fill', 'none');
+          }
+        });
+      }
+    }
+  };
+  
+  // Исправляем стили сразу
+  fixTabIcons();
+  
+  // Добавляем обработчик события для переключения вкладок
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Даем немного времени на смену классов активности
+      setTimeout(fixTabIcons, 10);
+    });
+  });
 })();
 
 if (tg) {
@@ -55,41 +109,31 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      document.querySelectorAll('.tab-btn.active').forEach(btn => {
-        btn.style.color = 'white';
+      // Обрабатываем все иконки вкладок для обеспечения единообразия
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.classList.contains('active');
+        const tabType = btn.getAttribute('data-tab');
         const svg = btn.querySelector('svg');
-        if (svg) svg.style.color = 'white';
         
-        // Дополнительная проверка для иконки главной вкладки
-        if (btn.getAttribute('data-tab') === 'tab-overview') {
-          // Фиксируем стиль для SVG элемента
+        if (svg) {
+          // Устанавливаем базовые стили для SVG
           svg.style.fill = 'none';
-          svg.style.color = 'white';
+          svg.style.stroke = isActive ? 'white' : 'currentColor';
+          svg.style.color = isActive ? 'white' : 'currentColor';
           
-          // Применяем стили ко всем путям и элементам SVG
-          const paths = btn.querySelectorAll('svg path');
-          paths.forEach(path => {
-            path.style.stroke = 'white';
-            path.style.fill = 'none';
-            path.style.color = 'white';
+          // Обрабатываем все дочерние элементы SVG
+          const elements = svg.querySelectorAll('*');
+          elements.forEach(el => {
+            el.style.fill = 'none';
+            el.style.stroke = isActive ? 'white' : 'currentColor';
+            el.style.color = isActive ? 'white' : 'currentColor';
             
             // Принудительно устанавливаем атрибуты
-            path.setAttribute('stroke', 'white');
-            path.setAttribute('fill', 'none');
-          });
-          
-          // Применяем стили ко всем дочерним элементам SVG
-          const allElements = btn.querySelectorAll('svg *');
-          allElements.forEach(el => {
-            el.style.stroke = 'white';
-            el.style.fill = 'none';
-            el.style.color = 'white';
-            
             if (el.hasAttribute('fill')) {
               el.setAttribute('fill', 'none');
             }
             if (el.hasAttribute('stroke')) {
-              el.setAttribute('stroke', 'white');
+              el.setAttribute('stroke', isActive ? 'white' : 'currentColor');
             }
           });
         }

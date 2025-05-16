@@ -10,22 +10,30 @@
   opacity: 1 !important;
 }
 
-/* Исправление для активной иконки home (иконка дома/обзора) */
-.tab-btn.active[data-tab="tab-overview"] svg {
-  color: #ffffff !important;
+/* Стили для всех иконок в навигации */
+.tab-btn svg {
+  stroke: currentColor !important;
   fill: none !important;
 }
 
-.tab-btn.active[data-tab="tab-overview"] svg path {
-  stroke: #ffffff !important;
+.tab-btn svg path,
+.tab-btn svg rect,
+.tab-btn svg circle {
+  stroke: currentColor !important;
   fill: none !important;
-  color: #ffffff !important;
 }
 
-.tab-btn.active[data-tab="tab-overview"] svg * {
-  fill: none !important;
+/* Стили для активных иконок в навигации */
+.tab-btn.active svg {
   stroke: #ffffff !important;
-  color: #ffffff !important;
+  fill: none !important;
+}
+
+.tab-btn.active svg path,
+.tab-btn.active svg rect,
+.tab-btn.active svg circle {
+  stroke: #ffffff !important;
+  fill: none !important;
 }
 
 /* Стили для кнопок периодичности */
@@ -85,4 +93,56 @@ label, .form-title, .section-title {
 /* Более глобальные селекторы для переопределения стилей Telegram */
 body.telegram-app * {
   font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Исправление для активной иконки home (иконка дома/обзора) */
+.tab-btn.active[data-tab="tab-overview"] svg {
+  color: #ffffff !important;
+  fill: none !important;
+}
+
+.tab-btn.active[data-tab="tab-overview"] svg path {
+  stroke: #ffffff !important;
+  fill: none !important;
+  color: #ffffff !important;
+}
+
+.tab-btn.active[data-tab="tab-overview"] svg * {
+  fill: none !important;
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Исправление для иконки календаря */
+.tab-btn[data-tab="tab-calendar"] svg,
+.tab-btn[data-tab="tab-calendar"] svg path,
+.tab-btn[data-tab="tab-calendar"] svg rect,
+.tab-btn[data-tab="tab-calendar"] svg * {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.tab-btn.active[data-tab="tab-calendar"] svg,
+.tab-btn.active[data-tab="tab-calendar"] svg path,
+.tab-btn.active[data-tab="tab-calendar"] svg rect,
+.tab-btn.active[data-tab="tab-calendar"] svg * {
+  fill: none !important;
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Исправление для иконки статистики */
+.tab-btn[data-tab="tab-stats"] svg,
+.tab-btn[data-tab="tab-stats"] svg path,
+.tab-btn[data-tab="tab-stats"] svg * {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.tab-btn.active[data-tab="tab-stats"] svg,
+.tab-btn.active[data-tab="tab-stats"] svg path,
+.tab-btn.active[data-tab="tab-stats"] svg * {
+  fill: none !important;
+  stroke: #ffffff !important;
+  color: #ffffff !important;
 } 
