@@ -60,10 +60,10 @@ if (tg) {
   tg.expand();
   document.body.classList.add('telegram-app');
   
-  // Используем цвета темы Telegram
-  document.documentElement.style.setProperty('--primary-color', tg.themeParams.button_color || '#4a90e2');
-  document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color || '#e0e0e0');
-  document.documentElement.style.setProperty('--dark-bg', tg.themeParams.bg_color || '#0d0d0d');
+  // Используем фиксированные цвета приложения, а не цвета темы Telegram
+  document.documentElement.style.setProperty('--primary-color', '#4a90e2'); // Значение из :root
+  document.documentElement.style.setProperty('--text-color', '#e0e0e0');    // Значение из :root
+  document.documentElement.style.setProperty('--dark-bg', '#0d0d0d');       // Значение из :root
   
   // Функция для принудительного применения стилей на мобильных устройствах
   const forceMobileStyles = () => {
@@ -71,21 +71,6 @@ if (tg) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // Исправляем проблемы со стилями на мобильных устройствах
-      document.querySelectorAll('.toggle-container label').forEach(label => {
-        label.style.color = 'white';
-      });
-      
-      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
-        label.style.backgroundColor = '#4a90e2';
-        label.style.color = 'white';
-      });
-      
-      document.querySelectorAll('.calendar-day.selected').forEach(day => {
-        day.style.backgroundColor = '#4a90e2';
-        day.style.color = 'white';
-      });
-      
       // Обрабатываем все иконки вкладок для обеспечения единообразия
       document.querySelectorAll('.tab-btn').forEach(btn => {
         const isActive = btn.classList.contains('active');
@@ -116,18 +101,6 @@ if (tg) {
             }
           });
         }
-      });
-      
-      // Исправление для кнопки добавления подписки
-      const fabButton = document.querySelector('.fab-button');
-      if (fabButton) {
-        fabButton.style.backgroundColor = '#4a90e2';
-        const svg = fabButton.querySelector('svg');
-        if (svg) svg.style.color = 'white';
-      }
-      
-      document.querySelectorAll('input[type="date"]').forEach(input => {
-        input.style.color = 'white';
       });
     }
   };

@@ -76,20 +76,20 @@ body.telegram-app {
 
 /* Fix для выбранных элементов в Telegram Mini App */
 .telegram-app .toggle-container input[type="radio"]:checked + label {
-  background-color: var(--tg-theme-button-color, var(--primary-color));
-  color: var(--tg-theme-button-text-color, white) !important;
-  border-color: var(--tg-theme-button-color, var(--primary-color));
+  background-color: var(--primary-color);
+  color: white !important;
+  border-color: var(--primary-color);
 }
 
 .telegram-app .calendar-day.selected {
-  background-color: var(--tg-theme-button-color, var(--primary-color));
-  color: var(--tg-theme-button-text-color, white) !important;
+  background-color: var(--primary-color);
+  color: white !important;
   font-weight: 600;
 }
 
 .telegram-app .color-option.selected {
-  border-color: var(--tg-theme-button-text-color, white);
-  box-shadow: 0 0 0 2px var(--tg-theme-button-color, var(--primary-color));
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--primary-color);
 }
 
 .telegram-app .tab-btn.active svg {
@@ -864,7 +864,7 @@ input[type="date"] {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background-color: rgba(26, 26, 26, 0.8);
-  color: var(--text-color);
+  color: white;
   font-size: 1rem;
   transition: border-color 0.2s ease;
 }
@@ -898,7 +898,7 @@ input[type="date"]:focus {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--text-color);
+  color: white !important;
 }
 
 .toggle-container input[type="radio"]:checked + label {
