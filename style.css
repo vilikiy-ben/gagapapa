@@ -224,6 +224,14 @@ body.telegram-app {
   padding: var(--space-md);
   overflow-y: auto;
   height: calc(100vh - var(--header-height) - var(--banner-height) - var(--tab-nav-height));
+  
+  /* Скрытие полосы прокрутки */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE и Edge (старые версии) */
+}
+
+.tab-content::-webkit-scrollbar { /* Chrome, Safari, Edge (новые), Opera, Telegram WebView */
+  display: none;
 }
 
 .tab-pane {
