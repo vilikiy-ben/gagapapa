@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.3";
+const APP_VERSION = "v1.0.4";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -19,7 +19,21 @@ if (tg) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // Исправляем проблемы со стилями на мобильных устройствах
+      // Сначала сбрасываем все встроенные стили на календаре
+      document.querySelectorAll('.calendar-day').forEach(day => {
+        if (!day.classList.contains('selected')) {
+          day.removeAttribute('style');
+        }
+      });
+      
+      // Сбрасываем стили вкладок
+      document.querySelectorAll('.tab-btn:not(.active)').forEach(btn => {
+        btn.removeAttribute('style');
+        const svg = btn.querySelector('svg');
+        if (svg) svg.removeAttribute('style');
+      });
+      
+      // Теперь применяем нужные стили
       document.querySelectorAll('.toggle-container label').forEach(label => {
         label.style.color = 'white';
       });
@@ -304,6 +318,12 @@ function switchTab(tabId) {
     const existingIndicator = btn.querySelector('.tab-indicator');
     if (existingIndicator) {
       existingIndicator.remove();
+    }
+    // Полностью сбрасываем встроенные стили
+    btn.removeAttribute('style');
+    const svg = btn.querySelector('svg');
+    if (svg) {
+      svg.removeAttribute('style');
     }
   });
   tabPanes.forEach(pane => pane.classList.remove('active'));
@@ -966,7 +986,13 @@ function setupCalendarEventListeners() {
         selectedDate = new Date(dateString);
         
         // Обновляем стили выбранного дня
-        dayElements.forEach(d => d.classList.remove('selected'));
+        // Сначала сбрасываем все встроенные стили со всех дней
+        dayElements.forEach(d => {
+          d.classList.remove('selected');
+          d.removeAttribute('style'); // Важно: удаляем все встроенные стили
+        });
+        
+        // Теперь добавляем класс selected к выбранному дню
         day.classList.add('selected');
         
         // Применяем явные стили для мобильной версии
@@ -985,6 +1011,12 @@ function setupCalendarEventListeners() {
   // Применяем принудительные стили для мобильной версии
   if (tg) {
     dayElements.forEach(day => {
+      // Сначала сбрасываем стили для всех дней
+      if (!day.classList.contains('selected')) {
+        day.removeAttribute('style');
+      }
+      
+      // Теперь применяем стили только для выбранного дня
       if (day.classList.contains('selected')) {
         day.style.backgroundColor = '#4a90e2';
         day.style.color = 'white';

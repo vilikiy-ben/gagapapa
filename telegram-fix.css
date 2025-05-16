@@ -11,6 +11,14 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 }
 
 /* Общие исправления */
+.tab-btn {
+  color: var(--text-muted) !important;
+}
+
+.tab-btn svg {
+  color: var(--text-muted) !important;
+}
+
 .tab-btn.active {
   color: #4a90e2 !important;
 }
@@ -39,7 +47,13 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   border-color: #4a90e2 !important;
 }
 
-/* Исправление для даты в календаре */
+/* Исправление стилей календаря */
+.calendar-day {
+  background-color: rgba(30, 30, 30, 0.5) !important;
+  color: var(--text-color) !important;
+  font-weight: normal !important;
+}
+
 .calendar-day.selected {
   background-color: #4a90e2 !important;
   color: white !important;
