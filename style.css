@@ -740,45 +740,39 @@ body.telegram-app {
   color: var(--primary-color);
 }
 
-.tab-btn.active::before {
+/* Используем ::before для фонового индикатора */
+.tab-btn.active::before,
+.tab-btn.tab-active::before {
   content: '';
   position: absolute;
   width: 38px;
   height: 38px;
-  background-color: rgba(74, 144, 226, 0.15);
+  background-color: rgba(74, 144, 226, 0.3); 
   border-radius: 50%;
-  z-index: 1;
+  z-index: 1; /* Низкий z-index для фона */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: none;
+  pointer-events: none; /* Не перехватываем события */
 }
 
 .tab-btn.active svg {
   opacity: 1;
   color: var(--primary-color);
   position: relative;
-  z-index: 10;
-  transform: scale(1.05);
+  z-index: 10; /* Высокий z-index для активного SVG */
 }
 
-/* Стили для динамически добавляемого индикатора */
-.tab-indicator {
-  position: absolute;
-  width: 38px;
-  height: 38px;
-  background-color: rgba(74, 144, 226, 0.3);
-  border-radius: 50%;
-  z-index: 1;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+/* Дополнительный класс для активных вкладок */
+.tab-btn.tab-active {
+  color: var(--primary-color);
 }
 
-/* Скрываем индикатор, если он идет после SVG в DOM-структуре */
-.tab-btn.active svg ~ .tab-indicator {
-  display: none;
+.tab-btn.tab-active svg {
+  opacity: 1;
+  color: var(--primary-color);
+  position: relative;
+  z-index: 10; /* Высокий z-index для активного SVG */
 }
 
 /* Modal */

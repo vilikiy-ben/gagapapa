@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.7";
+const APP_VERSION = "v1.0.8";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -23,109 +23,97 @@ if (tg) {
   
   // Функция для принудительного применения стилей на мобильных устройствах
   const forceMobileStyles = () => {
-    // Определяем мобильное устройство
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Если уже идет обновление, не делаем ничего
+    if (isUpdatingDOM) return;
     
-    if (isMobile) {
-      // Сначала сбрасываем все встроенные стили на календаре
-      document.querySelectorAll('.calendar-day').forEach(day => {
-        if (!day.classList.contains('selected')) {
-          day.removeAttribute('style');
-        }
-      });
+    // Устанавливаем флаг, что идет обновление
+    isUpdatingDOM = true;
+    
+    try {
+      // Определяем мобильное устройство
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      // Сбрасываем стили вкладок
-      document.querySelectorAll('.tab-btn:not(.active)').forEach(btn => {
-        btn.removeAttribute('style');
-        const svg = btn.querySelector('svg');
-        if (svg) svg.removeAttribute('style');
-      });
-      
-      // Теперь применяем нужные стили
-      document.querySelectorAll('.toggle-container label').forEach(label => {
-        label.style.color = 'white';
-      });
-      
-      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
-        label.style.backgroundColor = '#4a90e2';
-        label.style.color = 'white';
-      });
-      
-      document.querySelectorAll('.calendar-day.selected').forEach(day => {
-        day.style.backgroundColor = '#4a90e2';
-        day.style.color = 'white';
-      });
-      
-      // НОВЫЙ ПОДХОД: Для активных вкладок - сначала очищаем все индикаторы
-      document.querySelectorAll('.tab-indicator').forEach(indicator => {
-        indicator.remove();
-      });
-      
-      document.querySelectorAll('.tab-btn.active').forEach(btn => {
-        // Очищаем все inline стили кнопки и восстанавливаем чистое состояние
-        btn.style.cssText = '';
-        btn.style.position = 'relative';
-        btn.style.color = '#4a90e2';
-
-        // Получаем SVG и задаем ему явные стили
-        const svg = btn.querySelector('svg');
-        if (svg) {
-          // Полностью очищаем стили SVG
-          svg.style.cssText = '';
-          svg.style.color = '#4a90e2';
-          svg.style.opacity = '1';
-          svg.style.position = 'relative';
-          svg.style.zIndex = '10'; // Очень высокий z-index
-          svg.style.transform = 'scale(1.05)'; // Делаем иконку немного больше
-        }
+      if (isMobile) {
+        // Сначала сбрасываем все встроенные стили на календаре
+        document.querySelectorAll('.calendar-day').forEach(day => {
+          if (!day.classList.contains('selected')) {
+            day.removeAttribute('style');
+          }
+        });
         
-        // Добавляем фоновый индикатор ПЕРЕД SVG, чтобы он был ниже в DOM порядке
-        if (svg && !btn.querySelector('.tab-indicator')) {
-          const indicator = document.createElement('span');
-          indicator.className = 'tab-indicator';
-          indicator.style.cssText = '';
-          indicator.style.position = 'absolute';
-          indicator.style.width = '38px';
-          indicator.style.height = '38px';
-          indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
-          indicator.style.borderRadius = '50%';
-          indicator.style.top = '50%';
-          indicator.style.left = '50%';
-          indicator.style.transform = 'translate(-50%, -50%)';
-          indicator.style.zIndex = '1'; // Низкий z-index
+        // Сбрасываем стили вкладок
+        document.querySelectorAll('.tab-btn:not(.active)').forEach(btn => {
+          btn.removeAttribute('style');
+          const svg = btn.querySelector('svg');
+          if (svg) svg.removeAttribute('style');
+        });
+        
+        // Теперь применяем нужные стили
+        document.querySelectorAll('.toggle-container label').forEach(label => {
+          label.style.color = 'white';
+        });
+        
+        document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
+          label.style.backgroundColor = '#4a90e2';
+          label.style.color = 'white';
+        });
+        
+        document.querySelectorAll('.calendar-day.selected').forEach(day => {
+          day.style.backgroundColor = '#4a90e2';
+          day.style.color = 'white';
+        });
+        
+        // Для активных вкладок - используем встроенные CSS классы вместо динамических манипуляций
+        document.querySelectorAll('.tab-btn.active').forEach(btn => {
+          // Достаточно просто добавить класс, остальное сделают CSS правила
+          btn.classList.add('tab-active');
           
-          // Вставляем индикатор ПЕРЕД svg, чтобы svg был выше в порядке DOM
-          btn.insertBefore(indicator, svg);
-        }
-      });
-      
-      document.querySelectorAll('input[type="date"]').forEach(input => {
-        input.style.color = 'white';
-      });
-      
-      // Явное исправление для кнопки добавления (fab-button)
-      document.querySelectorAll('.fab-button').forEach(btn => {
-        btn.style.backgroundColor = '#4a90e2';
-        btn.style.color = 'white';
-        const svg = btn.querySelector('svg');
-        if (svg) {
-          svg.style.color = 'white';
-          svg.style.fill = 'white';
-          svg.style.stroke = 'white';
-          svg.style.opacity = '1';
-        }
-      });
+          // Очищаем все внешние стили для предотвращения конфликтов
+          btn.style.color = '#4a90e2';
+          
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            svg.style.color = '#4a90e2';
+          }
+        });
+        
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+          input.style.color = 'white';
+        });
+        
+        // Явное исправление для кнопки добавления (fab-button)
+        document.querySelectorAll('.fab-button').forEach(btn => {
+          btn.style.backgroundColor = '#4a90e2';
+          btn.style.color = 'white';
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            svg.style.color = 'white';
+            svg.style.fill = 'white';
+            svg.style.stroke = 'white';
+            svg.style.opacity = '1';
+          }
+        });
+      }
+    } finally {
+      // В любом случае снимаем флаг
+      isUpdatingDOM = false;
     }
   };
   
   // Вызываем функцию сразу и добавляем в список обработчиков событий
   forceMobileStyles();
   
-  // Добавляем наблюдателя за изменениями DOM
+  // Добавляем наблюдателя за изменениями DOM с защитой от циклических вызовов
   const observer = new MutationObserver(() => {
-    forceMobileStyles();
+    if (!isUpdatingDOM) {
+      forceMobileStyles();
+    }
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true,
+    attributes: false // Отключаем наблюдение за атрибутами, только структура DOM
+  });
   
   // Добавляем временную задержку для повторного применения стилей
   // после полной загрузки (часто помогает в мобильных WebView)
@@ -173,6 +161,9 @@ let formMode = 'add';
 
 // ID подписки, которую нужно удалить
 let subscriptionToDeleteId = null;
+
+// Флаг для отслеживания состояния обновления DOM
+let isUpdatingDOM = false;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
@@ -337,22 +328,12 @@ function setupEventListeners() {
   });
 }
 
-// Переключение между табами - полностью меняем подход к индикаторам
+// Переключение между табами - используем классический подход с CSS
 function switchTab(tabId) {
   // Убираем активный класс со всех кнопок и табов
   tabButtons.forEach(btn => {
     btn.classList.remove('active');
-    // Удаляем индикаторы с предыдущих активных вкладок
-    const existingIndicator = btn.querySelector('.tab-indicator');
-    if (existingIndicator) {
-      existingIndicator.remove();
-    }
-    // Полностью сбрасываем встроенные стили
-    btn.removeAttribute('style');
-    const svg = btn.querySelector('svg');
-    if (svg) {
-      svg.removeAttribute('style');
-    }
+    btn.classList.remove('tab-active');
   });
   tabPanes.forEach(pane => pane.classList.remove('active'));
   
@@ -362,38 +343,15 @@ function switchTab(tabId) {
   
   if (selectedButton && selectedPane) {
     selectedButton.classList.add('active');
+    selectedButton.classList.add('tab-active');
     selectedPane.classList.add('active');
     
-    // Установка базовых стилей кнопки
-    selectedButton.style.position = 'relative';
+    // Минимальные встроенные стили только для цвета
     selectedButton.style.color = '#4a90e2';
     
-    // Получаем SVG и устанавливаем его явные стили
     const svg = selectedButton.querySelector('svg');
     if (svg) {
       svg.style.color = '#4a90e2';
-      svg.style.opacity = '1';
-      svg.style.position = 'relative';
-      svg.style.zIndex = '10'; // Очень высокий z-index
-      svg.style.transform = 'scale(1.05)'; // Делаем иконку немного больше
-    }
-    
-    // Добавляем индикатор ПЕРЕД SVG (важно для порядка DOM)
-    if (svg && !selectedButton.querySelector('.tab-indicator')) {
-      const indicator = document.createElement('span');
-      indicator.className = 'tab-indicator';
-      indicator.style.position = 'absolute';
-      indicator.style.width = '38px';
-      indicator.style.height = '38px';
-      indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
-      indicator.style.borderRadius = '50%';
-      indicator.style.zIndex = '1'; // Низкий z-index
-      indicator.style.top = '50%';
-      indicator.style.left = '50%';
-      indicator.style.transform = 'translate(-50%, -50%)';
-      
-      // Вставляем индикатор ПЕРЕД svg, чтобы svg был выше в порядке DOM
-      selectedButton.insertBefore(indicator, svg);
     }
   }
 }
