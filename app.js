@@ -69,13 +69,15 @@ if (tg) {
           indicator.style.position = 'absolute';
           indicator.style.width = '38px';
           indicator.style.height = '38px';
-          indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
+          indicator.style.backgroundColor = '#4a90e2';
+          indicator.style.opacity = '0.3';
           indicator.style.borderRadius = '50%';
           indicator.style.zIndex = '-1';
           indicator.style.top = '50%';
           indicator.style.left = '50%';
           indicator.style.transform = 'translate(-50%, -50%)';
-          btn.appendChild(indicator);
+          btn.style.position = 'relative';
+          btn.prepend(indicator);
         }
       });
       
@@ -366,7 +368,7 @@ function switchTab(tabId) {
       indicator.style.left = '50%';
       indicator.style.transform = 'translate(-50%, -50%)';
       selectedButton.style.position = 'relative';
-      selectedButton.appendChild(indicator);
+      selectedButton.prepend(indicator);
     }
   }
 }
