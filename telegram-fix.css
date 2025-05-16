@@ -55,6 +55,15 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 .tab-indicator {
   background-color: #4a90e2 !important;
   opacity: 0.3 !important;
+  z-index: -1 !important;
+}
+
+/* Исправление видимости иконок в активных вкладках */
+.tab-btn.active svg {
+  color: #4a90e2 !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 /* Стили для кнопок периодичности */
