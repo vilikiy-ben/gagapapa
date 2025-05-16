@@ -756,23 +756,17 @@ body.telegram-app {
   color: var(--text-color);
 }
 
-/* Унифицированные стили для всех иконок */
+/* Дополнительные правила для гарантированного белого цвета иконок во вкладках */
 .tab-btn.active svg * {
-  stroke: white !important;
-  color: white !important;
-  opacity: 1 !important;
+  color: var(--text-color) !important;
 }
 
-.tab-btn.active svg path,
-.tab-btn.active svg rect {
+.tab-btn.active[data-tab="tab-overview"] svg,
+.tab-btn.active[data-tab="tab-overview"] svg path,
+.tab-btn.active[data-tab="tab-overview"] svg * {
   fill: none !important;
-}
-
-/* Принудительный стиль для иконки главной вкладки */
-.tab-btn.active[data-tab="tab-overview"] svg path {
-  stroke: white !important;
-  fill: none !important;
-  color: white !important;
+  stroke: var(--text-color) !important;
+  color: var(--text-color) !important;
 }
 
 /* Modal */

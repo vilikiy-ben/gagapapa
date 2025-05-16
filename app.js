@@ -1,6 +1,30 @@
 // SubsViewer - мини-приложение для Telegram
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
+
+// Немедленное исправление стилей для иконки главной вкладки
+(function() {
+  const overviewTabBtn = document.querySelector('.tab-btn.active[data-tab="tab-overview"]');
+  if (overviewTabBtn) {
+    const svg = overviewTabBtn.querySelector('svg');
+    if (svg) {
+      svg.style.color = 'white';
+      svg.style.fill = 'none';
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      
+      const paths = svg.querySelectorAll('path');
+      paths.forEach(path => {
+        path.style.stroke = 'white';
+        path.style.fill = 'none';
+        path.style.color = 'white';
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'currentColor');
+      });
+    }
+  }
+})();
+
 if (tg) {
   tg.expand();
   document.body.classList.add('telegram-app');
@@ -31,26 +55,41 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      // Унифицированная обработка всех вкладок
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
         btn.style.color = 'white';
-        
-        // Применяем стили ко всем иконкам вкладок
         const svg = btn.querySelector('svg');
-        if (svg) {
+        if (svg) svg.style.color = 'white';
+        
+        // Дополнительная проверка для иконки главной вкладки
+        if (btn.getAttribute('data-tab') === 'tab-overview') {
+          // Фиксируем стиль для SVG элемента
+          svg.style.fill = 'none';
           svg.style.color = 'white';
-          svg.style.opacity = '1';
           
-          // Применяем стили ко всем элементам внутри SVG
-          const svgElements = svg.querySelectorAll('*');
-          svgElements.forEach(element => {
-            element.style.stroke = 'white';
-            element.style.color = 'white';
-            element.style.opacity = '1';
+          // Применяем стили ко всем путям и элементам SVG
+          const paths = btn.querySelectorAll('svg path');
+          paths.forEach(path => {
+            path.style.stroke = 'white';
+            path.style.fill = 'none';
+            path.style.color = 'white';
             
-            // Для path элементов дополнительно убираем заливку, оставляя только контуры
-            if (element.tagName === 'path') {
-              element.style.fill = 'none';
+            // Принудительно устанавливаем атрибуты
+            path.setAttribute('stroke', 'white');
+            path.setAttribute('fill', 'none');
+          });
+          
+          // Применяем стили ко всем дочерним элементам SVG
+          const allElements = btn.querySelectorAll('svg *');
+          allElements.forEach(el => {
+            el.style.stroke = 'white';
+            el.style.fill = 'none';
+            el.style.color = 'white';
+            
+            if (el.hasAttribute('fill')) {
+              el.setAttribute('fill', 'none');
+            }
+            if (el.hasAttribute('stroke')) {
+              el.setAttribute('stroke', 'white');
             }
           });
         }

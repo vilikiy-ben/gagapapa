@@ -1,6 +1,6 @@
 /* Специальные стили для устранения проблем в мобильной версии Telegram */
 
-/* Общие исправления для всех активных вкладок и их SVG */
+/* Общие исправления */
 .tab-btn.active {
   color: #ffffff !important;
 }
@@ -10,48 +10,22 @@
   opacity: 1 !important;
 }
 
-.tab-btn.active svg path {
-  stroke: #ffffff !important;
+/* Исправление для активной иконки home (иконка дома/обзора) */
+.tab-btn.active[data-tab="tab-overview"] svg {
   color: #ffffff !important;
-  opacity: 1 !important;
+  fill: none !important;
 }
 
-/* Специфичные стили для разных вкладок */
-/* Иконка главного экрана (домик) */
 .tab-btn.active[data-tab="tab-overview"] svg path {
   stroke: #ffffff !important;
-  color: #ffffff !important;
   fill: none !important;
-  opacity: 1 !important;
+  color: #ffffff !important;
 }
 
-/* Иконка календаря (средняя вкладка) */
-.tab-btn.active[data-tab="tab-calendar"] svg {
-  stroke: #ffffff !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-.tab-btn.active[data-tab="tab-calendar"] svg path,
-.tab-btn.active[data-tab="tab-calendar"] svg rect {
-  stroke: #ffffff !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-/* Иконка статистики (третья вкладка) */
-.tab-btn.active[data-tab="tab-stats"] svg path {
-  stroke: #ffffff !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
+.tab-btn.active[data-tab="tab-overview"] svg * {
   fill: none !important;
-}
-
-/* Самый приоритетный стиль для всех иконок */
-body .tab-btn.active svg * {
   stroke: #ffffff !important;
   color: #ffffff !important;
-  opacity: 1 !important;
 }
 
 /* Стили для кнопок периодичности */
