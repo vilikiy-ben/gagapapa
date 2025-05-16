@@ -145,4 +145,10 @@ body.telegram-app * {
   fill: none !important;
   stroke: #ffffff !important;
   color: #ffffff !important;
+}
+
+/* Стиль для версии приложения в Telegram */
+.telegram-app .app-version {
+  color: var(--tg-theme-hint-color, var(--text-muted)) !important;
+  background-color: rgba(0, 0, 0, 0.15) !important;
 } 
