@@ -32,16 +32,11 @@
       background-color: #4a90e2 !important;
       color: white !important;
     }
-    /* Делаем все иконки синими */
-    .tab-btn svg,
-    .tab-btn svg path,
-    .tab-btn svg rect,
-    .tab-btn.active svg,
-    .tab-btn.active svg path,
-    .tab-btn.active svg rect {
-      color: #4a90e2 !important;
-      stroke: #4a90e2 !important;
-      fill: #4a90e2 !important;
+    .tab-btn.active {
+      color: white !important;
+    }
+    .tab-btn.active svg {
+      color: white !important;
       opacity: 1 !important;
     }
   </style>
@@ -277,13 +272,29 @@
             day.style.color = 'white';
           });
           
-          // Все иконки вкладок синего цвета
-          const allTabIcons = document.querySelectorAll('.tab-btn svg, .tab-btn svg *, .tab-btn path, .tab-btn rect');
-          allTabIcons.forEach(icon => {
-            icon.style.color = '#4a90e2';
-            icon.style.stroke = '#4a90e2';
-            icon.style.fill = '#4a90e2';
-            icon.style.opacity = '1';
+          // Для активных вкладок - унифицированная обработка всех иконок
+          const activeTabs = document.querySelectorAll('.tab-btn.active');
+          activeTabs.forEach(tab => {
+            tab.style.color = 'white';
+            
+            const svg = tab.querySelector('svg');
+            if (svg) {
+              svg.style.color = 'white';
+              svg.style.opacity = '1';
+              
+              // Применяем стили ко всем элементам внутри SVG
+              const svgElements = svg.querySelectorAll('*');
+              svgElements.forEach(element => {
+                element.style.stroke = 'white';
+                element.style.color = 'white';
+                element.style.opacity = '1';
+                
+                // Для path элементов и rect убираем заливку, чтобы был только контур
+                if (element.tagName === 'path' || element.tagName === 'rect') {
+                  element.style.fill = 'none';
+                }
+              });
+            }
           });
         };
         

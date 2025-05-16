@@ -31,12 +31,29 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      // Все иконки вкладок синего цвета
-      document.querySelectorAll('.tab-btn svg, .tab-btn svg *, .tab-btn path, .tab-btn rect').forEach(icon => {
-        icon.style.color = '#4a90e2';
-        icon.style.stroke = '#4a90e2';
-        icon.style.fill = '#4a90e2';
-        icon.style.opacity = '1';
+      // Унифицированная обработка всех вкладок
+      document.querySelectorAll('.tab-btn.active').forEach(btn => {
+        btn.style.color = 'white';
+        
+        // Применяем стили ко всем иконкам вкладок
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.style.color = 'white';
+          svg.style.opacity = '1';
+          
+          // Применяем стили ко всем элементам внутри SVG
+          const svgElements = svg.querySelectorAll('*');
+          svgElements.forEach(element => {
+            element.style.stroke = 'white';
+            element.style.color = 'white';
+            element.style.opacity = '1';
+            
+            // Для path элементов дополнительно убираем заливку, оставляя только контуры
+            if (element.tagName === 'path') {
+              element.style.fill = 'none';
+            }
+          });
+        }
       });
       
       // Исправление для кнопки добавления подписки
