@@ -147,8 +147,8 @@ body.telegram-app {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   margin: 0;
   margin-right: var(--space-sm);
@@ -245,6 +245,11 @@ body.telegram-app {
   margin-bottom: var(--space-xl);
 }
 
+/* Уменьшаем нижний отступ для первой секции на главной вкладке */
+#tab-overview > .section:first-child {
+  margin-bottom: var(--space-md);
+}
+
 .section-title {
   font-size: 1.2rem;
   font-weight: 600;
@@ -266,7 +271,7 @@ body.telegram-app {
 /* Upcoming payments */
 .upcoming-payments {
   position: relative;
-  padding-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
   overflow: hidden;
 }
 
@@ -724,7 +729,7 @@ body.telegram-app {
   background-color: rgba(30, 30, 30, 0.95);
   height: var(--tab-nav-height);
   position: fixed;
-  bottom: 16px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
@@ -1069,7 +1074,7 @@ input[type="date"]:focus {
 /* Плавающая кнопка добавления (FAB) */
 .fab-button {
   position: fixed;
-  bottom: calc(var(--tab-nav-height) + 24px);
+  bottom: calc(var(--tab-nav-height) + 32px);
   left: 50%;
   transform: translateX(-50%);
   width: 56px;

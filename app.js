@@ -174,6 +174,18 @@ async function initApp() {
     }, 300);
   }
   
+  // Принудительная установка размеров логотипа, особенно для мобильных устройств
+  try {
+    const logoImg = document.querySelector('.app-logo img');
+    if (logoImg) {
+      logoImg.style.height = '30px';
+      logoImg.style.width = '30px';
+      logoImg.style.objectFit = 'contain';
+    }
+  } catch (error) {
+    console.error("Error resizing logo via JS:", error);
+  }
+  
   // Исправляем стили для мобильной версии после инициализации
   if (tg) {
     setTimeout(() => {
