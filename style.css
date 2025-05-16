@@ -300,7 +300,6 @@ body.telegram-app {
 .upcoming-payments {
   position: relative;
   padding-bottom: var(--space-xs);
-  overflow: hidden;
 }
 
 .upcoming-payments-wrapper {
