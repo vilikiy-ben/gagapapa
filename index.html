@@ -31,6 +31,7 @@
     .calendar-day.selected {
       background-color: #4a90e2 !important;
       color: white !important;
+      font-weight: 600 !important;
     }
     .tab-btn.active {
       color: #4a90e2 !important;
@@ -41,7 +42,10 @@
       position: relative !important;
       z-index: 2 !important;
     }
+    .tab-btn.active::before,
     .tab-indicator {
+      background-color: #4a90e2 !important;
+      opacity: 0.3 !important;
       z-index: -1 !important;
     }
     /* Фиксация основных цветов темы */
@@ -51,6 +55,10 @@
     .fab-button svg {
       color: white !important;
       fill: white !important;
+      stroke: white !important;
+      opacity: 1 !important;
+      width: 30px !important;
+      height: 30px !important;
     }
     .submit-btn {
       background-color: #4a90e2 !important;
@@ -299,8 +307,18 @@
           activeTabs.forEach(tab => {
             tab.style.color = '#4a90e2';
             const svg = tab.querySelector('svg');
-            if (svg) svg.style.color = '#4a90e2';
+            if (svg) {
+              svg.style.color = '#4a90e2';
+              svg.style.position = 'relative';
+              svg.style.zIndex = '2';
+            }
           });
+          
+          // Для индикаторов
+          const hasIndicator = document.querySelector('.tab-indicator');
+          if (hasIndicator) {
+            hasIndicator.style.zIndex = '-1';
+          }
         };
         
         // Применяем сразу и с небольшой задержкой (после полной загрузки DOM)
@@ -312,6 +330,15 @@
         observer.observe(document.body, { childList: true, subtree: true });
       }
     });
+
+    document.querySelectorAll('.calendar-day').forEach(day => {
+      if (!day.classList.contains('selected')) {
+        day.removeAttribute('style');
+      }
+    });
+
+    document.documentElement.style.setProperty('--tg-theme-bg-color', '#0d0d0d', 'important');
+    document.documentElement.style.setProperty('--tg-theme-text-color', '#e0e0e0', 'important');
   </script>
 </body>
 </html> 
