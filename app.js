@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.5";
+const APP_VERSION = "v1.0.6";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
