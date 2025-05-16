@@ -308,6 +308,28 @@ body.telegram-app {
   width: 100%;
 }
 
+/* Стили для эффекта затухания по краям карусели */
+.upcoming-payments.has-scroll .upcoming-payments-wrapper::before,
+.upcoming-payments.has-scroll .upcoming-payments-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0; 
+  width: 40px; /* Ширина зоны "затухания" */
+  z-index: 2;  /* Чтобы быть поверх карточек, но не мешать другим элементам управления */
+  pointer-events: none; /* Чтобы не перехватывать клики/скролл */
+}
+
+.upcoming-payments.has-scroll .upcoming-payments-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); /* От фона страницы к прозрачному */
+}
+
+.upcoming-payments.has-scroll .upcoming-payments-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); /* От фона страницы к прозрачному */
+}
+
 .upcoming-payments-scroll {
   display: flex;
   overflow-x: auto;
