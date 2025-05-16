@@ -146,12 +146,15 @@ body.telegram-app {
 .app-logo {
   display: flex;
   align-items: center;
+  max-height: 100%;
 }
 
 .app-logo img {
-  height: 30px;
-  width: auto;
   display: block;
+  height: 30px;
+  width: 30px;
+  object-fit: contain;
+  max-height: 100%;
 }
 
 .app-title {
