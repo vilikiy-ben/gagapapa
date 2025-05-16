@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.6";
+const APP_VERSION = "v1.0.5";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -56,38 +56,26 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      // Для активных вкладок
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
         btn.style.color = '#4a90e2';
         const svg = btn.querySelector('svg');
-        if (svg) {
-          svg.style.color = '#4a90e2';
-          svg.style.opacity = '1';
-          svg.style.position = 'relative';
-          svg.style.zIndex = '2';
-        }
-        
-        // Проверяем наличие индикатора
-        const hasIndicator = btn.querySelector('.tab-indicator');
-        if (!hasIndicator) {
-          // Явное добавление видимого индикатора активности
-          btn.style.position = 'relative';
+        if (svg) svg.style.color = '#4a90e2';
+        // Явное добавление видимого индикатора активности
+        btn.style.position = 'relative';
+        const tabIndicator = btn.querySelector('.tab-indicator');
+        if (!tabIndicator) {
           const indicator = document.createElement('span');
           indicator.className = 'tab-indicator';
           indicator.style.position = 'absolute';
           indicator.style.width = '38px';
           indicator.style.height = '38px';
-          indicator.style.backgroundColor = '#4a90e2';
-          indicator.style.opacity = '0.3';
+          indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
           indicator.style.borderRadius = '50%';
           indicator.style.zIndex = '-1';
           indicator.style.top = '50%';
           indicator.style.left = '50%';
           indicator.style.transform = 'translate(-50%, -50%)';
           btn.appendChild(indicator);
-        } else {
-          // Убеждаемся, что индикатор под иконкой
-          hasIndicator.style.zIndex = '-1';
         }
       });
       
@@ -361,9 +349,6 @@ function switchTab(tabId) {
     const svg = selectedButton.querySelector('svg');
     if (svg) {
       svg.style.color = '#4a90e2';
-      svg.style.opacity = '1';
-      svg.style.position = 'relative';
-      svg.style.zIndex = '2';
     }
     
     // Добавляем видимый индикатор активности для мобильных
