@@ -32,11 +32,16 @@
       background-color: #4a90e2 !important;
       color: white !important;
     }
-    .tab-btn.active {
-      color: white !important;
-    }
-    .tab-btn.active svg {
-      color: white !important;
+    /* Делаем все иконки синими */
+    .tab-btn svg,
+    .tab-btn svg path,
+    .tab-btn svg rect,
+    .tab-btn.active svg,
+    .tab-btn.active svg path,
+    .tab-btn.active svg rect {
+      color: #4a90e2 !important;
+      stroke: #4a90e2 !important;
+      fill: #4a90e2 !important;
       opacity: 1 !important;
     }
   </style>
@@ -272,28 +277,13 @@
             day.style.color = 'white';
           });
           
-          // Все вкладки иконок делаем одного цвета
-          const allTabs = document.querySelectorAll('.tab-btn');
-          allTabs.forEach(tab => {
-            if (tab.classList.contains('active')) {
-              tab.style.color = 'white';
-              const elements = tab.querySelectorAll('svg, svg *, path, rect');
-              elements.forEach(el => {
-                el.style.color = 'white';
-                el.style.stroke = 'white';
-                el.style.fill = tab.getAttribute('data-tab') === 'tab-calendar' ? 'white' : 'none';
-                el.style.opacity = '1';
-              });
-            } else {
-              tab.style.color = 'rgba(255,255,255,0.7)';
-              const elements = tab.querySelectorAll('svg, svg *, path, rect');
-              elements.forEach(el => {
-                el.style.color = 'rgba(255,255,255,0.7)';
-                el.style.stroke = 'rgba(255,255,255,0.7)';
-                el.style.fill = tab.getAttribute('data-tab') === 'tab-calendar' ? 'rgba(255,255,255,0.7)' : 'none';
-                el.style.opacity = '0.7';
-              });
-            }
+          // Все иконки вкладок синего цвета
+          const allTabIcons = document.querySelectorAll('.tab-btn svg, .tab-btn svg *, .tab-btn path, .tab-btn rect');
+          allTabIcons.forEach(icon => {
+            icon.style.color = '#4a90e2';
+            icon.style.stroke = '#4a90e2';
+            icon.style.fill = '#4a90e2';
+            icon.style.opacity = '1';
           });
         };
         

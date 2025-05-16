@@ -31,39 +31,12 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      // Обработка всех иконок вкладок для единого стиля
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        if (btn.classList.contains('active')) {
-          btn.style.color = 'white';
-          // Обрабатываем все SVG элементы в активной вкладке
-          const svgElements = btn.querySelectorAll('svg, svg *, path, rect');
-          svgElements.forEach(el => {
-            el.style.color = 'white';
-            el.style.stroke = 'white';
-            // Для иконки календаря нужен fill=white, для остальных fill=none
-            if (btn.getAttribute('data-tab') === 'tab-calendar') {
-              el.style.fill = 'white';
-            } else {
-              el.style.fill = 'none';
-            }
-            el.style.opacity = '1';
-          });
-        } else {
-          btn.style.color = 'rgba(255,255,255,0.7)';
-          // Обрабатываем все SVG элементы в неактивной вкладке
-          const svgElements = btn.querySelectorAll('svg, svg *, path, rect');
-          svgElements.forEach(el => {
-            el.style.color = 'rgba(255,255,255,0.7)';
-            el.style.stroke = 'rgba(255,255,255,0.7)';
-            // Для иконки календаря нужен fill, для остальных fill=none
-            if (btn.getAttribute('data-tab') === 'tab-calendar') {
-              el.style.fill = 'rgba(255,255,255,0.7)';
-            } else {
-              el.style.fill = 'none';
-            }
-            el.style.opacity = '0.7';
-          });
-        }
+      // Все иконки вкладок синего цвета
+      document.querySelectorAll('.tab-btn svg, .tab-btn svg *, .tab-btn path, .tab-btn rect').forEach(icon => {
+        icon.style.color = '#4a90e2';
+        icon.style.stroke = '#4a90e2';
+        icon.style.fill = '#4a90e2';
+        icon.style.opacity = '1';
       });
       
       // Исправление для кнопки добавления подписки

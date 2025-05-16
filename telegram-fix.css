@@ -1,44 +1,16 @@
 /* Специальные стили для устранения проблем в мобильной версии Telegram */
 
-/* Исправленные стили для всех иконок вкладок - все белого цвета */
-.tab-btn {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.tab-btn svg {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.tab-btn svg path {
-  stroke: rgba(255, 255, 255, 0.7) !important;
-  fill: none !important;
-}
-
-.tab-btn.active {
-  color: #ffffff !important;
-}
-
-.tab-btn.active svg {
-  color: #ffffff !important;
+/* Все иконки синего цвета - как было раньше */
+.tab-btn svg,
+.tab-btn svg path,
+.tab-btn svg rect,
+.tab-btn.active svg,
+.tab-btn.active svg path,
+.tab-btn.active svg rect {
+  color: #4a90e2 !important;
+  stroke: #4a90e2 !important;
+  fill: #4a90e2 !important;
   opacity: 1 !important;
-}
-
-.tab-btn.active svg path {
-  stroke: #ffffff !important;
-  fill: none !important;
-}
-
-/* Fix для иконок с fill в неактивном состоянии */
-.tab-btn[data-tab="tab-calendar"] svg rect,
-.tab-btn[data-tab="tab-calendar"] svg path {
-  fill: rgba(255, 255, 255, 0.7) !important;
-  stroke: rgba(255, 255, 255, 0.7) !important;
-}
-
-.tab-btn.active[data-tab="tab-calendar"] svg rect,
-.tab-btn.active[data-tab="tab-calendar"] svg path {
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
 }
 
 /* Стили для кнопок периодичности */

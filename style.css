@@ -200,6 +200,19 @@ body.telegram-app {
   animation: fadeIn 0.3s ease;
 }
 
+/* Принудительный стиль для всех иконок - синий цвет */
+.tab-btn svg,
+.tab-btn svg path,
+.tab-btn svg rect,
+.tab-btn.active svg,
+.tab-btn.active svg path,
+.tab-btn.active svg rect {
+  color: #4a90e2 !important;
+  stroke: #4a90e2 !important;
+  fill: #4a90e2 !important;
+  opacity: 1 !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
