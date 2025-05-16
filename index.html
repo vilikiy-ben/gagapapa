@@ -48,6 +48,11 @@
       stroke: var(--text-color) !important;
       fill: none !important;
     }
+    /* Явные стили для НЕАКТИВНОЙ иконки главной вкладки */
+    .tab-btn[data-tab="tab-overview"]:not(.active) svg {
+      color: var(--text-muted) !important;
+      opacity: 0.7 !important;
+    }
   </style>
 </head>
 <body>
