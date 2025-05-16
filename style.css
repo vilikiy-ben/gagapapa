@@ -44,11 +44,17 @@ body, html {
   line-height: 1.5;
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   touch-action: manipulation;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar, html::-webkit-scrollbar {
+  display: none;
 }
 
 /* Telegram Mini App specific styles */
@@ -107,8 +113,15 @@ body.telegram-app {
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100vh;
   max-width: 100%;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#app::-webkit-scrollbar {
+  display: none;
 }
 
 .app-container {
@@ -119,6 +132,13 @@ body.telegram-app {
   max-width: 100%;
   padding-bottom: var(--tab-nav-height);
   min-height: 100vh;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Header */
