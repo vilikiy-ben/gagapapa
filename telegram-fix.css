@@ -17,6 +17,12 @@
   fill: none !important;
 }
 
+/* Самый приоритетный стиль для home иконки */
+body .tab-btn.active[data-tab="tab-overview"] svg path {
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
 /* Стили для кнопок периодичности */
 .toggle-container label {
   color: white !important;

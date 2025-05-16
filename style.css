@@ -756,6 +756,13 @@ body.telegram-app {
   color: var(--text-color);
 }
 
+/* Принудительный стиль для иконки главной вкладки */
+.tab-btn.active[data-tab="tab-overview"] svg path {
+  stroke: white !important;
+  fill: none !important;
+  color: white !important;
+}
+
 /* Modal */
 .modal {
   position: fixed;
