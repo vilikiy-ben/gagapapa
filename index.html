@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="MobileOptimized" content="176">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SubsViewer</title>
+  <!-- Telegram MiniApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Загрузочный экран -->
+    <div class="loading">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Главный контейнер -->
+    <div class="app-container">
+      <!-- Верхняя панель -->
+      <div class="app-header">
+        <div class="app-title-container">
+          <div class="app-logo">📅</div>
+          <h1 class="app-title">SubsViewer</h1>
+        </div>
+      </div>
+      
+      <!-- Общая сумма -->
+      <div class="totals-banner">
+        <div class="totals-item">
+          <div class="totals-label">В месяц</div>
+          <div class="totals-value" id="monthly-total">$0</div>
+        </div>
+        <div class="totals-divider"></div>
+        <div class="totals-item">
+          <div class="totals-label">В год</div>
+          <div class="totals-value" id="yearly-total">$0</div>
+        </div>
+      </div>
+      
+      <!-- Основной контент с табами -->
+      <div class="tab-content" id="tab-content">
+        <!-- Таб 1: Главная / Обзор -->
+        <div class="tab-pane active" id="tab-overview">
+          <!-- Ближайшие платежи -->
+          <div class="section">
+            <h2 class="section-title">Ближайшие платежи</h2>
+            <div class="upcoming-payments" id="upcoming-payments">
+              <!-- Будет заполнено динамически -->
+              <div class="empty-list-message">Нет предстоящих платежей</div>
+            </div>
+          </div>
+          
+          <!-- Все подписки в виде карточек -->
+          <div class="section">
+            <h2 class="section-title" id="all-subscriptions-title">Все подписки (0)</h2>
+            <div class="subscription-cards" id="subscriptions-list">
+              <!-- Будет заполнено динамически -->
+              <div class="empty-list-message" id="empty-subscriptions-message">Нет активных подписок</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Таб 2: Календарь -->
+        <div class="tab-pane" id="tab-calendar">
+          <div class="section">
+            <div class="calendar-container" id="calendar-container">
+              <!-- Календарь будет добавлен здесь динамически -->
+            </div>
+            
+            <div class="daily-subscriptions" id="daily-subscriptions">
+              <!-- Подписки на выбранный день будут здесь -->
+              <div class="empty-list-message">Выберите дату в календаре</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Таб 3: Статистика -->
+        <div class="tab-pane" id="tab-stats">
+          <div class="section">
+            <h2 class="section-title">Статистика платежей</h2>
+            
+            <div class="stats-cards">
+              <div class="stats-card">
+                <div class="stats-title">Распределение</div>
+                <div class="stats-chart" id="distribution-chart">
+                  <div class="placeholder-chart">
+                    <div class="chart-bar" style="height: 40%; background-color: #e74c3c;"></div>
+                    <div class="chart-bar" style="height: 70%; background-color: #3498db;"></div>
+                    <div class="chart-bar" style="height: 30%; background-color: #2ecc71;"></div>
+                    <div class="chart-bar" style="height: 60%; background-color: #f1c40f;"></div>
+                    <div class="chart-bar" style="height: 50%; background-color: #9b59b6;"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="stats-card">
+                <div class="stats-title">Типы платежей</div>
+                <div class="payment-types">
+                  <div class="payment-type-item">
+                    <div class="payment-type-label">Ежемесячные</div>
+                    <div class="payment-type-value" id="monthly-count">0</div>
+                  </div>
+                  <div class="payment-type-item">
+                    <div class="payment-type-label">Ежегодные</div>
+                    <div class="payment-type-value" id="yearly-count">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Кнопка добавления (плавающая) -->
+      <button class="fab-button" id="add-subscription-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM12 7.5C12.4142 7.5 12.75 7.83579 12.75 8.25V11.25H15.75C16.1642 11.25 16.5 11.5858 16.5 12C16.5 12.4142 16.1642 12.75 15.75 12.75H12.75V15.75C12.75 16.1642 12.4142 16.5 12 16.5C11.5858 16.5 11.25 16.1642 11.25 15.75V12.75H8.25C7.83579 12.75 7.5 12.4142 7.5 12C7.5 11.5858 7.83579 11.25 8.25 11.25H11.25V8.25C11.25 7.83579 11.5858 7.5 12 7.5Z" fill="currentColor"/>
+        </svg>
+      </button>
+      
+      <!-- Навигация по табам -->
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-overview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12.7596C5 11.4019 5 10.723 5.27446 10.1262C5.54892 9.52949 6.06437 9.08769 7.09525 8.20407L8.09525 7.34693C9.95857 5.7498 10.8902 4.95123 12 4.95123C13.1098 4.95123 14.0414 5.7498 15.9047 7.34693L16.9047 8.20407C17.9356 9.08769 18.4511 9.52949 18.7255 10.1262C19 10.723 19 11.4019 19 12.7596V17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17V12.7596Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14.5 21V16C14.5 15.4477 14.0523 15 13.5 15H10.5C9.94772 15 9.5 15.4477 9.5 16V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-calendar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="6" width="18" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M3 10C3 8.11438 3 7.17157 3.58579 6.58579C4.17157 6 5.11438 6 7 6H17C18.8856 6 19.8284 6 20.4142 6.58579C21 7.17157 21 8.11438 21 10H3Z" fill="currentColor" fill-opacity="0.2"/>
+            <path d="M7 3V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M17 3V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="7" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="11" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="15" y="12" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="7" y="16" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="11" y="16" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="15" y="16" width="2" height="2" rx="0.5" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-stats">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 21H4.6C4.03995 21 3.75992 21 3.54601 20.891C3.35785 20.7951 3.20487 20.6422 3.10899 20.454C3 20.2401 3 19.9601 3 19.4V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M21 7L17.5 10.5L13 6L7 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17 7H21V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Форма добавления/редактирования подписки (скрытая по умолчанию) -->
+      <div class="modal" id="subscription-form-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="form-title" id="form-title">Добавить подписку</h3>
+            <button class="close-btn" id="close-form-btn">&times;</button>
+          </div>
+          <form id="subscription-form">
+            <input type="hidden" id="subscription-id" value="">
+            <div class="form-group">
+              <label for="name">Название</label>
+              <input type="text" id="name" placeholder="например, Netflix" required>
+            </div>
+            <div class="form-group">
+              <label for="price">Цена, $</label>
+              <input type="number" id="price" placeholder="например, 20" min="0" step="0.01" required>
+            </div>
+            <div class="form-group toggle-group">
+              <label>Периодичность</label>
+              <div class="toggle-container">
+                <input type="radio" id="monthly" name="period" value="monthly" checked>
+                <label for="monthly">Ежемесячно</label>
+                <input type="radio" id="yearly" name="period" value="yearly">
+                <label for="yearly">Ежегодно</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="billing-date">Дата списания</label>
+              <input type="date" id="billing-date" required>
+            </div>
+            <div class="form-group">
+              <label for="color">Цвет</label>
+              <div class="color-options" id="color-options">
+                <div class="color-option" data-color="#e74c3c" style="background-color: #e74c3c;"></div>
+                <div class="color-option" data-color="#2ecc71" style="background-color: #2ecc71;"></div>
+                <div class="color-option" data-color="#3498db" style="background-color: #3498db;"></div>
+                <div class="color-option" data-color="#9b59b6" style="background-color: #9b59b6;"></div>
+                <div class="color-option" data-color="#f1c40f" style="background-color: #f1c40f;"></div>
+                <div class="color-option" data-color="#e67e22" style="background-color: #e67e22;"></div>
+                <div class="color-option" data-color="#1abc9c" style="background-color: #1abc9c;"></div>
+                <div class="color-option" data-color="#34495e" style="background-color: #34495e;"></div>
+              </div>
+              <input type="hidden" id="color" value="#3498db">
+            </div>
+            <div class="form-actions">
+              <button type="button" class="cancel-btn" id="cancel-form-btn">Отмена</button>
+              <button type="submit" class="submit-btn" id="form-submit-btn">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Модальное окно подтверждения удаления -->
+      <div class="modal" id="confirm-delete-modal">
+        <div class="modal-content confirm-modal">
+          <div class="confirm-title">Удалить подписку?</div>
+          <div class="confirm-message">Вы уверены, что хотите удалить подписку? Это действие нельзя отменить.</div>
+          <div class="confirm-actions">
+            <button class="cancel-btn" id="cancel-delete-btn">Отмена</button>
+            <button class="danger-btn" id="confirm-delete-btn">Удалить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html> 
