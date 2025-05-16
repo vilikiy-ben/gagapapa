@@ -58,7 +58,6 @@ let tg = window.Telegram?.WebApp;
 
 if (tg) {
   tg.expand();
-  tg.disableVerticalSwipes(); // Отключаем стандартный свайп вниз для закрытия приложения
   document.body.classList.add('telegram-app');
   
   // Используем фиксированные цвета приложения, а не цвета темы Telegram
