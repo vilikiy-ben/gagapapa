@@ -35,7 +35,25 @@ if (tg) {
         btn.style.color = 'white';
         const svg = btn.querySelector('svg');
         if (svg) svg.style.color = 'white';
+        
+        // Дополнительная проверка для иконки главной вкладки
+        if (btn.getAttribute('data-tab') === 'tab-overview') {
+          const paths = btn.querySelectorAll('svg path');
+          paths.forEach(path => {
+            path.style.stroke = 'white';
+            path.style.color = 'white';
+            path.style.fill = 'none';
+          });
+        }
       });
+      
+      // Исправление для кнопки добавления подписки
+      const fabButton = document.querySelector('.fab-button');
+      if (fabButton) {
+        fabButton.style.backgroundColor = '#4a90e2';
+        const svg = fabButton.querySelector('svg');
+        if (svg) svg.style.color = 'white';
+      }
       
       document.querySelectorAll('input[type="date"]').forEach(input => {
         input.style.color = 'white';
@@ -119,6 +137,9 @@ async function initApp() {
         label.style.backgroundColor = '#4a90e2';
         label.style.color = 'white';
       });
+      
+      // Вызываем функцию принудительного применения стилей
+      forceMobileStyles();
     }, 500);
   }
 }

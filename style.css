@@ -1081,6 +1081,7 @@ input[type="date"]:focus {
 .fab-button svg {
   width: 28px;
   height: 28px;
+  color: white;
   transition: all 0.3s ease;
 }
 

@@ -10,6 +10,13 @@
   opacity: 1 !important;
 }
 
+/* Исправление для активной иконки home (иконка дома/обзора) */
+.tab-btn.active[data-tab="tab-overview"] svg path {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+  fill: none !important;
+}
+
 /* Стили для кнопок периодичности */
 .toggle-container label {
   color: white !important;
@@ -45,7 +52,7 @@ input[type="date"] {
 
 /* Дополнительные исправления для надежности */
 .tab-btn.active::before {
-  background-color: rgba(255, 255, 255, 0.3) !important;
+  background-color: rgba(74, 144, 226, 0.3) !important;
 }
 
 .telegram-app .submit-btn {
