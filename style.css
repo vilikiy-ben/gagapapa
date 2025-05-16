@@ -315,18 +315,20 @@ body.telegram-app {
   top: 0;
   bottom: 0; 
   width: 40px; /* Ширина зоны "затухания" */
-  z-index: 2;  /* Чтобы быть поверх карточек, но не мешать другим элементам управления */
+  z-index: 10;  /* Увеличим z-index для теста */
   pointer-events: none; /* Чтобы не перехватывать клики/скролл */
 }
 
 .upcoming-payments.has-scroll .upcoming-payments-wrapper::before {
   left: 0;
-  background: linear-gradient(to right, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); /* От фона страницы к прозрачному */
+  /* background: linear-gradient(to right, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
+  background: red; /* Тестовый фон */
 }
 
 .upcoming-payments.has-scroll .upcoming-payments-wrapper::after {
   right: 0;
-  background: linear-gradient(to left, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); /* От фона страницы к прозрачному */
+  /* background: linear-gradient(to left, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
+  background: blue; /* Тестовый фон */
 }
 
 .upcoming-payments-scroll {
