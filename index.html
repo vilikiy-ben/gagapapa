@@ -272,20 +272,26 @@
             day.style.color = 'white';
           });
           
-          // Для активных вкладок
-          const activeTabs = document.querySelectorAll('.tab-btn.active');
-          activeTabs.forEach(tab => {
-            tab.style.color = 'white';
-            const svg = tab.querySelector('svg');
-            if (svg) svg.style.color = 'white';
-            
-            // Специально для иконки главной вкладки
-            if (tab.getAttribute('data-tab') === 'tab-overview') {
-              const paths = tab.querySelectorAll('svg path');
-              paths.forEach(path => {
-                path.style.stroke = 'white';
-                path.style.fill = 'none';
-                path.style.color = 'white';
+          // Все вкладки иконок делаем одного цвета
+          const allTabs = document.querySelectorAll('.tab-btn');
+          allTabs.forEach(tab => {
+            if (tab.classList.contains('active')) {
+              tab.style.color = 'white';
+              const elements = tab.querySelectorAll('svg, svg *, path, rect');
+              elements.forEach(el => {
+                el.style.color = 'white';
+                el.style.stroke = 'white';
+                el.style.fill = tab.getAttribute('data-tab') === 'tab-calendar' ? 'white' : 'none';
+                el.style.opacity = '1';
+              });
+            } else {
+              tab.style.color = 'rgba(255,255,255,0.7)';
+              const elements = tab.querySelectorAll('svg, svg *, path, rect');
+              elements.forEach(el => {
+                el.style.color = 'rgba(255,255,255,0.7)';
+                el.style.stroke = 'rgba(255,255,255,0.7)';
+                el.style.fill = tab.getAttribute('data-tab') === 'tab-calendar' ? 'rgba(255,255,255,0.7)' : 'none';
+                el.style.opacity = '0.7';
               });
             }
           });

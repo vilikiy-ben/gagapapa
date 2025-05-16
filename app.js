@@ -31,18 +31,37 @@ if (tg) {
         day.style.color = 'white';
       });
       
-      document.querySelectorAll('.tab-btn.active').forEach(btn => {
-        btn.style.color = 'white';
-        const svg = btn.querySelector('svg');
-        if (svg) svg.style.color = 'white';
-        
-        // Дополнительная проверка для иконки главной вкладки
-        if (btn.getAttribute('data-tab') === 'tab-overview') {
-          const paths = btn.querySelectorAll('svg path');
-          paths.forEach(path => {
-            path.style.stroke = 'white';
-            path.style.color = 'white';
-            path.style.fill = 'none';
+      // Обработка всех иконок вкладок для единого стиля
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.classList.contains('active')) {
+          btn.style.color = 'white';
+          // Обрабатываем все SVG элементы в активной вкладке
+          const svgElements = btn.querySelectorAll('svg, svg *, path, rect');
+          svgElements.forEach(el => {
+            el.style.color = 'white';
+            el.style.stroke = 'white';
+            // Для иконки календаря нужен fill=white, для остальных fill=none
+            if (btn.getAttribute('data-tab') === 'tab-calendar') {
+              el.style.fill = 'white';
+            } else {
+              el.style.fill = 'none';
+            }
+            el.style.opacity = '1';
+          });
+        } else {
+          btn.style.color = 'rgba(255,255,255,0.7)';
+          // Обрабатываем все SVG элементы в неактивной вкладке
+          const svgElements = btn.querySelectorAll('svg, svg *, path, rect');
+          svgElements.forEach(el => {
+            el.style.color = 'rgba(255,255,255,0.7)';
+            el.style.stroke = 'rgba(255,255,255,0.7)';
+            // Для иконки календаря нужен fill, для остальных fill=none
+            if (btn.getAttribute('data-tab') === 'tab-calendar') {
+              el.style.fill = 'rgba(255,255,255,0.7)';
+            } else {
+              el.style.fill = 'none';
+            }
+            el.style.opacity = '0.7';
           });
         }
       });
