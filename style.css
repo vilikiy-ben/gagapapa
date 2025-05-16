@@ -308,8 +308,9 @@ body.telegram-app {
 }
 
 /* Стили для эффекта затухания по краям карусели */
-.upcoming-payments.has-scroll .upcoming-payments-wrapper::before,
-.upcoming-payments.has-scroll .upcoming-payments-wrapper::after {
+/* Убираем .has-scroll из селектора для теста */
+.upcoming-payments-wrapper::before,
+.upcoming-payments-wrapper::after {
   content: '';
   position: absolute;
   top: 0;
@@ -319,13 +320,15 @@ body.telegram-app {
   pointer-events: none; /* Чтобы не перехватывать клики/скролл */
 }
 
-.upcoming-payments.has-scroll .upcoming-payments-wrapper::before {
+/* Убираем .has-scroll из селектора для теста */
+.upcoming-payments-wrapper::before {
   left: 0;
   /* background: linear-gradient(to right, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
   background: red; /* Тестовый фон */
 }
 
-.upcoming-payments.has-scroll .upcoming-payments-wrapper::after {
+/* Убираем .has-scroll из селектора для теста */
+.upcoming-payments-wrapper::after {
   right: 0;
   /* background: linear-gradient(to left, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
   background: blue; /* Тестовый фон */
