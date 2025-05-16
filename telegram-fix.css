@@ -1,5 +1,15 @@
 /* Специальные стили для устранения проблем в мобильной версии Telegram */
 
+/* Устранение эффекта выделения при тапе */
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+}
+
+/* Сброс цветов фокуса для интерактивных элементов */
+button:focus, .tab-btn:focus, .calendar-day:focus {
+  outline: none !important;
+}
+
 /* Общие исправления */
 .tab-btn.active {
   color: #4a90e2 !important;
@@ -8,6 +18,13 @@
 .tab-btn.active svg {
   color: #4a90e2 !important;
   opacity: 1 !important;
+}
+
+/* Исправление фона для индикатора активной вкладки - делаем его синим */
+.tab-btn.active::before,
+.tab-indicator {
+  background-color: #4a90e2 !important;
+  opacity: 0.3 !important;
 }
 
 /* Стили для кнопок периодичности */
@@ -43,16 +60,6 @@ input[type="date"] {
   background-color: rgba(30, 30, 30, 0.9) !important;
 }
 
-/* Дополнительные исправления для надежности */
-.tab-btn.active::before {
-  background-color: rgba(74, 144, 226, 0.3) !important;
-}
-
-.telegram-app .submit-btn {
-  background-color: #4a90e2 !important;
-  color: white !important;
-}
-
 /* Фикс для выпадающих меню и списков */
 select, option {
   color: white !important;
@@ -64,6 +71,12 @@ label, .form-title, .section-title {
   color: #ffffff !important;
 }
 
+/* Фикс для кнопки отправки формы */
+.telegram-app .submit-btn {
+  background-color: #4a90e2 !important;
+  color: white !important;
+}
+
 /* Более глобальные селекторы для переопределения стилей Telegram */
 body.telegram-app * {
   font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
@@ -72,19 +85,18 @@ body.telegram-app * {
 /* Исправление плюсика в кнопке добавления подписки */
 .fab-button {
   background-color: #4a90e2 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
+/* Улучшаем видимость плюсика - делаем его белым и более жирным */
 .fab-button svg {
   color: white !important;
   fill: white !important;
   stroke: white !important;
   opacity: 1 !important;
-}
-
-/* Изменение цвета окружности активной вкладки для лучшей видимости */
-.tab-btn.active::before {
-  background-color: rgba(74, 144, 226, 0.3) !important;
-  opacity: 1 !important;
+  width: 30px !important;
+  height: 30px !important;
+  stroke-width: 0.5 !important;
 }
 
 /* Добавляем дополнительное решение для контраста */
@@ -111,10 +123,11 @@ body.telegram-app * {
   .fab-button svg {
     color: white !important;
     fill: white !important;
+    stroke-width: 0 !important;
   }
   
   .tab-btn.active::before {
-    opacity: 1 !important;
+    opacity: 0.3 !important;
     background-color: #4a90e2 !important;
   }
 } 

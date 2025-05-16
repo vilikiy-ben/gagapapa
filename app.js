@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.2";
+const APP_VERSION = "v1.0.3";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -330,7 +330,8 @@ function switchTab(tabId) {
       indicator.style.position = 'absolute';
       indicator.style.width = '38px';
       indicator.style.height = '38px';
-      indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
+      indicator.style.backgroundColor = '#4a90e2';
+      indicator.style.opacity = '0.3';
       indicator.style.borderRadius = '50%';
       indicator.style.zIndex = '-1';
       indicator.style.top = '50%';

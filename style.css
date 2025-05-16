@@ -1138,4 +1138,22 @@ input[type="date"]:focus {
 
 .telegram-app .app-version {
   color: var(--tg-theme-hint-color, var(--text-muted));
+}
+
+/* Общие правила для устранения эффекта "залипания" после тапа */
+button, input, .tab-btn, .calendar-day, .subscription-card, .fab-button {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  outline: none !important;
+}
+
+button:focus, .tab-btn:focus, .calendar-day:focus {
+  outline: none !important;
+}
+
+/* Решение для Safari и iOS */
+@supports (-webkit-touch-callout: none) {
+  button, input, .tab-btn, .calendar-day, .subscription-card, .fab-button {
+    -webkit-tap-highlight-color: transparent;
+    outline: none !important;
+  }
 } 
