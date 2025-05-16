@@ -35,12 +35,15 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
 /* Исправления для избежания залипания стилей */
 .tab-btn {
   color: var(--text-muted) !important;
+  position: relative !important;
 }
 
+/* Новый подход - SVG всегда должен быть поверх индикатора */
 .tab-btn svg {
   color: var(--text-muted) !important;
   position: relative !important;
-  z-index: 5 !important;
+  z-index: 10 !important;  /* Высокое значение z-index */
+  will-change: transform !important; /* Может помочь с производительностью */
 }
 
 .tab-btn.active {
@@ -51,15 +54,29 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   color: #4a90e2 !important;
   opacity: 1 !important;
   position: relative !important;
-  z-index: 5 !important;
+  z-index: 10 !important;  /* Высокое значение z-index */
+  transform: scale(1.05) !important; /* Делаем активную иконку немного больше */
 }
 
-/* Исправление фона для индикатора активной вкладки - делаем его синим */
+/* Исправление фона для индикатора активной вкладки */
 .tab-btn.active::before,
 .tab-indicator {
-  background-color: #4a90e2 !important;
-  opacity: 0.3 !important;
-  z-index: 1 !important;
+  content: '' !important;
+  position: absolute !important;
+  width: 38px !important;
+  height: 38px !important;
+  background-color: rgba(74, 144, 226, 0.3) !important;
+  border-radius: 50% !important;
+  z-index: 1 !important;  /* Низкое значение z-index */
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important; /* Индикатор не должен перехватывать события */
+}
+
+/* Принудительно скрываем все фоновые элементы, если они попадают "перед" SVG элементом в DOM */
+.tab-btn.active svg ~ .tab-indicator {
+  display: none !important;
 }
 
 /* Стили для кнопок периодичности */

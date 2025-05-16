@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.6";
+const APP_VERSION = "v1.0.7";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -56,31 +56,46 @@ if (tg) {
         day.style.color = 'white';
       });
       
+      // НОВЫЙ ПОДХОД: Для активных вкладок - сначала очищаем все индикаторы
+      document.querySelectorAll('.tab-indicator').forEach(indicator => {
+        indicator.remove();
+      });
+      
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
+        // Очищаем все inline стили кнопки и восстанавливаем чистое состояние
+        btn.style.cssText = '';
+        btn.style.position = 'relative';
         btn.style.color = '#4a90e2';
+
+        // Получаем SVG и задаем ему явные стили
         const svg = btn.querySelector('svg');
         if (svg) {
+          // Полностью очищаем стили SVG
+          svg.style.cssText = '';
           svg.style.color = '#4a90e2';
-          // Добавляем высокий z-index для SVG и позиционирование, чтобы он был над индикатором
+          svg.style.opacity = '1';
           svg.style.position = 'relative';
-          svg.style.zIndex = '5';
+          svg.style.zIndex = '10'; // Очень высокий z-index
+          svg.style.transform = 'scale(1.05)'; // Делаем иконку немного больше
         }
-        // Явное добавление видимого индикатора активности
-        btn.style.position = 'relative';
-        const tabIndicator = btn.querySelector('.tab-indicator');
-        if (!tabIndicator) {
+        
+        // Добавляем фоновый индикатор ПЕРЕД SVG, чтобы он был ниже в DOM порядке
+        if (svg && !btn.querySelector('.tab-indicator')) {
           const indicator = document.createElement('span');
           indicator.className = 'tab-indicator';
+          indicator.style.cssText = '';
           indicator.style.position = 'absolute';
           indicator.style.width = '38px';
           indicator.style.height = '38px';
           indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
           indicator.style.borderRadius = '50%';
-          indicator.style.zIndex = '1'; // Меняем на положительный z-index, но ниже, чем у SVG
           indicator.style.top = '50%';
           indicator.style.left = '50%';
           indicator.style.transform = 'translate(-50%, -50%)';
-          btn.appendChild(indicator);
+          indicator.style.zIndex = '1'; // Низкий z-index
+          
+          // Вставляем индикатор ПЕРЕД svg, чтобы svg был выше в порядке DOM
+          btn.insertBefore(indicator, svg);
         }
       });
       
@@ -322,7 +337,7 @@ function setupEventListeners() {
   });
 }
 
-// Переключение между табами
+// Переключение между табами - полностью меняем подход к индикаторам
 function switchTab(tabId) {
   // Убираем активный класс со всех кнопок и табов
   tabButtons.forEach(btn => {
@@ -349,32 +364,36 @@ function switchTab(tabId) {
     selectedButton.classList.add('active');
     selectedPane.classList.add('active');
     
-    // Добавляем явные стили для мобильных устройств
+    // Установка базовых стилей кнопки
+    selectedButton.style.position = 'relative';
     selectedButton.style.color = '#4a90e2';
+    
+    // Получаем SVG и устанавливаем его явные стили
     const svg = selectedButton.querySelector('svg');
     if (svg) {
       svg.style.color = '#4a90e2';
-      // Важно: устанавливаем более высокий z-index для SVG, чтобы он был поверх индикатора
+      svg.style.opacity = '1';
       svg.style.position = 'relative';
-      svg.style.zIndex = '5';
+      svg.style.zIndex = '10'; // Очень высокий z-index
+      svg.style.transform = 'scale(1.05)'; // Делаем иконку немного больше
     }
     
-    // Добавляем видимый индикатор активности для мобильных
-    if (!selectedButton.querySelector('.tab-indicator')) {
+    // Добавляем индикатор ПЕРЕД SVG (важно для порядка DOM)
+    if (svg && !selectedButton.querySelector('.tab-indicator')) {
       const indicator = document.createElement('span');
       indicator.className = 'tab-indicator';
       indicator.style.position = 'absolute';
       indicator.style.width = '38px';
       indicator.style.height = '38px';
-      indicator.style.backgroundColor = '#4a90e2';
-      indicator.style.opacity = '0.3';
+      indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
       indicator.style.borderRadius = '50%';
-      indicator.style.zIndex = '1'; // Устанавливаем положительный z-index, но ниже чем у SVG
+      indicator.style.zIndex = '1'; // Низкий z-index
       indicator.style.top = '50%';
       indicator.style.left = '50%';
       indicator.style.transform = 'translate(-50%, -50%)';
-      selectedButton.style.position = 'relative';
-      selectedButton.appendChild(indicator);
+      
+      // Вставляем индикатор ПЕРЕД svg, чтобы svg был выше в порядке DOM
+      selectedButton.insertBefore(indicator, svg);
     }
   }
 }
