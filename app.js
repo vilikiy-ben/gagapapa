@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.5";
+const APP_VERSION = "v1.0.6";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -21,46 +21,32 @@ if (tg) {
   document.documentElement.style.setProperty('--tg-theme-button-color', '#4a90e2', 'important');
   document.documentElement.style.setProperty('--tg-theme-button-text-color', 'white', 'important');
   
-  // Функция для принудительного применения стилей на мобильных устройствах
   const forceMobileStyles = () => {
-    // Определяем мобильное устройство
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
     if (isMobile) {
-      // Сначала сбрасываем все встроенные стили на календаре
       document.querySelectorAll('.calendar-day').forEach(day => {
         if (!day.classList.contains('selected')) {
           day.removeAttribute('style');
         }
       });
-      
-      // Сбрасываем стили вкладок
       document.querySelectorAll('.tab-btn:not(.active)').forEach(btn => {
         btn.removeAttribute('style');
         const svg = btn.querySelector('svg');
         if (svg) svg.removeAttribute('style');
       });
-      
-      // Теперь применяем нужные стили
       document.querySelectorAll('.toggle-container label').forEach(label => {
         label.style.color = 'white';
       });
-      
       document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
         label.style.backgroundColor = '#4a90e2';
         label.style.color = 'white';
       });
-      
       document.querySelectorAll('.calendar-day.selected').forEach(day => {
         day.style.backgroundColor = '#4a90e2';
         day.style.color = 'white';
+        day.style.fontWeight = '600';
       });
-      
       document.querySelectorAll('.tab-btn.active').forEach(btn => {
-        btn.style.color = '#4a90e2';
-        const svg = btn.querySelector('svg');
-        if (svg) svg.style.color = '#4a90e2';
-        // Явное добавление видимого индикатора активности
         btn.style.position = 'relative';
         const tabIndicator = btn.querySelector('.tab-indicator');
         if (!tabIndicator) {
@@ -69,7 +55,8 @@ if (tg) {
           indicator.style.position = 'absolute';
           indicator.style.width = '38px';
           indicator.style.height = '38px';
-          indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
+          indicator.style.backgroundColor = '#4a90e2';
+          indicator.style.opacity = '0.3';
           indicator.style.borderRadius = '50%';
           indicator.style.zIndex = '-1';
           indicator.style.top = '50%';
@@ -78,12 +65,9 @@ if (tg) {
           btn.appendChild(indicator);
         }
       });
-      
       document.querySelectorAll('input[type="date"]').forEach(input => {
         input.style.color = 'white';
       });
-      
-      // Явное исправление для кнопки добавления (fab-button)
       document.querySelectorAll('.fab-button').forEach(btn => {
         btn.style.backgroundColor = '#4a90e2';
         btn.style.color = 'white';
@@ -97,18 +81,11 @@ if (tg) {
       });
     }
   };
-  
-  // Вызываем функцию сразу и добавляем в список обработчиков событий
   forceMobileStyles();
-  
-  // Добавляем наблюдателя за изменениями DOM
   const observer = new MutationObserver(() => {
     forceMobileStyles();
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  
-  // Добавляем временную задержку для повторного применения стилей
-  // после полной загрузки (часто помогает в мобильных WebView)
   setTimeout(forceMobileStyles, 1000);
   window.addEventListener('load', () => {
     forceMobileStyles();
@@ -319,15 +296,12 @@ function setupEventListeners() {
 
 // Переключение между табами
 function switchTab(tabId) {
-  // Убираем активный класс со всех кнопок и табов
   tabButtons.forEach(btn => {
     btn.classList.remove('active');
-    // Удаляем индикаторы с предыдущих активных вкладок
     const existingIndicator = btn.querySelector('.tab-indicator');
     if (existingIndicator) {
       existingIndicator.remove();
     }
-    // Полностью сбрасываем встроенные стили
     btn.removeAttribute('style');
     const svg = btn.querySelector('svg');
     if (svg) {
@@ -336,7 +310,6 @@ function switchTab(tabId) {
   });
   tabPanes.forEach(pane => pane.classList.remove('active'));
   
-  // Добавляем активный класс к выбранной кнопке и табу
   const selectedButton = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
   const selectedPane = document.getElementById(tabId);
   
@@ -344,14 +317,6 @@ function switchTab(tabId) {
     selectedButton.classList.add('active');
     selectedPane.classList.add('active');
     
-    // Добавляем явные стили для мобильных устройств
-    selectedButton.style.color = '#4a90e2';
-    const svg = selectedButton.querySelector('svg');
-    if (svg) {
-      svg.style.color = '#4a90e2';
-    }
-    
-    // Добавляем видимый индикатор активности для мобильных
     if (!selectedButton.querySelector('.tab-indicator')) {
       const indicator = document.createElement('span');
       indicator.className = 'tab-indicator';
@@ -963,7 +928,6 @@ function renderCalendar(date) {
 
 // Настройка обработчиков событий для календаря
 function setupCalendarEventListeners() {
-  // Кнопки навигации
   const prevMonthBtn = calendarContainer.querySelector('.prev-month');
   const nextMonthBtn = calendarContainer.querySelector('.next-month');
   
@@ -981,50 +945,32 @@ function setupCalendarEventListeners() {
     renderCalendar(selectedDate);
   });
   
-  // Клик по ячейке календаря
   const dayElements = calendarContainer.querySelectorAll('.calendar-day');
   dayElements.forEach(day => {
     day.addEventListener('click', () => {
-      // Игнорируем дни других месяцев
       if (day.classList.contains('other-month')) return;
-      
-      // Обновляем выбранную дату
       const dateString = day.getAttribute('data-date');
       if (dateString) {
         selectedDate = new Date(dateString);
-        
-        // Обновляем стили выбранного дня
-        // Сначала сбрасываем все встроенные стили со всех дней
         dayElements.forEach(d => {
           d.classList.remove('selected');
-          d.removeAttribute('style'); // Важно: удаляем все встроенные стили
+          d.removeAttribute('style'); 
         });
-        
-        // Теперь добавляем класс selected к выбранному дню
         day.classList.add('selected');
-        
-        // Применяем явные стили для мобильной версии
-        if (tg) {
+        if (tg) { // Применяем стили только если это Telegram WebApp
           day.style.backgroundColor = '#4a90e2';
           day.style.color = 'white';
           day.style.fontWeight = '600';
         }
-        
-        // Обновляем список подписок на этот день
         renderDailySubscriptions();
       }
     });
   });
-  
-  // Применяем принудительные стили для мобильной версии
   if (tg) {
     dayElements.forEach(day => {
-      // Сначала сбрасываем стили для всех дней
       if (!day.classList.contains('selected')) {
         day.removeAttribute('style');
       }
-      
-      // Теперь применяем стили только для выбранного дня
       if (day.classList.contains('selected')) {
         day.style.backgroundColor = '#4a90e2';
         day.style.color = 'white';
