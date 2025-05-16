@@ -35,10 +35,40 @@ if (tg) {
         btn.style.color = '#4a90e2';
         const svg = btn.querySelector('svg');
         if (svg) svg.style.color = '#4a90e2';
+        // Явное добавление видимого индикатора активности
+        btn.style.position = 'relative';
+        const tabIndicator = btn.querySelector('.tab-indicator');
+        if (!tabIndicator) {
+          const indicator = document.createElement('span');
+          indicator.className = 'tab-indicator';
+          indicator.style.position = 'absolute';
+          indicator.style.width = '38px';
+          indicator.style.height = '38px';
+          indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
+          indicator.style.borderRadius = '50%';
+          indicator.style.zIndex = '-1';
+          indicator.style.top = '50%';
+          indicator.style.left = '50%';
+          indicator.style.transform = 'translate(-50%, -50%)';
+          btn.appendChild(indicator);
+        }
       });
       
       document.querySelectorAll('input[type="date"]').forEach(input => {
         input.style.color = 'white';
+      });
+      
+      // Явное исправление для кнопки добавления (fab-button)
+      document.querySelectorAll('.fab-button').forEach(btn => {
+        btn.style.backgroundColor = '#4a90e2';
+        btn.style.color = 'white';
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.style.color = 'white';
+          svg.style.fill = 'white';
+          svg.style.stroke = 'white';
+          svg.style.opacity = '1';
+        }
       });
     }
   };
@@ -51,6 +81,14 @@ if (tg) {
     forceMobileStyles();
   });
   observer.observe(document.body, { childList: true, subtree: true });
+  
+  // Добавляем временную задержку для повторного применения стилей
+  // после полной загрузки (часто помогает в мобильных WebView)
+  setTimeout(forceMobileStyles, 1000);
+  window.addEventListener('load', () => {
+    forceMobileStyles();
+    setTimeout(forceMobileStyles, 500);
+  });
 }
 
 // Основные переменные приложения
@@ -251,7 +289,14 @@ function setupEventListeners() {
 // Переключение между табами
 function switchTab(tabId) {
   // Убираем активный класс со всех кнопок и табов
-  tabButtons.forEach(btn => btn.classList.remove('active'));
+  tabButtons.forEach(btn => {
+    btn.classList.remove('active');
+    // Удаляем индикаторы с предыдущих активных вкладок
+    const existingIndicator = btn.querySelector('.tab-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+  });
   tabPanes.forEach(pane => pane.classList.remove('active'));
   
   // Добавляем активный класс к выбранной кнопке и табу
@@ -261,6 +306,30 @@ function switchTab(tabId) {
   if (selectedButton && selectedPane) {
     selectedButton.classList.add('active');
     selectedPane.classList.add('active');
+    
+    // Добавляем явные стили для мобильных устройств
+    selectedButton.style.color = '#4a90e2';
+    const svg = selectedButton.querySelector('svg');
+    if (svg) {
+      svg.style.color = '#4a90e2';
+    }
+    
+    // Добавляем видимый индикатор активности для мобильных
+    if (!selectedButton.querySelector('.tab-indicator')) {
+      const indicator = document.createElement('span');
+      indicator.className = 'tab-indicator';
+      indicator.style.position = 'absolute';
+      indicator.style.width = '38px';
+      indicator.style.height = '38px';
+      indicator.style.backgroundColor = 'rgba(74, 144, 226, 0.3)';
+      indicator.style.borderRadius = '50%';
+      indicator.style.zIndex = '-1';
+      indicator.style.top = '50%';
+      indicator.style.left = '50%';
+      indicator.style.transform = 'translate(-50%, -50%)';
+      selectedButton.style.position = 'relative';
+      selectedButton.appendChild(indicator);
+    }
   }
 }
 
@@ -890,11 +959,29 @@ function setupCalendarEventListeners() {
         dayElements.forEach(d => d.classList.remove('selected'));
         day.classList.add('selected');
         
+        // Применяем явные стили для мобильной версии
+        if (tg) {
+          day.style.backgroundColor = '#4a90e2';
+          day.style.color = 'white';
+          day.style.fontWeight = '600';
+        }
+        
         // Обновляем список подписок на этот день
         renderDailySubscriptions();
       }
     });
   });
+  
+  // Применяем принудительные стили для мобильной версии
+  if (tg) {
+    dayElements.forEach(day => {
+      if (day.classList.contains('selected')) {
+        day.style.backgroundColor = '#4a90e2';
+        day.style.color = 'white';
+        day.style.fontWeight = '600';
+      }
+    });
+  }
 }
 
 // Проверка наличия подписок на дату
