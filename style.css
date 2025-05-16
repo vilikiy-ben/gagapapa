@@ -151,9 +151,11 @@ body.telegram-app {
 
 .app-logo img {
   display: block;
-  height: 30px;
-  width: 30px;
-  object-fit: contain;
+  height: 30px !important;
+  width: 30px !important;
+  min-height: 30px !important;
+  min-width: 30px !important;
+  object-fit: contain !important;
   max-height: 100%;
 }
 
