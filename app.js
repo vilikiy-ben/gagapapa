@@ -1,6 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Версия приложения
-const APP_VERSION = "v1.0.4";
+const APP_VERSION = "v1.0.5";
 
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
@@ -8,10 +8,18 @@ if (tg) {
   tg.expand();
   document.body.classList.add('telegram-app');
   
-  // Используем цвета темы Telegram
-  document.documentElement.style.setProperty('--primary-color', tg.themeParams.button_color || '#4a90e2');
-  document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color || '#e0e0e0');
-  document.documentElement.style.setProperty('--dark-bg', tg.themeParams.bg_color || '#0d0d0d');
+  // Используем фиксированные цвета вместо темы Telegram
+  document.documentElement.style.setProperty('--primary-color', '#4a90e2');
+  document.documentElement.style.setProperty('--text-color', '#e0e0e0');
+  document.documentElement.style.setProperty('--dark-bg', '#0d0d0d');
+  
+  // Перезаписываем CSS переменные темы Telegram для предотвращения их влияния
+  document.documentElement.style.setProperty('--tg-theme-bg-color', '#0d0d0d', 'important');
+  document.documentElement.style.setProperty('--tg-theme-text-color', '#e0e0e0', 'important');
+  document.documentElement.style.setProperty('--tg-theme-hint-color', '#999', 'important');
+  document.documentElement.style.setProperty('--tg-theme-link-color', '#4a90e2', 'important');
+  document.documentElement.style.setProperty('--tg-theme-button-color', '#4a90e2', 'important');
+  document.documentElement.style.setProperty('--tg-theme-button-text-color', 'white', 'important');
   
   // Функция для принудительного применения стилей на мобильных устройствах
   const forceMobileStyles = () => {

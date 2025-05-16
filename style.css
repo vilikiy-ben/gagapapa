@@ -53,45 +53,45 @@ body, html {
 
 /* Telegram Mini App specific styles */
 body.telegram-app {
-  background-color: var(--tg-theme-bg-color, var(--dark-bg));
-  color: var(--tg-theme-text-color, var(--text-color));
+  background-color: #0d0d0d !important;
+  color: #e0e0e0 !important;
 }
 
 .telegram-app .app-title {
-  color: var(--tg-theme-button-color, var(--primary-color));
+  color: #4a90e2 !important;
 }
 
 .telegram-app .app-logo {
-  color: var(--tg-theme-button-color, var(--primary-color));
+  color: #4a90e2 !important;
 }
 
 .telegram-app .submit-btn,
 .telegram-app .tab-btn.active {
-  background-color: var(--tg-theme-button-color, var(--primary-color));
-  color: var(--tg-theme-button-text-color, white) !important;
+  background-color: #4a90e2 !important;
+  color: white !important;
 }
 
 /* Fix для выбранных элементов в Telegram Mini App */
 .telegram-app .toggle-container input[type="radio"]:checked + label {
-  background-color: var(--tg-theme-button-color, var(--primary-color));
-  color: var(--tg-theme-button-text-color, white) !important;
-  border-color: var(--tg-theme-button-color, var(--primary-color));
+  background-color: #4a90e2 !important;
+  color: white !important;
+  border-color: #4a90e2 !important;
 }
 
 .telegram-app .calendar-day.selected {
-  background-color: var(--tg-theme-button-color, var(--primary-color));
-  color: var(--tg-theme-button-text-color, white) !important;
-  font-weight: 600;
+  background-color: #4a90e2 !important;
+  color: white !important;
+  font-weight: 600 !important;
 }
 
 .telegram-app .color-option.selected {
-  border-color: var(--tg-theme-button-text-color, white);
-  box-shadow: 0 0 0 2px var(--tg-theme-button-color, var(--primary-color));
+  border-color: white !important;
+  box-shadow: 0 0 0 2px #4a90e2 !important;
 }
 
 .telegram-app .tab-btn.active svg {
-  color: var(--tg-theme-button-text-color, white) !important;
-  opacity: 1;
+  color: white !important;
+  opacity: 1 !important;
 }
 
 /* App Container */

@@ -10,7 +10,29 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   outline: none !important;
 }
 
-/* Общие исправления */
+/* Фиксация цветов интерфейса - отключение влияния темы Telegram */
+:root.telegram-app, 
+.telegram-app {
+  /* Принудительно перезаписываем все переменные темы Telegram */
+  --tg-theme-bg-color: #0d0d0d !important;
+  --tg-theme-text-color: #e0e0e0 !important;
+  --tg-theme-hint-color: #999 !important;
+  --tg-theme-link-color: #4a90e2 !important;
+  --tg-theme-button-color: #4a90e2 !important;
+  --tg-theme-button-text-color: white !important;
+  --tg-theme-secondary-bg-color: #161616 !important;
+}
+
+/* Принудительное применение цветов для основных элементов интерфейса */
+.telegram-app .primary-color,
+.telegram-app .app-title,
+.telegram-app .app-logo,
+.telegram-app .tab-btn.active,
+.telegram-app .tab-btn.active svg {
+  color: #4a90e2 !important;
+}
+
+/* Исправления для избежания залипания стилей */
 .tab-btn {
   color: var(--text-muted) !important;
 }
@@ -96,7 +118,7 @@ body.telegram-app * {
   font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-/* Исправление плюсика в кнопке добавления подписки */
+/* Исправление плюсика в кнопке добавления подписки - принудительный фиксированный цвет*/
 .fab-button {
   background-color: #4a90e2 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
@@ -113,23 +135,23 @@ body.telegram-app * {
   stroke-width: 0.5 !important;
 }
 
-/* Добавляем дополнительное решение для контраста */
+/* Принудительно заменяем все Theme CSS переменные Telegram */
 .telegram-app .fab-button {
-  background-color: var(--tg-theme-button-color, #4a90e2) !important;
-  color: var(--tg-theme-button-text-color, white) !important;
+  background-color: #4a90e2 !important;
+  color: white !important;
 }
 
 .telegram-app .fab-button svg {
-  color: var(--tg-theme-button-text-color, white) !important;
-  fill: var(--tg-theme-button-text-color, white) !important;
-  stroke: var(--tg-theme-button-text-color, white) !important;
+  color: white !important;
+  fill: white !important;
+  stroke: white !important;
 }
 
 /* Дополнительное усиление контрастности при наведении на кнопку (для сенсорного события) */
 .telegram-app .fab-button:active,
 .telegram-app .fab-button:hover,
 .telegram-app .fab-button:focus {
-  background-color: var(--tg-theme-button-color, #4a90e2) !important;
+  background-color: #4a90e2 !important;
 }
 
 /* Дополнительное решение для мобильного Safari */
