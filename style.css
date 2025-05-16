@@ -1125,4 +1125,17 @@ input[type="date"]:focus {
 
 .danger-btn:hover {
   background-color: #c0392b;
+}
+
+/* Индикатор версии */
+.app-version {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  padding-right: var(--space-md);
+  font-weight: 500;
+}
+
+.telegram-app .app-version {
+  color: var(--tg-theme-hint-color, var(--text-muted));
 } 

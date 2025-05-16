@@ -1,4 +1,7 @@
 // SubsViewer - мини-приложение для Telegram
+// Версия приложения
+const APP_VERSION = "v1.0.2";
+
 // Инициализация Telegram Mini App
 let tg = window.Telegram?.WebApp;
 if (tg) {
@@ -140,6 +143,12 @@ async function initApp() {
   setupEventListeners();
   renderCalendar(selectedDate);
   updateUI();
+  
+  // Устанавливаем версию приложения
+  const versionElement = document.querySelector('.app-version');
+  if (versionElement) {
+    versionElement.textContent = APP_VERSION;
+  }
   
   // Удаляем загрузочный экран, если он есть
   const loadingElement = document.querySelector('.loading');
