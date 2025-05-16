@@ -65,10 +65,13 @@ body.telegram-app {
   color: var(--tg-theme-button-color, var(--primary-color));
 }
 
-.telegram-app .submit-btn,
-.telegram-app .tab-btn.active {
+.telegram-app .submit-btn {
   background-color: var(--tg-theme-button-color, var(--primary-color));
   color: var(--tg-theme-button-text-color, white) !important;
+}
+
+.telegram-app .tab-btn.active {
+  color: var(--text-color) !important;
 }
 
 /* Fix для выбранных элементов в Telegram Mini App */
@@ -90,7 +93,7 @@ body.telegram-app {
 }
 
 .telegram-app .tab-btn.active svg {
-  color: var(--tg-theme-button-text-color, white) !important;
+  color: var(--text-color) !important;
   opacity: 1;
 }
 
