@@ -300,38 +300,12 @@ body.telegram-app {
 .upcoming-payments {
   position: relative;
   padding-bottom: var(--space-xs);
+  overflow: hidden;
 }
 
 .upcoming-payments-wrapper {
   position: relative;
   width: 100%;
-}
-
-/* Стили для эффекта затухания по краям карусели */
-/* Убираем .has-scroll из селектора для теста */
-.upcoming-payments-wrapper::before,
-.upcoming-payments-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0; 
-  width: 40px; /* Ширина зоны "затухания" */
-  z-index: 10;  /* Увеличим z-index для теста */
-  pointer-events: none; /* Чтобы не перехватывать клики/скролл */
-}
-
-/* Убираем .has-scroll из селектора для теста */
-.upcoming-payments-wrapper::before {
-  left: 0;
-  /* background: linear-gradient(to right, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
-  background: red; /* Тестовый фон */
-}
-
-/* Убираем .has-scroll из селектора для теста */
-.upcoming-payments-wrapper::after {
-  right: 0;
-  /* background: linear-gradient(to left, var(--dark-bg) 20%, rgba(13, 13, 13, 0) 100%); */ /* От фона страницы к прозрачному */
-  background: blue; /* Тестовый фон */
 }
 
 .upcoming-payments-scroll {
