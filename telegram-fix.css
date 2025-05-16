@@ -66,11 +66,8 @@ button:focus, .tab-btn:focus, .calendar-day:focus {
   background-color: #4a90e2 !important;
   opacity: 0.3 !important;
   border-radius: 50% !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: -1 !important; /* Гарантирует что индикатор будет под всеми содержимыми элементами */
-  pointer-events: none !important; /* Чтобы индикатор не блокировал клики */
+  z-index: -1 !important; /* Гарантирует что индикатор будет под иконкой */
+  pointer-events: none !important; /* Индикатор не блокирует клики */
 }
 
 /* Стили для кнопок периодичности */
