@@ -460,8 +460,12 @@ function renderUpcomingPayments() {
   const dotsContainer = document.createElement('div');
   dotsContainer.className = 'scroll-dots-container';
   
-  // Рассчитываем количество точек (1 точка на каждые 2 карточки, минимум 1)
-  const totalDots = Math.max(1, Math.ceil(upcomingPaymentsList.length / 2));
+  // Получаем ширину контейнера и карточки для расчета видимых элементов
+  const isMobile = window.innerWidth <= 480;
+  const itemsPerView = isMobile ? 2 : 3;
+  
+  // Рассчитываем количество точек (1 точка на каждые itemsPerView карточки, минимум 1)
+  const totalDots = Math.max(1, Math.ceil(upcomingPaymentsList.length / itemsPerView));
   
   // Создаем точки
   for (let i = 0; i < totalDots; i++) {
@@ -508,26 +512,16 @@ function renderUpcomingPayments() {
   }, 100);
 }
 
-// Helper функция для склонения слова "день"
-function getDaysString(days) {
-  if (days % 10 === 1 && days % 100 !== 11) {
-    return `${days} день`;
-  } else if ([2, 3, 4].includes(days % 10) && ![12, 13, 14].includes(days % 100)) {
-    return `${days} дня`;
-  } else {
-    return `${days} дней`;
-  }
-}
-
 // Создание элемента предстоящего платежа
 function createPaymentItem(payment) {
   const paymentElement = document.createElement('div');
   paymentElement.className = 'upcoming-payment-item';
-  paymentElement.style.borderLeftColor = payment.color || 'var(--primary-color)';
+  paymentElement.style.setProperty('--primary-color', payment.color || 'var(--primary-color)');
+  paymentElement.style.borderBottomColor = payment.color || 'var(--primary-color)';
   
   const date = payment.nextPaymentDate;
-  // Формат даты: "ДД месяц", например, "15 мая"
-  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'long' })}`;
+  // Формат даты: "ДД мес", например, "15 мая"
+  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'short' })}`;
   
   const formattedPrice = formatCurrency(payment.price);
   const periodSuffix = payment.isYearly ? '/год' : '/мес';
@@ -541,31 +535,39 @@ function createPaymentItem(payment) {
 
   let termText = '';
   let termClass = '';
+  let termEmoji = '';
 
   if (diffDays === 0) {
     termText = 'Сегодня';
     termClass = 'uupi-term-critical';
+    termEmoji = '⚡';
   } else if (diffDays === 1) {
     termText = 'Завтра';
     termClass = 'uupi-term-critical';
+    termEmoji = '⏰';
   } else if (diffDays >= 2 && diffDays <= 3) {
-    termText = `Через ${getDaysString(diffDays)}`;
+    termText = `Через ${diffDays} д.`;
     termClass = 'uupi-term-warning';
+    termEmoji = '⚠️';
   } else if (diffDays >= 4 && diffDays <= 7) {
-    termText = `Через ${getDaysString(diffDays)}`;
+    termText = `Через ${diffDays} д.`;
     termClass = 'uupi-term-notice';
+    termEmoji = '📆';
   } else if (diffDays > 7) {
-    termText = `Через ${getDaysString(diffDays)}`;
+    termText = `Через ${diffDays} д.`;
     termClass = 'uupi-term-normal';
+    termEmoji = '🕑';
   }
   
   paymentElement.innerHTML = `
-    <div class="uupi-name">${payment.name}</div>
-    <div class="uupi-meta-info">
-      <span class="uupi-price">${formattedPrice} ${periodSuffix}</span>
-      <span class="uupi-billing-date">${formattedPaymentDate}</span>
+    <div class="upcoming-payment-item-content">
+      <div class="uupi-name">${payment.name}</div>
+      <div class="uupi-meta-info">
+        <span class="uupi-price">${formattedPrice} ${periodSuffix}</span>
+        <span class="uupi-billing-date">${formattedPaymentDate}</span>
+      </div>
+      <div class="uupi-term ${termClass}">${termEmoji} ${termText}</div>
     </div>
-    <div class="uupi-term ${termClass}">${termText}</div>
   `;
   
   return paymentElement;

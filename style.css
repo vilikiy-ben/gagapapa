@@ -353,30 +353,71 @@ body.telegram-app {
 }
 
 .upcoming-payment-item {
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 180px;
-  max-width: 220px;
-  padding: var(--space-md);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 130px;
+  max-width: 150px;
+  padding: var(--space-sm);
   background-color: var(--card-bg-light);
   border-radius: var(--radius-md);
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
-  min-height: 150px;
+  min-height: 100px;
   position: relative;
-  display: flex;
-  border-left: 5px solid var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
   border-top: none;
+  border-left: none;
+  backdrop-filter: blur(3px);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.upcoming-payment-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 5px;
+  background-color: var(--primary-color);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  opacity: 0.5;
+}
+
+.upcoming-payment-item::after {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  opacity: 0.05;
+  z-index: -1;
 }
 
 .upcoming-payment-item:hover {
   box-shadow: var(--shadow-md);
   background-color: var(--card-bg-hover);
+  transform: translateY(-2px);
+}
+
+.upcoming-payment-item:hover::after {
+  opacity: 0.1;
+}
+
+.upcoming-payment-item-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
 }
 
 /* Новые стили для элементов внутри карточки */
 .uupi-name {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-color);
   word-break: break-word;
@@ -385,62 +426,75 @@ body.telegram-app {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  line-height: 1.2;
   width: 100%;
-  text-align: left;
-  min-height: calc(1.1rem * 1.3 * 2);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-xs);
 }
 
 .uupi-meta-info {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-xs);
   width: 100%;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-xs);
 }
 
 .uupi-price {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: var(--text-color);
   font-weight: 600;
   display: block;
-  width: 100%;
+  background: linear-gradient(90deg, var(--text-color) 70%, transparent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  width: fit-content;
 }
 
 .uupi-billing-date {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 500;
   display: block;
-  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.uupi-billing-date::before {
+  content: "📅";
+  font-size: 0.7rem;
+  margin-right: 4px;
+  opacity: 0.7;
 }
 
 .uupi-term {
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.3;
   width: 100%;
-  text-align: left;
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-color);
+  padding: 3px 6px;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: var(--space-xs);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .uupi-term-critical {
+  background-color: rgba(231, 76, 60, 0.2);
   color: var(--danger-color);
 }
 
 .uupi-term-warning {
+  background-color: rgba(243, 156, 18, 0.2);
   color: var(--warning-color);
 }
 
 .uupi-term-notice {
+  background-color: rgba(241, 196, 15, 0.2);
   color: var(--notice-color);
 }
 
 .uupi-term-normal {
+  background-color: rgba(153, 153, 153, 0.2);
   color: var(--text-muted);
 }
 
@@ -1047,6 +1101,23 @@ input[type="date"]:focus {
   
   .upcoming-payments-scroll {
     padding: var(--space-xs) 0;
+    gap: 15px;
+  }
+  
+  .upcoming-payment-item {
+    min-width: 140px;
+    max-width: 160px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .upcoming-payment-item {
+    min-width: 130px;
+    max-width: 150px;
+  }
+  
+  .upcoming-payments-scroll {
+    gap: 12px;
   }
 }
 
@@ -1074,8 +1145,18 @@ input[type="date"]:focus {
   }
   
   .upcoming-payment-item {
-    min-width: 85%;
-    max-width: 90%;
+    min-width: 45%;
+    max-width: 48%;
+  }
+  
+  .upcoming-payments-scroll {
+    scroll-snap-type: x mandatory;
+    padding: var(--space-xs) 0;
+    gap: 10px;
+  }
+  
+  .upcoming-payment-item {
+    scroll-snap-align: start;
   }
 }
 
