@@ -328,8 +328,8 @@ body.telegram-app {
 .scroll-dots-container {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .scroll-dot {
@@ -819,7 +819,7 @@ body.telegram-app {
 .calendar-container {
   background-color: var(--card-bg);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  padding: var(--space-lg);
   border: 1px solid var(--border-color);
   margin-bottom: var(--space-md);
 }
@@ -832,9 +832,10 @@ body.telegram-app {
 }
 
 .calendar-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
+  color: var(--primary-color);
 }
 
 .calendar-navigation {
@@ -863,12 +864,13 @@ body.telegram-app {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 4px;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .calendar-weekday {
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   padding: 0.3rem 0;
   font-weight: 500;
@@ -876,6 +878,7 @@ body.telegram-app {
 
 .calendar-day {
   aspect-ratio: 1;
+  min-height: 44px; /* Увеличиваем минимальную высоту */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -883,7 +886,8 @@ body.telegram-app {
   background-color: rgba(30, 30, 30, 0.5);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 1.1rem; /* Увеличиваем размер шрифта */
+  font-weight: 500;
   position: relative;
 }
 
@@ -912,11 +916,11 @@ body.telegram-app {
 .calendar-day.has-subscription::after {
   content: '';
   position: absolute;
-  bottom: 6px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background-color: var(--subscription-indicator-color, var(--success-color));
 }
@@ -1340,6 +1344,12 @@ input[type="date"]:focus {
   .fab-button {
     bottom: 90px;
   }
+  
+  /* Улучшение календаря на больших экранах */
+  .calendar-day {
+    min-height: 50px; /* Увеличиваем для десктопов */
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1352,7 +1362,8 @@ input[type="date"]:focus {
   }
 
   .calendar-day {
-    font-size: 0.8rem;
+    min-height: 40px; /* Увеличиваем для мобильных */
+    font-size: 0.85rem;
   }
   
   .subscription-cards {
@@ -1742,4 +1753,9 @@ input[type="date"]:focus {
 
 .search-attribution a:hover {
   display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 } 

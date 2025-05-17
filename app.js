@@ -626,6 +626,12 @@ function renderUpcomingPayments() {
     scrollContainer.appendChild(paymentElement);
   });
   
+  // Добавляем невидимый элемент в конце для предотвращения обрезки последней карточки
+  const spacerElement = document.createElement('div');
+  spacerElement.style.minWidth = '15px'; // Минимальная ширина, чтобы быть заметным
+  spacerElement.style.height = '1px'; // Практически невидимый
+  scrollContainer.appendChild(spacerElement);
+  
   // Создаем индикатор-точки
   const dotsContainer = document.createElement('div');
   dotsContainer.className = 'scroll-dots-container';
