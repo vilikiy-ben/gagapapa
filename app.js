@@ -460,29 +460,25 @@ function renderUpcomingPayments() {
   const dotsContainer = document.createElement('div');
   dotsContainer.className = 'scroll-dots-container';
   
-  // Предположим, что у нас будет максимум 3 точки
-  // 1 точка для видимой области и до 2 точек для обозначения скрытого контента
-  const visibleItems = Math.floor(scrollContainer.clientWidth / 130); // 130px - примерная ширина элемента с учетом отступа
-  const totalDots = Math.min(3, Math.ceil(upcomingPaymentsList.length / visibleItems));
+  // Рассчитываем количество точек (1 точка на каждые 2 карточки, минимум 1)
+  const totalDots = Math.max(1, Math.ceil(upcomingPaymentsList.length / 2));
   
+  // Создаем точки
   for (let i = 0; i < totalDots; i++) {
     const dot = document.createElement('div');
-    dot.className = 'scroll-dot';
-    if (i === 0) dot.classList.add('active');
+    dot.className = i === 0 ? 'scroll-dot active' : 'scroll-dot';
     dotsContainer.appendChild(dot);
   }
   
-  // Добавляем элементы в DOM
+  // Добавляем контейнер и точки в DOM
   upcomingPayments.appendChild(scrollContainer);
-  upcomingPayments.appendChild(dotsContainer);
+  if (totalDots > 1) {
+    upcomingPayments.appendChild(dotsContainer);
+  }
   
   // Проверяем необходимость скролла и добавляем/убираем индикатор
   setTimeout(() => {
     const hasScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
-    console.log('Upcoming Payments Scroll Check:', 
-                'scrollWidth:', scrollContainer.scrollWidth, 
-                'clientWidth:', scrollContainer.clientWidth, 
-                'hasScroll:', hasScroll);
     
     if (hasScroll) {
       upcomingPayments.classList.add('has-scroll');
@@ -527,11 +523,11 @@ function getDaysString(days) {
 function createPaymentItem(payment) {
   const paymentElement = document.createElement('div');
   paymentElement.className = 'upcoming-payment-item';
-  paymentElement.style.borderTop = `4px solid ${payment.color || 'var(--primary-color)'}`;
+  paymentElement.style.borderLeftColor = payment.color || 'var(--primary-color)';
   
   const date = payment.nextPaymentDate;
-  // Формат даты: "ДД мес.", например, "15 мая"
-  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'short' }).replace('.', '').slice(0, 3)}`;
+  // Формат даты: "ДД месяц", например, "15 мая"
+  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'long' })}`;
   
   const formattedPrice = formatCurrency(payment.price);
   const periodSuffix = payment.isYearly ? '/год' : '/мес';
@@ -567,7 +563,6 @@ function createPaymentItem(payment) {
     <div class="uupi-name">${payment.name}</div>
     <div class="uupi-meta-info">
       <span class="uupi-price">${formattedPrice} ${periodSuffix}</span>
-      <span class="uupi-meta-separator">·</span>
       <span class="uupi-billing-date">${formattedPaymentDate}</span>
     </div>
     <div class="uupi-term ${termClass}">${termText}</div>

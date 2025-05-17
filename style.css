@@ -355,26 +355,28 @@ body.telegram-app {
 .upcoming-payment-item {
   flex-direction: column;
   align-items: flex-start;
-  min-width: 110px;
-  max-width: 130px;
-  padding: var(--space-md) var(--space-sm);
+  min-width: 180px;
+  max-width: 220px;
+  padding: var(--space-md);
   background-color: var(--card-bg-light);
   border-radius: var(--radius-md);
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
-  min-height: 130px;
-  position: static;
+  min-height: 150px;
+  position: relative;
+  display: flex;
+  border-left: 5px solid var(--primary-color);
+  border-top: none;
 }
 
 .upcoming-payment-item:hover {
-  /* transform: translateY(-3px); /* Временно комментируем для теста тени */
   box-shadow: var(--shadow-md);
   background-color: var(--card-bg-hover);
 }
 
 /* Новые стили для элементов внутри карточки */
 .uupi-name {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-color);
   word-break: break-word;
@@ -386,38 +388,33 @@ body.telegram-app {
   line-height: 1.3;
   width: 100%;
   text-align: left;
-  min-height: calc(1rem * 1.3 * 2);
-  margin-bottom: var(--space-sm);
+  min-height: calc(1.1rem * 1.3 * 2);
+  margin-bottom: var(--space-md);
 }
 
 .uupi-meta-info {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-xs);
   width: 100%;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  text-align: left;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .uupi-price {
-  font-size: inherit;
-  color: var(--success-color);
-  font-weight: 500;
-}
-
-.uupi-meta-separator {
-  color: inherit;
-  margin: 0 3px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+  font-weight: 600;
+  display: block;
+  width: 100%;
 }
 
 .uupi-billing-date {
-  font-size: inherit;
-  color: inherit;
+  font-size: 0.95rem;
+  color: var(--text-muted);
   font-weight: 500;
+  display: block;
+  margin-top: 2px;
 }
 
 .uupi-term {
@@ -427,6 +424,8 @@ body.telegram-app {
   width: 100%;
   text-align: left;
   margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
 }
 
 .uupi-term-critical {
@@ -1026,48 +1025,57 @@ input[type="date"]:focus {
 /* Media Queries */
 @media (min-width: 768px) {
   .tab-content {
-    max-width: 768px;
-    margin: 0 auto;
+    padding: var(--space-xl);
   }
   
   .totals-banner {
-    max-width: 768px;
-    margin: 0 auto;
+    margin: var(--space-xl) 0;
   }
   
   .subscription-cards {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
   
   .stats-cards {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .fab-button {
-    bottom: 90px;
+    bottom: 30px;
+    right: 30px;
+  }
+  
+  .upcoming-payments-scroll {
+    padding: var(--space-xs) 0;
   }
 }
 
 @media (max-width: 480px) {
   :root {
-    font-size: 14px;
+    --space-xl: 20px;
   }
   
   .calendar-grid {
-    gap: 3px;
+    grid-template-columns: repeat(7, 35px);
   }
-
+  
   .calendar-day {
-    font-size: 0.8rem;
+    height: 35px;
   }
   
   .subscription-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   
   .modal-content {
     width: 95%;
-    padding: 1.2rem;
+    max-height: 90vh;
+    padding: var(--space-md);
+  }
+  
+  .upcoming-payment-item {
+    min-width: 85%;
+    max-width: 90%;
   }
 }
 
