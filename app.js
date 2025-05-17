@@ -120,6 +120,147 @@ let subscriptions = [];
 let selectedDate = new Date();
 let currentColorSelection = '#3498db';
 
+// Функция для получения URL логотипа по названию сервиса
+async function getLogoUrl(companyName) {
+  try {
+    // Нормализуем название компании
+    const normalizedName = companyName.trim().toLowerCase();
+    
+    // Попытка получить логотип с помощью Clearbit API
+    const encodedName = encodeURIComponent(normalizedName);
+    
+    // Создаем массив с возможными доменами
+    const possibleDomains = [
+      `${encodedName}.com`,
+      `${encodedName}.ru`,
+      `${encodedName}.org`
+    ];
+    
+    // Дополнительно обрабатываем известные сервисы
+    const knownServices = {
+      'netflix': 'netflix.com',
+      'нетфликс': 'netflix.com',
+      'яндекс': 'yandex.ru',
+      'яндекс плюс': 'yandex.ru',
+      'yandex': 'yandex.ru',
+      'yandex plus': 'yandex.ru',
+      'spotify': 'spotify.com',
+      'спотифай': 'spotify.com',
+      'youtube': 'youtube.com',
+      'ютуб': 'youtube.com',
+      'youtube premium': 'youtube.com',
+      'ютуб премиум': 'youtube.com',
+      'apple': 'apple.com',
+      'эппл': 'apple.com',
+      'apple music': 'apple.com/apple-music',
+      'эппл мьюзик': 'apple.com/apple-music',
+      'google': 'google.com',
+      'гугл': 'google.com',
+      'microsoft': 'microsoft.com',
+      'майкрософт': 'microsoft.com',
+      'adobe': 'adobe.com',
+      'адоби': 'adobe.com',
+      'amazon': 'amazon.com',
+      'амазон': 'amazon.com',
+      'hbo': 'hbo.com',
+      'hbo max': 'hbomax.com',
+      'disney': 'disney.com',
+      'disney+': 'disneyplus.com',
+      'дисней': 'disney.com',
+      'дисней+': 'disneyplus.com',
+      'telegram': 'telegram.org',
+      'телеграм': 'telegram.org',
+      'vk': 'vk.com',
+      'вк': 'vk.com',
+      'вконтакте': 'vk.com',
+      'ok': 'ok.ru',
+      'одноклассники': 'ok.ru',
+      'skype': 'skype.com',
+      'скайп': 'skype.com',
+      'twitch': 'twitch.tv',
+      'твич': 'twitch.tv',
+      'steam': 'steampowered.com',
+      'стим': 'steampowered.com',
+      'dropbox': 'dropbox.com',
+      'дропбокс': 'dropbox.com',
+      'evernote': 'evernote.com',
+      'эверноут': 'evernote.com',
+      'slack': 'slack.com',
+      'слак': 'slack.com',
+      'zoom': 'zoom.us',
+      'зум': 'zoom.us',
+      'trello': 'trello.com',
+      'трелло': 'trello.com',
+      'jira': 'atlassian.com/jira',
+      'джира': 'atlassian.com/jira',
+      'notion': 'notion.so',
+      'ноушн': 'notion.so',
+      'figma': 'figma.com',
+      'фигма': 'figma.com',
+      'canva': 'canva.com',
+      'канва': 'canva.com',
+      'tiktok': 'tiktok.com',
+      'тикток': 'tiktok.com',
+      'instagram': 'instagram.com',
+      'инстаграм': 'instagram.com',
+      'facebook': 'facebook.com',
+      'фейсбук': 'facebook.com',
+      'twitter': 'twitter.com',
+      'твиттер': 'twitter.com',
+      'linkedin': 'linkedin.com',
+      'линкедин': 'linkedin.com',
+      'pinterest': 'pinterest.com',
+      'пинтерест': 'pinterest.com',
+      'reddit': 'reddit.com',
+      'реддит': 'reddit.com',
+      'github': 'github.com',
+      'гитхаб': 'github.com',
+      'gitlab': 'gitlab.com',
+      'гитлаб': 'gitlab.com',
+      'bitbucket': 'bitbucket.org',
+      'битбакет': 'bitbucket.org',
+      'perplexity': 'perplexity.ai',
+      'perplex': 'perplexity.ai',
+      'перплексити': 'perplexity.ai',
+      'claude': 'anthropic.com',
+      'клод': 'anthropic.com',
+      'eleven labs': 'elevenlabs.io',
+      'elevenlabs': 'elevenlabs.io',
+      'илевен лабс': 'elevenlabs.io',
+      'midjourney': 'midjourney.com',
+      'миджорни': 'midjourney.com',
+      'openai': 'openai.com',
+      'опенэи': 'openai.com',
+      'chatgpt': 'openai.com',
+      'чатгпт': 'openai.com',
+      'dall-e': 'openai.com',
+      'далли': 'openai.com'
+    };
+    
+    if (knownServices[normalizedName]) {
+      possibleDomains.unshift(knownServices[normalizedName]);
+    }
+    
+    // Для известных сервисов с многословными названиями
+    const companyWords = normalizedName.split(/\s+/);
+    if (companyWords.length > 1) {
+      const firstWord = companyWords[0];
+      if (knownServices[firstWord]) {
+        possibleDomains.unshift(knownServices[firstWord]);
+      }
+    }
+    
+    // Удаляем дубликаты
+    const uniqueDomains = [...new Set(possibleDomains)];
+    
+    // Возвращаем URL к первому домену (наиболее вероятному)
+    return `https://logo.clearbit.com/${uniqueDomains[0]}`;
+  } catch (error) {
+    console.error('Ошибка при получении логотипа:', error);
+    return null;
+  }
+}
+
 // DOM элементы
 const subscriptionFormModal = document.getElementById('subscription-form-modal');
 const subscriptionForm = document.getElementById('subscription-form');
@@ -384,7 +525,14 @@ function createSubscriptionCard(subscription) {
   const formattedPrice = formatCurrency(subscription.price);
   const period = subscription.isYearly ? 'год' : 'месяц';
   
+  // HTML для логотипа с запасным вариантом, если нет логотипа
+  const logoHTML = subscription.logoUrl ? 
+    `<div class="subscription-card-logo">
+      <img src="${subscription.logoUrl}" alt="${subscription.name}" onerror="this.style.display='none'">
+     </div>` : '';
+  
   subscriptionElement.innerHTML = `
+    ${logoHTML}
     <div class="subscription-card-name">${subscription.name}</div>
     <div class="subscription-card-price">${formattedPrice}</div>
     <div class="subscription-card-period">за ${period}</div>
@@ -460,29 +608,29 @@ function renderUpcomingPayments() {
   const dotsContainer = document.createElement('div');
   dotsContainer.className = 'scroll-dots-container';
   
-  // Получаем ширину контейнера и карточки для расчета видимых элементов
-  const isMobile = window.innerWidth <= 480;
-  const itemsPerView = isMobile ? 2 : 3;
+  // Предположим, что у нас будет максимум 3 точки
+  // 1 точка для видимой области и до 2 точек для обозначения скрытого контента
+  const visibleItems = Math.floor(scrollContainer.clientWidth / 130); // 130px - примерная ширина элемента с учетом отступа
+  const totalDots = Math.min(3, Math.ceil(upcomingPaymentsList.length / visibleItems));
   
-  // Рассчитываем количество точек (1 точка на каждые itemsPerView карточки, минимум 1)
-  const totalDots = Math.max(1, Math.ceil(upcomingPaymentsList.length / itemsPerView));
-  
-  // Создаем точки
   for (let i = 0; i < totalDots; i++) {
     const dot = document.createElement('div');
-    dot.className = i === 0 ? 'scroll-dot active' : 'scroll-dot';
+    dot.className = 'scroll-dot';
+    if (i === 0) dot.classList.add('active');
     dotsContainer.appendChild(dot);
   }
   
-  // Добавляем контейнер и точки в DOM
+  // Добавляем элементы в DOM
   upcomingPayments.appendChild(scrollContainer);
-  if (totalDots > 1) {
-    upcomingPayments.appendChild(dotsContainer);
-  }
+  upcomingPayments.appendChild(dotsContainer);
   
   // Проверяем необходимость скролла и добавляем/убираем индикатор
   setTimeout(() => {
     const hasScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+    console.log('Upcoming Payments Scroll Check:', 
+                'scrollWidth:', scrollContainer.scrollWidth, 
+                'clientWidth:', scrollContainer.clientWidth, 
+                'hasScroll:', hasScroll);
     
     if (hasScroll) {
       upcomingPayments.classList.add('has-scroll');
@@ -512,16 +660,26 @@ function renderUpcomingPayments() {
   }, 100);
 }
 
+// Helper функция для склонения слова "день"
+function getDaysString(days) {
+  if (days % 10 === 1 && days % 100 !== 11) {
+    return `${days} день`;
+  } else if ([2, 3, 4].includes(days % 10) && ![12, 13, 14].includes(days % 100)) {
+    return `${days} дня`;
+  } else {
+    return `${days} дней`;
+  }
+}
+
 // Создание элемента предстоящего платежа
 function createPaymentItem(payment) {
   const paymentElement = document.createElement('div');
   paymentElement.className = 'upcoming-payment-item';
-  paymentElement.style.setProperty('--primary-color', payment.color || 'var(--primary-color)');
-  paymentElement.style.borderBottomColor = payment.color || 'var(--primary-color)';
+  paymentElement.style.borderTop = `4px solid ${payment.color || 'var(--primary-color)'}`;
   
   const date = payment.nextPaymentDate;
-  // Формат даты: "ДД мес", например, "15 мая"
-  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'short' })}`;
+  // Формат даты: "ДД мес.", например, "15 мая"
+  const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'short' }).replace('.', '').slice(0, 3)}`;
   
   const formattedPrice = formatCurrency(payment.price);
   const periodSuffix = payment.isYearly ? '/год' : '/мес';
@@ -535,38 +693,39 @@ function createPaymentItem(payment) {
 
   let termText = '';
   let termClass = '';
-  let termEmoji = '';
 
   if (diffDays === 0) {
     termText = 'Сегодня';
     termClass = 'uupi-term-critical';
-    termEmoji = '⚡';
   } else if (diffDays === 1) {
     termText = 'Завтра';
     termClass = 'uupi-term-critical';
-    termEmoji = '⏰';
   } else if (diffDays >= 2 && diffDays <= 3) {
-    termText = `Через ${diffDays} д.`;
+    termText = `Через ${getDaysString(diffDays)}`;
     termClass = 'uupi-term-warning';
-    termEmoji = '⚠️';
   } else if (diffDays >= 4 && diffDays <= 7) {
-    termText = `Через ${diffDays} д.`;
+    termText = `Через ${getDaysString(diffDays)}`;
     termClass = 'uupi-term-notice';
-    termEmoji = '📆';
   } else if (diffDays > 7) {
-    termText = `Через ${diffDays} д.`;
+    termText = `Через ${getDaysString(diffDays)}`;
     termClass = 'uupi-term-normal';
-    termEmoji = '🕑';
   }
   
+  // Добавляем разметку для логотипа, если он есть
+  const logoHTML = payment.logoUrl ? 
+    `<div class="uupi-logo">
+      <img src="${payment.logoUrl}" alt="${payment.name}" onerror="this.style.display='none'">
+     </div>` : '';
+  
   paymentElement.innerHTML = `
-    <div class="upcoming-payment-item-content">
-      <div class="uupi-name">${payment.name}</div>
-      <div class="uupi-meta-info">
-        <span class="uupi-price">${formattedPrice} ${periodSuffix}</span>
-        <span class="uupi-billing-date">${formattedPaymentDate}</span>
-      </div>
-      <div class="uupi-term ${termClass}">${termEmoji} ${termText}</div>
+    ${logoHTML}
+    <div class="uupi-name">${payment.name}</div>
+    <div class="uupi-meta-info">
+      <span class="uupi-price">${formattedPrice} ${periodSuffix}</span>
+      <span class="uupi-date">${formattedPaymentDate}</span>
+    </div>
+    <div class="uupi-term ${termClass}">
+      ${termText}
     </div>
   `;
   
@@ -717,6 +876,9 @@ async function handleFormSubmit(e) {
     return;
   }
   
+  // Получаем URL логотипа для компании
+  const logoUrl = await getLogoUrl(name);
+  
   if (formMode === 'add') {
     // Добавление новой подписки
     const newSubscription = {
@@ -725,7 +887,8 @@ async function handleFormSubmit(e) {
       price,
       billingDate,
       color,
-      isYearly
+      isYearly,
+      logoUrl // Добавляем URL логотипа к данным подписки
     };
     
     subscriptions.push(newSubscription);
@@ -741,7 +904,8 @@ async function handleFormSubmit(e) {
         price,
         billingDate,
         color,
-        isYearly
+        isYearly,
+        logoUrl // Обновляем URL логотипа при редактировании
       };
     }
   }
@@ -1033,9 +1197,16 @@ function renderDailySubscriptions() {
       const formattedPrice = formatCurrency(sub.price);
       const period = sub.isYearly ? 'год' : 'месяц';
       
+      // Добавляем логотип, если он есть
+      const logoHTML = sub.logoUrl ? 
+        `<div class="subscription-logo">
+          <img src="${sub.logoUrl}" alt="${sub.name}" onerror="this.style.display='none'">
+         </div>` : '';
+      
       html += `
         <div class="daily-subscription-item">
           <div class="subscription-color" style="background-color: ${sub.color}"></div>
+          ${logoHTML}
           <div class="subscription-info">
             <div class="subscription-name">${sub.name}</div>
             <div class="subscription-price">${formattedPrice} / ${period}</div>
