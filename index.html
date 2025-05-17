@@ -186,8 +186,19 @@
           <form id="subscription-form">
             <input type="hidden" id="subscription-id" value="">
             <div class="form-group">
-              <label for="name">Название</label>
-              <input type="text" id="name" placeholder="например, Netflix" required>
+              <label for="name">Название сервиса</label>
+              <div class="icon-search-container">
+                <div class="icon-input-wrapper">
+                  <input type="text" id="name" placeholder="Введите название (например, Netflix)" required>
+                  <div class="icon-preview" id="icon-preview">
+                    <img id="selected-icon" src="" alt="Иконка приложения" style="display: none;">
+                  </div>
+                </div>
+                <div class="search-dropdown" id="search-dropdown">
+                  <!-- Здесь будут результаты поиска -->
+                </div>
+                <input type="hidden" id="app-icon-url" value="">
+              </div>
             </div>
             <div class="form-group">
               <label for="price">Цена, $</label>

@@ -1,0 +1,38 @@
+/* Стили для фиксации проблем с отображением в Telegram Mini App */
+body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Исправления для интерфейса в Telegram */
+.toggle-container label {
+  color: white !important;
+}
+
+/* Принудительные стили для иконок вкладок */
+.tab-btn svg {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.tab-btn svg path, .tab-btn svg rect, .tab-btn svg circle {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+/* Дополнительные исправления для Telegram */
+@media (max-width: 480px) {
+  .app-header {
+    padding: 10px 15px;
+  }
+  
+  .app-logo img {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .app-title {
+    font-size: 20px;
+  }
+} 

@@ -4,15 +4,22 @@
   "description": "Просмотр и управление подписками в Telegram Mini App",
   "main": "index.html",
   "scripts": {
-    "deploy": "gh-pages -d ."
+    "deploy": "gh-pages -d .",
+    "start": "http-server . -p 8080 -c-1"
   },
-  "keywords": ["subscriptions", "tracker", "telegram", "mini-app"],
+  "keywords": [
+    "subscriptions",
+    "tracker",
+    "telegram",
+    "mini-app"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "moment": "^2.29.4"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.0"
+    "gh-pages": "^6.1.0",
+    "http-server": "^14.1.1"
   }
 }
