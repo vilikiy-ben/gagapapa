@@ -215,22 +215,11 @@
             </div>
             <div class="form-group">
               <label for="billing-date">Дата списания</label>
-              <input type="date" id="billing-date" required style="color: white !important;">
-            </div>
-            <div class="form-group">
-              <label for="color">Цвет</label>
-              <div class="color-options" id="color-options">
-                <div class="color-option" data-color="#e74c3c" style="background-color: #e74c3c;"></div>
-                <div class="color-option" data-color="#2ecc71" style="background-color: #2ecc71;"></div>
-                <div class="color-option" data-color="#3498db" style="background-color: #3498db;"></div>
-                <div class="color-option" data-color="#9b59b6" style="background-color: #9b59b6;"></div>
-                <div class="color-option" data-color="#f1c40f" style="background-color: #f1c40f;"></div>
-                <div class="color-option" data-color="#e67e22" style="background-color: #e67e22;"></div>
-                <div class="color-option" data-color="#1abc9c" style="background-color: #1abc9c;"></div>
-                <div class="color-option" data-color="#34495e" style="background-color: #34495e;"></div>
+              <div class="date-field-container">
+                <input type="date" id="billing-date" required style="color: white !important;">
               </div>
-              <input type="hidden" id="color" value="#3498db">
             </div>
+            <input type="hidden" id="color" value="#f5f5f5">
             <div class="form-actions">
               <button type="button" class="cancel-btn" id="cancel-form-btn">Отмена</button>
               <button type="submit" class="submit-btn" id="form-submit-btn" style="background-color: #4a90e2 !important; color: white !important;">Добавить</button>

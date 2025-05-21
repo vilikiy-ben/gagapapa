@@ -88,9 +88,22 @@ body.telegram-app {
 }
 
 .telegram-app .calendar-day.selected {
-  background-color: var(--primary-color);
-  color: white !important;
+  border: 2px solid var(--primary-color) !important;
+  color: var(--primary-color) !important;
   font-weight: 600;
+  background-color: transparent;
+}
+
+/* Новый стиль для сегодняшнего дня в календаре в контексте Telegram */
+.telegram-app .calendar-day.today {
+  font-weight: 600;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(74, 144, 226, 0.15) 0px,
+    rgba(74, 144, 226, 0.15) 3px,
+    transparent 3px,
+    transparent 6px
+  );
 }
 
 .telegram-app .color-option.selected {
@@ -101,12 +114,6 @@ body.telegram-app {
 .telegram-app .tab-btn.active svg {
   color: var(--text-color) !important;
   opacity: 1;
-}
-
-/* Новый стиль для сегодняшнего дня в календаре в контексте Telegram */
-.telegram-app .calendar-day.today {
-  border: 1px solid var(--primary-color) !important;
-  color: var(--primary-color) !important;
 }
 
 /* App Container */
@@ -586,7 +593,7 @@ body.telegram-app {
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  border-left: 5px solid var(--sub-color, var(--primary-color));
+  border-left: 5px solid var(--sub-color, #383838);
   margin-bottom: 8px;
   height: 80px;
 }
@@ -840,25 +847,67 @@ body.telegram-app {
 
 .calendar-navigation {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .calendar-nav-btn {
-  background-color: rgba(30, 30, 30, 0.8);
-  color: var(--text-color);
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.6);
   border: none;
   border-radius: var(--radius-sm);
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-nav-btn::before,
+.calendar-nav-btn::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.calendar-nav-btn.prev-month::before {
+  transform: rotate(-45deg) translateX(1px);
+  top: 11px;
+  left: 9px;
+}
+
+.calendar-nav-btn.prev-month::after {
+  transform: rotate(45deg) translateX(1px);
+  bottom: 11px;
+  left: 9px;
+}
+
+.calendar-nav-btn.next-month::before {
+  transform: rotate(45deg) translateX(-1px);
+  top: 11px;
+  right: 9px;
+}
+
+.calendar-nav-btn.next-month::after {
+  transform: rotate(-45deg) translateX(-1px);
+  bottom: 11px;
+  right: 9px;
 }
 
 .calendar-nav-btn:hover {
-  background-color: var(--primary-color);
+  background-color: rgba(74, 144, 226, 0.2);
+  color: var(--primary-color);
+}
+
+.calendar-nav-btn:active {
+  transform: scale(0.95);
 }
 
 .calendar-grid {
@@ -885,7 +934,7 @@ body.telegram-app {
   border-radius: var(--radius-sm);
   background-color: rgba(30, 30, 30, 0.5);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease; /* Убираем анимацию transform, чтобы избежать моргания */
   font-size: 1.1rem; /* Увеличиваем размер шрифта */
   font-weight: 500;
   position: relative;
@@ -893,19 +942,26 @@ body.telegram-app {
 
 .calendar-day:hover {
   background-color: rgba(40, 40, 40, 0.8);
-  transform: translateY(-2px);
 }
 
 .calendar-day.today {
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
+  position: relative;
   font-weight: 600;
+  color: var(--text-color);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(74, 144, 226, 0.15) 0px,
+    rgba(74, 144, 226, 0.15) 3px,
+    transparent 3px,
+    transparent 6px
+  );
 }
 
 .calendar-day.selected {
-  background-color: var(--primary-color);
-  color: white !important;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
   font-weight: 600;
+  background-color: transparent;
 }
 
 .calendar-day.other-month {
@@ -922,7 +978,7 @@ body.telegram-app {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--subscription-indicator-color, var(--success-color));
+  background-color: var(--primary-color);
 }
 
 /* Daily subscriptions */
@@ -934,6 +990,14 @@ body.telegram-app {
   min-height: 100px;
 }
 
+.daily-subscriptions-header {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
 .daily-subscriptions-list {
   display: flex;
   flex-direction: column;
@@ -942,49 +1006,96 @@ body.telegram-app {
 }
 
 .daily-subscription-item {
+  background-color: #1a1a1a;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  padding: 12px;
-  background-color: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
   position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--sub-color, #383838);
+  margin-bottom: 8px;
+  height: 75px;
 }
 
-.subscription-color {
-  width: 4px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
+.daily-subscription-item:hover {
+  background-color: var(--card-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.subscription-info {
+.daily-subscription-item:active {
+  transform: translateY(0);
+  background-color: var(--card-bg);
+}
+
+.daily-subscription-item .subscription-content {
+  display: flex;
   flex: 1;
+  align-items: center;
+  gap: 16px;
+}
+
+.daily-subscription-item .subscription-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0;
 }
 
 .daily-subscription-item .subscription-name {
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  margin-bottom: 3px;
+}
+
+.daily-subscription-item .subscription-price-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin-bottom: 0;
 }
 
 .daily-subscription-item .subscription-price {
-  font-size: 0.9em;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2ecc71;
+}
+
+.daily-subscription-item .subscription-period {
+  font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+.daily-subscription-item .payment-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
 }
 
 /* Иконка в дневных подписках */
 .daily-subscription-item .subscription-icon {
-  width: 36px;
-  height: 36px;
-  margin-right: 12px;
-  border-radius: 8px;
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .daily-subscription-item .subscription-icon img {
@@ -1219,6 +1330,26 @@ input[type="date"] {
   color: white;
   font-size: 1rem;
   transition: border-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* Стили для контейнера поля даты */
+.date-field-container {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.date-field-container:hover input[type="date"] {
+  border-color: var(--border-color);
+}
+
+/* Стили для иконки календаря */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.9;
+  width: 20px;
+  height: 20px;
 }
 
 input[type="text"]:focus,

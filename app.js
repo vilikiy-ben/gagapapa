@@ -206,7 +206,7 @@ if (tg) {
 // Основные переменные приложения
 let subscriptions = [];
 let selectedDate = new Date();
-let currentColorSelection = '#3498db';
+const DEFAULT_SUBSCRIPTION_COLOR = '#383838';
 
 // Инициализация переменных для работы с иконками
 let nameInput = null;
@@ -226,7 +226,6 @@ const subscriptionForm = document.getElementById('subscription-form');
 const addSubscriptionBtn = document.getElementById('add-subscription-btn');
 const closeFormBtn = document.getElementById('close-form-btn');
 const cancelFormBtn = document.getElementById('cancel-form-btn');
-const colorOptions = document.querySelectorAll('.color-option');
 const colorInput = document.getElementById('color');
 const subscriptionsList = document.getElementById('subscriptions-list');
 const monthlyTotalElement = document.getElementById('monthly-total');
@@ -302,6 +301,22 @@ async function initApp() {
       }
     });
   }
+
+  // Улучшение работы поля выбора даты
+  document.addEventListener('click', (e) => {
+    // Если клик был по input[type="date"] или его родительскому элементу с классом form-group для даты
+    if ((e.target.classList.contains('date-field-container') || 
+         e.target.closest('.date-field-container')) && 
+        !e.target.matches('input[type="date"]')) {
+      // Находим input даты и имитируем клик
+      const dateInput = e.target.querySelector('input[type="date"]') || 
+                        e.target.closest('.date-field-container').querySelector('input[type="date"]');
+      if (dateInput) {
+        dateInput.click();
+        dateInput.focus();
+      }
+    }
+  });
 
   await loadSubscriptions();
   setupEventListeners();
@@ -397,14 +412,6 @@ function setupEventListeners() {
   
   // Отправка формы
   subscriptionForm.addEventListener('submit', handleFormSubmit);
-  
-  // Выбор цвета
-  colorOptions.forEach(option => {
-    option.addEventListener('click', () => {
-      const color = option.getAttribute('data-color');
-      selectColor(color);
-    });
-  });
   
   // Обработчики для переключения периодичности (с принудительным применением стилей)
   document.getElementById('monthly').addEventListener('change', function() {
@@ -526,8 +533,8 @@ function createSubscriptionCard(subscription) {
   const formattedPrice = formatCurrency(subscription.price);
   const period = subscription.isYearly ? 'год' : 'месяц';
   
-  // Устанавливаем цвет элемента
-  subscriptionElement.style.setProperty('--sub-color', subscription.color);
+  // Устанавливаем единый цвет для всех карточек
+  subscriptionElement.style.setProperty('--sub-color', DEFAULT_SUBSCRIPTION_COLOR);
   
   // Генерируем HTML с поддержкой иконки
   let iconHtml = '';
@@ -826,11 +833,14 @@ function openSubscriptionForm() {
   // Сброс формы
   subscriptionForm.reset();
   
+  // Снова устанавливаем текущую дату (после сброса формы)
+  document.getElementById('billing-date').value = formattedDate;
+  
   // Сброс выбранной иконки
   resetAppIcon();
   
   // Установка цвета по умолчанию
-  selectColor('#3498db');
+  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
   
   // Отображение формы
   subscriptionFormModal.style.opacity = '0';
@@ -863,8 +873,8 @@ function openEditSubscriptionForm(subscription) {
   const dateString = subscription.billingDate.toISOString().split('T')[0];
   document.getElementById('billing-date').value = dateString;
   
-  // Устанавливаем цвет
-  selectColor(subscription.color);
+  // Устанавливаем цвет по умолчанию
+  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
   
   // Устанавливаем иконку, если она есть
   if (subscription.iconUrl) {
@@ -889,23 +899,7 @@ function closeSubscriptionForm() {
   }, 300);
 }
 
-// Выбор цвета
-function selectColor(color) {
-  currentColorSelection = color;
-  colorInput.value = color;
-  
-  // Обновление выбранного цвета
-  colorOptions.forEach(option => {
-    const optionColor = option.getAttribute('data-color');
-    if (optionColor === color) {
-      option.classList.add('selected');
-    } else {
-      option.classList.remove('selected');
-    }
-  });
-}
-
-// Обработка отправки формы (добавление или редактирование)
+/// Обработка отправки формы (добавление или редактирование)
 async function handleFormSubmit(e) {
   e.preventDefault();
   
@@ -1059,8 +1053,8 @@ function renderCalendar(date) {
     <div class="calendar-header">
       <h3 class="calendar-title">${monthNames[month]} ${year}</h3>
       <div class="calendar-navigation">
-        <button class="calendar-nav-btn prev-month">&larr;</button>
-        <button class="calendar-nav-btn next-month">&rarr;</button>
+        <button class="calendar-nav-btn prev-month" aria-label="Предыдущий месяц"></button>
+        <button class="calendar-nav-btn next-month" aria-label="Следующий месяц"></button>
       </div>
     </div>
     <div class="calendar-grid">
@@ -1095,11 +1089,6 @@ function renderCalendar(date) {
     
     const subscriptionOnThisDay = checkIfDateHasSubscription(currentDate);
     const hasSubscription = !!subscriptionOnThisDay;
-    let subscriptionColorForIndicator = null;
-
-    if (hasSubscription) {
-      subscriptionColorForIndicator = subscriptionOnThisDay.color;
-    }
     
     // Определяем, выбран ли день
     const isSelected = currentDate.getTime() === selectedDate.getTime();
@@ -1112,13 +1101,11 @@ function renderCalendar(date) {
     if (isToday) dayClasses += ' today';
     if (hasSubscription) dayClasses += ' has-subscription';
     
-    let styleAttribute = '';
-    if (subscriptionColorForIndicator) {
-      styleAttribute = `style="--subscription-indicator-color: ${subscriptionColorForIndicator};"`;
-    }
+    // Атрибут для подписок больше не нужен, так как отображаем только одну точку
+    let subscriptionAttribute = '';
 
     calendarHTML += `
-      <div class="${dayClasses}" data-date="${currentDate.toISOString()}" ${styleAttribute}>
+      <div class="${dayClasses}" data-date="${currentDate.toISOString()}" ${subscriptionAttribute}>
         ${day}
       </div>
     `;
@@ -1185,7 +1172,8 @@ function setupCalendarEventListeners() {
 
 // Проверка наличия подписок на дату
 function checkIfDateHasSubscription(date) {
-  return subscriptions.find(sub => {
+  // Вместо поиска одной подписки, собираем все подписки на эту дату
+  const subscriptionsOnDate = subscriptions.filter(sub => {
     const initialBillingDate = new Date(sub.billingDate);
     initialBillingDate.setHours(0,0,0,0); // Нормализуем время
 
@@ -1214,41 +1202,55 @@ function checkIfDateHasSubscription(date) {
       }
       return false;
     }
-  }) || null;
+  });
+
+  if (subscriptionsOnDate.length === 0) {
+    return null;
+  }
+
+  // Возвращаем объект с информацией о количестве подписок
+  return {
+    count: subscriptionsOnDate.length,
+    subscriptions: subscriptionsOnDate
+  };
 }
 
 // Рендеринг подписок на выбранный день
 function renderDailySubscriptions() {
-  // Фильтруем подписки для выбранной даты
-  const subsForDate = [];
-  
-  subscriptions.forEach(sub => {
+  // Получаем подписки для выбранной даты с помощью существующей функции
+  const subscriptionOnThisDay = checkIfDateHasSubscription(selectedDate);
+  const subsForDate = subscriptionOnThisDay ? subscriptionOnThisDay.subscriptions.map(sub => {
     const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly);
-    
-    // Проверяем только день и месяц, игнорируем год
-    if (nextBillingDate.getDate() === selectedDate.getDate() && 
-        nextBillingDate.getMonth() === selectedDate.getMonth()) {
-      subsForDate.push({
-        ...sub,
-        nextBillingDate
-      });
-    }
+    return { ...sub, nextBillingDate };
+  }) : [];
+
+  // Форматируем выбранную дату для заголовка (например, "22 мая 2025 г.")
+  const formattedHeaderDate = selectedDate.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
 
   // Обновляем отображение
   if (subsForDate.length === 0) {
-    dailySubscriptions.innerHTML = '<div class="empty-list-message">Нет подписок на этот день</div>';
+    dailySubscriptions.innerHTML = `
+      <div class="daily-subscriptions-header">${formattedHeaderDate}</div>
+      <div class="empty-list-message">Нет подписок на этот день</div>
+    `;
   } else {
-    let html = '<div class="daily-subscriptions-list">';
+    let html = `<div class="daily-subscriptions-header">${formattedHeaderDate}</div>`;
+    html += '<div class="daily-subscriptions-list">';
     
     subsForDate.forEach(sub => {
+      const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly);
+      const formattedDate = formatDate(nextBillingDate);
       const formattedPrice = formatCurrency(sub.price);
       const period = sub.isYearly ? 'год' : 'месяц';
       
-      // Подготавливаем HTML для иконки
+      // Генерируем HTML с поддержкой иконки, точно как в createSubscriptionCard
       let iconHtml = '';
       if (sub.iconUrl) {
-        // Используем увеличенный размер для детального отображения в календаре
+        // Добавляем параметры для оптимизации иконки в карточке
         const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
         iconHtml = `
           <div class="subscription-icon">
@@ -1259,13 +1261,22 @@ function renderDailySubscriptions() {
       
       html += `
         <div class="daily-subscription-item">
-          <div class="subscription-color" style="background-color: ${sub.color}"></div>
           <div class="subscription-content">
             ${iconHtml}
-            <div class="subscription-info">
+            <div class="subscription-details">
               <div class="subscription-name">${sub.name}</div>
-              <div class="subscription-price">${formattedPrice} / ${period}</div>
+              <div class="subscription-price-group">
+                <span class="subscription-price">${formattedPrice}</span>
+                <span class="subscription-period">за ${period}</span>
+              </div>
             </div>
+          </div>
+          <div class="payment-date">
+            <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Оплата ${formattedDate}</span>
           </div>
         </div>
       `;
@@ -1273,6 +1284,14 @@ function renderDailySubscriptions() {
     
     html += '</div>';
     dailySubscriptions.innerHTML = html;
+    
+    // Добавляем обработчики событий для карточек
+    const cards = dailySubscriptions.querySelectorAll('.daily-subscription-item');
+    cards.forEach((card, index) => {
+      card.addEventListener('click', () => {
+        openEditSubscriptionForm(subsForDate[index]);
+      });
+    });
   }
 }
 
