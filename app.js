@@ -217,6 +217,10 @@ const API_TOKEN = "pk_f-SKNQU7TJWnou-__dux7A"; // Токен API logo.dev
 const SEARCH_DELAY = 500; // Задержка поиска после ввода (мс)
 let searchTimeout = null;
 
+// Переменные для Trial-функционала
+let trialCheckbox = null;
+let priceInput = null;
+
 // Добавим переменную для ключа API Brand Search
 const BRAND_SEARCH_API_TOKEN = API_TOKEN; // Используем тот же ключ для начала, но может потребоваться другой
 
@@ -263,6 +267,10 @@ async function initApp() {
   nameInput = document.getElementById('name');
   searchDropdown = document.getElementById('search-dropdown');
   iconPreview = document.getElementById('icon-preview');
+  
+  // Инициализация элементов для Trial-функционала
+  trialCheckbox = document.getElementById('trial-checkbox');
+  priceInput = document.getElementById('price');
   
   // Обработчик событий для поиска иконок при вводе
   if (nameInput) {
@@ -356,6 +364,32 @@ async function initApp() {
       forceMobileStyles();
     }, 500);
   }
+
+  // Обработчик для чекбокса Trial
+  if (trialCheckbox && priceInput) {
+    trialCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        // Запоминаем текущее значение цены
+        priceInput.dataset.previousValue = priceInput.value;
+        
+        // Блокируем поле и устанавливаем "Бесплатно"
+        priceInput.disabled = true;
+        priceInput.value = '';
+        priceInput.placeholder = 'Бесплатно';
+      } else {
+        // Восстанавливаем поле и предыдущее значение
+        priceInput.disabled = false;
+        
+        // Восстанавливаем предыдущее значение, если оно было
+        if (priceInput.dataset.previousValue) {
+          priceInput.value = priceInput.dataset.previousValue;
+        }
+        
+        // Восстанавливаем placeholder
+        priceInput.placeholder = 'например, 20';
+      }
+    });
+  }
 }
 
 // Загрузка подписок из localStorage
@@ -414,37 +448,21 @@ function setupEventListeners() {
   subscriptionForm.addEventListener('submit', handleFormSubmit);
   
   // Обработчики для переключения периодичности (с принудительным применением стилей)
+  document.getElementById('weekly').addEventListener('change', function() {
+    if (this.checked && tg) {
+      // Стили будут установлены через CSS
+    }
+  });
+  
   document.getElementById('monthly').addEventListener('change', function() {
     if (this.checked && tg) {
-      setTimeout(() => {
-        const label = document.querySelector('label[for="monthly"]');
-        if (label) {
-          label.style.backgroundColor = '#4a90e2';
-          label.style.color = 'white';
-        }
-        const yearlyLabel = document.querySelector('label[for="yearly"]');
-        if (yearlyLabel) {
-          yearlyLabel.style.backgroundColor = '';
-          yearlyLabel.style.color = 'white';
-        }
-      }, 10);
+      // Стили будут установлены через CSS
     }
   });
   
   document.getElementById('yearly').addEventListener('change', function() {
     if (this.checked && tg) {
-      setTimeout(() => {
-        const label = document.querySelector('label[for="yearly"]');
-        if (label) {
-          label.style.backgroundColor = '#4a90e2';
-          label.style.color = 'white';
-        }
-        const monthlyLabel = document.querySelector('label[for="monthly"]');
-        if (monthlyLabel) {
-          monthlyLabel.style.backgroundColor = '';
-          monthlyLabel.style.color = 'white';
-        }
-      }, 10);
+      // Стили будут установлены через CSS
     }
   });
   
@@ -525,13 +543,22 @@ function renderAllSubscriptions() {
 
 // Создание карточки подписки
 function createSubscriptionCard(subscription) {
+  // Создаем контейнер для свайп-действий
+  const containerElement = document.createElement('div');
+  containerElement.className = 'subscription-card-container';
+
+  // Создаем карточку
   const subscriptionElement = document.createElement('div');
   subscriptionElement.className = 'subscription-card';
+  subscriptionElement.setAttribute('data-id', subscription.id);
   
-  const nextBillingDate = getNextBillingDate(subscription.billingDate, subscription.isYearly);
+  const nextBillingDate = getNextBillingDate(subscription.billingDate, subscription.isYearly, subscription.isWeekly);
   const formattedDate = formatDate(nextBillingDate);
-  const formattedPrice = formatCurrency(subscription.price);
-  const period = subscription.isYearly ? 'год' : 'месяц';
+  
+  // Получаем отформатированную цену или "Триал" для триальных подписок
+  const formattedPrice = subscription.isTrial ? 'Триал' : formatCurrency(subscription.price);
+  
+  const period = formatSubscriptionPeriod(subscription);
   
   // Устанавливаем единый цвет для всех карточек
   subscriptionElement.style.setProperty('--sub-color', DEFAULT_SUBSCRIPTION_COLOR);
@@ -548,16 +575,30 @@ function createSubscriptionCard(subscription) {
     `;
   }
   
+  // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
+  let priceHtml = '';
+  if (subscription.isTrial) {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price trial-price">Триал</span>
+      </div>
+    `;
+  } else {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price">${formattedPrice}</span>
+        <span class="subscription-period">за ${period}</span>
+      </div>
+    `;
+  }
+  
   subscriptionElement.innerHTML = `
     <button class="subscription-delete" data-id="${subscription.id}">&times;</button>
     <div class="subscription-content">
       ${iconHtml}
       <div class="subscription-details">
         <div class="subscription-name">${subscription.name}</div>
-        <div class="subscription-price-group">
-          <span class="subscription-price">${formattedPrice}</span>
-          <span class="subscription-period">за ${period}</span>
-        </div>
+        ${priceHtml}
       </div>
     </div>
     <div class="payment-date">
@@ -565,11 +606,11 @@ function createSubscriptionCard(subscription) {
         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
         <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Оплата ${formattedDate}</span>
+      <span>${subscription.isTrial ? 'Закончится' : 'Оплата'} ${formattedDate}</span>
     </div>
   `;
   
-  // Добавляем обработчик для удаления
+  // Добавляем обработчик для удаления через кнопку
   const deleteButton = subscriptionElement.querySelector('.subscription-delete');
   deleteButton.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -580,8 +621,159 @@ function createSubscriptionCard(subscription) {
   subscriptionElement.addEventListener('click', () => {
     openEditSubscriptionForm(subscription);
   });
+
+  // Добавляем карточку в контейнер свайп-действий
+  containerElement.appendChild(subscriptionElement);
+
+  // Добавляем обработчики свайпа
+  setupSwipeHandlers(containerElement, subscriptionElement, subscription);
   
-  return subscriptionElement;
+  return containerElement;
+}
+
+// Функция для настройки обработчиков свайпа
+function setupSwipeHandlers(container, card, subscription) {
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  const swipeThreshold = 50; // Минимальное расстояние для срабатывания свайпа
+  let swipeActionsElement = null;
+  
+  // Обработчик начала касания
+  card.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+    card.classList.add('swiping');
+  });
+  
+  // Обработчик движения пальца
+  card.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    
+    currentX = e.touches[0].clientX;
+    const diffX = currentX - startX;
+    
+    // Если пользователь двигает палец достаточно далеко, создаем элементы свайп-действий
+    if ((Math.abs(diffX) > 10) && !swipeActionsElement) {
+      swipeActionsElement = createSwipeActions();
+    }
+    
+    // Ограничиваем смещение
+    if (diffX > 80) {
+      card.style.transform = `translateX(80px)`;
+      // Добавляем классы к контейнеру для видимости кнопок
+      container.classList.add('swiping-left');
+      container.classList.remove('swiping-right');
+    } else if (diffX < -80) {
+      card.style.transform = `translateX(-80px)`;
+      // Добавляем классы к контейнеру для видимости кнопок
+      container.classList.add('swiping-right');
+      container.classList.remove('swiping-left');
+    } else {
+      card.style.transform = `translateX(${diffX}px)`;
+      container.classList.remove('swiping-left', 'swiping-right');
+    }
+  });
+  
+  // Обработчик окончания касания
+  card.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    
+    isDragging = false;
+    card.classList.remove('swiping');
+    
+    const diffX = currentX - startX;
+    
+    // Если смещение больше порога - выполняем действие
+    if (diffX > swipeThreshold) {
+      // Свайп вправо - редактирование
+      openEditSubscriptionForm(subscription);
+    } else if (diffX < -swipeThreshold) {
+      // Свайп влево - удаление
+      showConfirmDeleteModal(subscription.id);
+    }
+    
+    // Возвращаем карточку в исходное положение и удаляем свайп-действия
+    resetCardPosition();
+    removeSwipeActions();
+  });
+  
+  // Обработчик отмены касания
+  card.addEventListener('touchcancel', () => {
+    if (isDragging) {
+      isDragging = false;
+      resetCardPosition();
+      removeSwipeActions();
+    }
+  });
+  
+  // Функция для создания элементов свайп-действий
+  function createSwipeActions() {
+    // Удалим существующие элементы свайп-действий, если они есть
+    removeSwipeActions();
+    
+    // Создаем элементы свайп-действий
+    const actions = document.createElement('div');
+    actions.className = 'swipe-actions';
+    
+    // Левое действие (редактирование)
+    const leftAction = document.createElement('div');
+    leftAction.className = 'swipe-action-left';
+    leftAction.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    // Правое действие (удаление)
+    const rightAction = document.createElement('div');
+    rightAction.className = 'swipe-action-right';
+    rightAction.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6H5H21" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    // Добавляем элементы в DOM
+    actions.appendChild(leftAction);
+    actions.appendChild(rightAction);
+    container.insertBefore(actions, container.firstChild);
+    
+    // Добавляем обработчики событий для кнопок
+    leftAction.addEventListener('click', () => {
+      openEditSubscriptionForm(subscription);
+      resetCardPosition();
+      removeSwipeActions();
+    });
+    
+    rightAction.addEventListener('click', () => {
+      showConfirmDeleteModal(subscription.id);
+      resetCardPosition();
+      removeSwipeActions();
+    });
+    
+    return actions;
+  }
+  
+  // Функция для удаления элементов свайп-действий
+  function removeSwipeActions() {
+    const existingActions = container.querySelector('.swipe-actions');
+    if (existingActions) {
+      container.removeChild(existingActions);
+    }
+    swipeActionsElement = null;
+    // Удаляем классы свайпа с контейнера
+    container.classList.remove('swiping-left', 'swiping-right');
+  }
+  
+  // Функция для сброса позиции карточки
+  function resetCardPosition() {
+    card.style.transform = 'translateX(0)';
+    // Удаляем классы свайпа с контейнера
+    container.classList.remove('swiping-left', 'swiping-right');
+  }
 }
 
 // Рендеринг предстоящих платежей
@@ -603,7 +795,7 @@ function renderUpcomingPayments() {
   const upcomingPaymentsList = [];
   
   subscriptions.forEach(sub => {
-    const nextPaymentDate = getNextBillingDate(sub.billingDate, sub.isYearly);
+    const nextPaymentDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
     const normalizedNextPaymentDate = new Date(nextPaymentDate);
     normalizedNextPaymentDate.setHours(0,0,0,0);
 
@@ -704,7 +896,8 @@ function createPaymentItem(payment) {
   // Формат даты: "ДД мес.", например, "15 мая"
   const formattedPaymentDate = `${date.getDate()} ${date.toLocaleString('ru-RU', { month: 'short' }).replace('.', '').slice(0, 3)}`;
   
-  const formattedPrice = formatCurrency(payment.price);
+  // Получаем отформатированную цену или сокращенное название для триальных подписок
+  const formattedPrice = payment.isTrial ? 'Триал' : formatCurrency(payment.price);
 
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -741,19 +934,22 @@ function createPaymentItem(payment) {
   } else {
     // 3 категория (8-14 дней) - серый цвет
     termText = `${diffDays} ${getDaysString(diffDays)}`;
-    termClass = 'uupi-term-normal';
-    cardColor = 'rgba(142, 142, 147, 0.5)'; // Серый
+    termClass = 'uupi-term-warning';
+    cardColor = 'rgba(170, 170, 170, 0.3)'; // Серый
     importance = 2;
   }
   
-  // Устанавливаем цвет карточки и важность (для CSS)
-  paymentElement.setAttribute('style', `--card-custom-color: ${cardColor};`);
-  paymentElement.setAttribute('data-importance', importance);
+  // Устанавливаем атрибуты
+  paymentElement.setAttribute('data-importance', importance.toString());
+  paymentElement.style.setProperty('--card-custom-color', cardColor);
   
-  // Добавляем поддержку иконки
+  // Определяем тип периода
+  const periodText = formatSubscriptionPeriodShort(payment);
+  
+  // Генерируем HTML для иконки
   let iconHtml = '';
   if (payment.iconUrl) {
-    // Используем больший размер для иконки в новом дизайне
+    // Добавляем параметры для оптимизации иконки в карточке
     const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
     iconHtml = `
       <div class="payment-app-icon">
@@ -762,11 +958,19 @@ function createPaymentItem(payment) {
     `;
   }
   
+  // Формируем HTML для цены - разный для триальных и обычных подписок
+  let priceHtml = '';
+  if (payment.isTrial) {
+    priceHtml = `<span class="uupi-price trial-color">${formattedPrice}</span>`;
+  } else {
+    priceHtml = `<span class="uupi-price success-color">${formattedPrice}</span>`;
+  }
+  
   paymentElement.innerHTML = `
     ${iconHtml}
     <div class="uupi-name">${payment.name}</div>
     <div class="uupi-meta-info">
-      <span class="uupi-price">${formattedPrice}</span>
+      ${priceHtml}
     </div>
     <div class="uupi-term ${termClass}">${termText}</div>
   `;
@@ -777,14 +981,15 @@ function createPaymentItem(payment) {
 // Обновление статистических данных
 function updateStatsData() {
   // Количество подписок по типам
-  const monthlyCount = subscriptions.filter(sub => !sub.isYearly).length;
+  const weeklyCount = subscriptions.filter(sub => sub.isWeekly).length;
+  const monthlyCount = subscriptions.filter(sub => !sub.isYearly && !sub.isWeekly).length;
   const yearlyCount = subscriptions.filter(sub => sub.isYearly).length;
   
+  document.getElementById('weekly-count').textContent = weeklyCount;
   monthlyCountElement.textContent = monthlyCount;
   yearlyCountElement.textContent = yearlyCount;
   
-  // Здесь можно добавить код для визуализации графиков
-  // на основе данных подписок, если потребуется
+  // Здесь можно добавить больше статистики
 }
 
 // Показать модальное окно подтверждения удаления
@@ -832,6 +1037,7 @@ function openSubscriptionForm() {
   
   // Сброс формы
   subscriptionForm.reset();
+  resetTrialCheckbox();
   
   // Снова устанавливаем текущую дату (после сброса формы)
   document.getElementById('billing-date').value = formattedDate;
@@ -860,11 +1066,24 @@ function openEditSubscriptionForm(subscription) {
   // Заполняем форму данными подписки
   subscriptionIdInput.value = subscription.id;
   nameInput.value = subscription.name;
-  document.getElementById('price').value = subscription.price;
+  
+  // Проверяем, является ли подписка бесплатной (триальной)
+  if (subscription.isTrial) {
+    document.getElementById('trial-checkbox').checked = true;
+    priceInput.disabled = true;
+    priceInput.value = '';
+    priceInput.placeholder = 'Триал';
+  } else {
+    document.getElementById('trial-checkbox').checked = false;
+    priceInput.disabled = false;
+    document.getElementById('price').value = subscription.price;
+  }
   
   // Устанавливаем периодичность
   if (subscription.isYearly) {
     document.getElementById('yearly').checked = true;
+  } else if (subscription.isWeekly) {
+    document.getElementById('weekly').checked = true;
   } else {
     document.getElementById('monthly').checked = true;
   }
@@ -904,14 +1123,16 @@ async function handleFormSubmit(e) {
   e.preventDefault();
   
   const name = document.getElementById('name').value.trim();
-  const price = parseFloat(document.getElementById('price').value);
+  const isTrial = document.getElementById('trial-checkbox').checked;
+  const price = isTrial ? 0 : parseFloat(document.getElementById('price').value);
   const billingDateStr = document.getElementById('billing-date').value;
   const billingDate = new Date(billingDateStr);
   const isYearly = document.getElementById('yearly').checked;
+  const isWeekly = document.getElementById('weekly').checked;
   const color = colorInput.value;
   const iconUrl = document.getElementById('app-icon-url').value;
   
-  if (!name || isNaN(price) || !billingDate) {
+  if (!name || (!isTrial && (isNaN(price) || price < 0)) || !billingDate) {
     alert('Пожалуйста, заполните все обязательные поля формы');
     return;
   }
@@ -922,9 +1143,11 @@ async function handleFormSubmit(e) {
       id: Date.now(),
       name,
       price,
+      isTrial,
       billingDate,
       color,
       isYearly,
+      isWeekly,
       iconUrl
     };
     
@@ -939,9 +1162,11 @@ async function handleFormSubmit(e) {
         ...subscriptions[index],
         name,
         price,
+        isTrial,
         billingDate,
         color,
         isYearly,
+        isWeekly,
         iconUrl
       };
     }
@@ -972,20 +1197,25 @@ function getNextSubscription() {
   // Находим ближайшую дату платежа
   return subscriptions
     .map(sub => {
-      const nextDate = getNextBillingDate(sub.billingDate, sub.isYearly);
+      const nextDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
       return { ...sub, nextDate };
     })
     .sort((a, b) => a.nextDate - b.nextDate)
     .find(sub => sub.nextDate >= today) || subscriptions[0];
 }
 
-// Расчет ежемесячной суммы
+// Расчет ежемесячной суммы (без учета триальных подписок)
 function calculateMonthlyTotal() {
   if (subscriptions.length === 0) return 0;
   
   return subscriptions.reduce((total, sub) => {
+    // Пропускаем триальные подписки
+    if (sub.isTrial) return total;
+    
     if (sub.isYearly) {
       return total + (sub.price / 12); // разделить годовую сумму на 12 месяцев
+    } else if (sub.isWeekly) {
+      return total + (sub.price * 4.33); // умножить недельную сумму на среднее количество недель в месяце (4.33)
     }
     return total + sub.price;
   }, 0);
@@ -1008,7 +1238,7 @@ function formatDate(date) {
 }
 
 // Получение следующей даты списания
-function getNextBillingDate(billingDate, isYearly) {
+function getNextBillingDate(billingDate, isYearly, isWeekly) {
   const today = new Date();
   // Создаем копию даты, чтобы не изменять оригинал
   const nextDate = new Date(billingDate);
@@ -1017,7 +1247,12 @@ function getNextBillingDate(billingDate, isYearly) {
   nextDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   
-  if (isYearly) {
+  if (isWeekly) {
+    // Еженедельный платеж
+    while (nextDate < today) {
+      nextDate.setDate(nextDate.getDate() + 7);
+    }
+  } else if (isYearly) {
     // Ежегодный платеж
     while (nextDate < today) {
       nextDate.setFullYear(nextDate.getFullYear() + 1);
@@ -1184,6 +1419,9 @@ function checkIfDateHasSubscription(date) {
       // Для годовых подписок проверяем совпадение дня и месяца
       return initialBillingDate.getDate() === calendarDate.getDate() &&
              initialBillingDate.getMonth() === calendarDate.getMonth();
+    } else if (sub.isWeekly) {
+      // Для еженедельных подписок проверяем совпадение дня недели
+      return initialBillingDate.getDay() === calendarDate.getDay();
     } else {
       // Для месячных подписок
       const billingDay = initialBillingDate.getDate();
@@ -1218,17 +1456,18 @@ function checkIfDateHasSubscription(date) {
 // Рендеринг подписок на выбранный день
 function renderDailySubscriptions() {
   // Получаем подписки для выбранной даты с помощью существующей функции
-  const subscriptionOnThisDay = checkIfDateHasSubscription(selectedDate);
-  const subsForDate = subscriptionOnThisDay ? subscriptionOnThisDay.subscriptions.map(sub => {
-    const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly);
-    return { ...sub, nextBillingDate };
-  }) : [];
-
-  // Форматируем выбранную дату для заголовка (например, "22 мая 2025 г.")
-  const formattedHeaderDate = selectedDate.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
+  const selectedDateCopy = new Date(selectedDate);
+  selectedDateCopy.setHours(0, 0, 0, 0);
+  
+  // Форматируем дату для заголовка
+  const formattedHeaderDate = formatDate(selectedDateCopy);
+  
+  // Фильтруем подписки, платежи по которым приходятся на выбранный день
+  const subsForDate = subscriptions.filter(sub => {
+    const nextPaymentDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
+    const paymentDateCopy = new Date(nextPaymentDate);
+    paymentDateCopy.setHours(0, 0, 0, 0);
+    return paymentDateCopy.getTime() === selectedDateCopy.getTime();
   });
 
   // Обновляем отображение
@@ -1242,10 +1481,12 @@ function renderDailySubscriptions() {
     html += '<div class="daily-subscriptions-list">';
     
     subsForDate.forEach(sub => {
-      const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly);
+      const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
       const formattedDate = formatDate(nextBillingDate);
-      const formattedPrice = formatCurrency(sub.price);
-      const period = sub.isYearly ? 'год' : 'месяц';
+      
+      // Получаем отформатированную цену или "Бесплатно" для триальных подписок
+      const formattedPrice = sub.isTrial ? 'Бесплатно' : formatCurrency(sub.price);
+      const period = formatSubscriptionPeriod(sub);
       
       // Генерируем HTML с поддержкой иконки, точно как в createSubscriptionCard
       let iconHtml = '';
@@ -1259,24 +1500,41 @@ function renderDailySubscriptions() {
         `;
       }
       
+      // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
+      let priceHtml = '';
+      if (sub.isTrial) {
+        priceHtml = `
+          <div class="subscription-price-group">
+            <span class="subscription-price trial-price">Триал</span>
+          </div>
+        `;
+      } else {
+        priceHtml = `
+          <div class="subscription-price-group">
+            <span class="subscription-price">${formattedPrice}</span>
+            <span class="subscription-period">за ${period}</span>
+          </div>
+        `;
+      }
+      
+      // Создаем контейнер для карточки (без предварительного создания кнопок)
       html += `
-        <div class="daily-subscription-item">
-          <div class="subscription-content">
-            ${iconHtml}
-            <div class="subscription-details">
-              <div class="subscription-name">${sub.name}</div>
-              <div class="subscription-price-group">
-                <span class="subscription-price">${formattedPrice}</span>
-                <span class="subscription-period">за ${period}</span>
+        <div class="subscription-card-container daily-subscription-container">
+          <div class="daily-subscription-item" data-id="${sub.id}">
+            <div class="subscription-content">
+              ${iconHtml}
+              <div class="subscription-details">
+                <div class="subscription-name">${sub.name}</div>
+                ${priceHtml}
               </div>
             </div>
-          </div>
-          <div class="payment-date">
-            <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>Оплата ${formattedDate}</span>
+            <div class="payment-date">
+              <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>${sub.isTrial ? 'Закончится' : 'Оплата'} ${formattedDate}</span>
+            </div>
           </div>
         </div>
       `;
@@ -1287,10 +1545,15 @@ function renderDailySubscriptions() {
     
     // Добавляем обработчики событий для карточек
     const cards = dailySubscriptions.querySelectorAll('.daily-subscription-item');
+    const containers = dailySubscriptions.querySelectorAll('.daily-subscription-container');
+    
     cards.forEach((card, index) => {
       card.addEventListener('click', () => {
         openEditSubscriptionForm(subsForDate[index]);
       });
+      
+      // Настраиваем обработчики свайпа
+      setupSwipeHandlers(containers[index], card, subsForDate[index]);
     });
   }
 }
@@ -1573,5 +1836,36 @@ function getDaysString(days) {
     return 'дня';
   } else {
     return 'дней';
+  }
+}
+
+// Вспомогательная функция для определения периода подписки
+function formatSubscriptionPeriod(subscription) {
+  if (subscription.isYearly) {
+    return 'год';
+  } else if (subscription.isWeekly) {
+    return 'неделю';
+  } else {
+    return 'месяц';
+  }
+}
+
+// Вспомогательная функция для короткого форматирования периода подписки
+function formatSubscriptionPeriodShort(subscription) {
+  if (subscription.isYearly) {
+    return '/ год';
+  } else if (subscription.isWeekly) {
+    return '/ нед.';
+  } else {
+    return '/ мес.';
+  }
+}
+
+// Также обрабатываем чекбокс при редактировании подписки
+function resetTrialCheckbox() {
+  if (trialCheckbox && priceInput) {
+    trialCheckbox.checked = false;
+    priceInput.disabled = false;
+    priceInput.placeholder = 'например, 20';
   }
 } 

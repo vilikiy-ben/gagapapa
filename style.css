@@ -394,15 +394,7 @@ body.telegram-app {
   box-shadow: none;
 }
 
-/* Специальный эффект при наведении для карточек с критическими сроками */
-.upcoming-payment-item[data-importance="0"]:hover {
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-}
 
-/* Специальный эффект при наведении для карточек с предупреждением */
-.upcoming-payment-item[data-importance="1"]:hover {
-  box-shadow: none;
-}
 
 .upcoming-payment-item::before {
   content: '';
@@ -428,14 +420,7 @@ body.telegram-app {
   z-index: 1;
 }
 
-.upcoming-payment-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px) scale(1.02);
-}
 
-.upcoming-payment-item:hover::before {
-  opacity: 0.7;
-}
 
 /* Логотип сервиса в верхней части карточки */
 .upcoming-payment-item .payment-app-icon {
@@ -484,6 +469,10 @@ body.telegram-app {
   display: block;
   margin-bottom: 8px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Блок с метаинформацией */
@@ -579,6 +568,65 @@ body.telegram-app {
   margin-top: 12px;
 }
 
+/* Свайп-действия для карточек подписок */
+.subscription-card-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  z-index: 1;
+  pointer-events: none; /* Чтобы события мыши/касания проходили через элемент к карточке */
+  opacity: 0; /* По умолчанию невидимые */
+  transition: opacity 0.2s ease;
+}
+
+/* Классы swiping-left и swiping-right теперь на контейнере */
+.subscription-card-container.swiping-left .swipe-actions,
+.subscription-card-container.swiping-right .swipe-actions,
+.daily-subscription-container.swiping-left .swipe-actions,
+.daily-subscription-container.swiping-right .swipe-actions {
+  opacity: 1; /* Показываем действия при свайпе */
+}
+
+.swipe-action-left,
+.swipe-action-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 100%;
+  transition: all 0.3s ease;
+  pointer-events: auto; /* Восстанавливаем события для кнопок */
+}
+
+.swipe-action-left {
+  background-color: #555; /* Серый цвет для редактирования (слева) */
+  left: 0;
+}
+
+.swipe-action-right {
+  background-color: var(--danger-color); /* Красный цвет для удаления (справа) */
+  right: 0;
+}
+
+.swipe-action-left svg,
+.swipe-action-right svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
 /* Карточка подписки в стиле списка */
 .subscription-card {
   background-color: var(--card-bg);
@@ -589,25 +637,38 @@ body.telegram-app {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  transition: all 0.2s ease;
+  transition: transform 0.3s ease;
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border-left: 5px solid var(--sub-color, #383838);
-  margin-bottom: 8px;
   height: 80px;
+  touch-action: pan-y; /* Разрешаем свайп по горизонтали */
+  z-index: 2; /* Карточка над действиями */
 }
 
-/* Эффекты при наведении */
-.subscription-card:hover {
-  background-color: var(--card-bg-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
+/* Эффекты для активного состояния (для мобильных устройств) */
 .subscription-card:active {
   transform: translateY(0);
   background-color: var(--card-bg);
+}
+
+/* Теперь классы swiping-left и swiping-right на контейнере, но трансформация карточки */
+.subscription-card-container.swiping-left .subscription-card {
+  transform: translateX(80px);
+}
+
+.subscription-card-container.swiping-right .subscription-card {
+  transform: translateX(-80px);
+}
+
+/* Те же стили для ежедневных подписок */
+.daily-subscription-container.swiping-left .daily-subscription-item {
+  transform: translateX(80px);
+}
+
+.daily-subscription-container.swiping-right .daily-subscription-item {
+  transform: translateX(-80px);
 }
 
 /* Контент карточки */
@@ -713,25 +774,7 @@ body.telegram-app {
   background-color: rgba(231, 76, 60, 0.15);
 }
 
-/* Индикатор действия для карточки */
-.subscription-card::after {
-  content: "Нажмите для изменения";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: var(--text-light);
-  font-size: 0.7rem;
-  padding: 4px;
-  text-align: center;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-}
 
-.subscription-card:hover::after {
-  transform: translateY(0);
-}
 
 /* Показ иконки в карточках подписок */
 .subscription-card .card-header {
@@ -901,10 +944,7 @@ body.telegram-app {
   right: 9px;
 }
 
-.calendar-nav-btn:hover {
-  background-color: rgba(74, 144, 226, 0.2);
-  color: var(--primary-color);
-}
+
 
 .calendar-nav-btn:active {
   transform: scale(0.95);
@@ -940,9 +980,7 @@ body.telegram-app {
   position: relative;
 }
 
-.calendar-day:hover {
-  background-color: rgba(40, 40, 40, 0.8);
-}
+
 
 .calendar-day.today {
   position: relative;
@@ -1005,6 +1043,10 @@ body.telegram-app {
   margin-top: 15px;
 }
 
+.daily-subscription-container {
+  margin-bottom: 8px;
+}
+
 .daily-subscription-item {
   background-color: #1a1a1a;
   border-radius: var(--radius-md);
@@ -1014,19 +1056,15 @@ body.telegram-app {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  transition: all 0.2s ease;
+  transition: transform 0.3s ease;
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border-left: 5px solid var(--sub-color, #383838);
-  margin-bottom: 8px;
+  margin-bottom: 0;
   height: 75px;
-}
-
-.daily-subscription-item:hover {
-  background-color: var(--card-bg-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  touch-action: pan-y;
+  z-index: 2;
 }
 
 .daily-subscription-item:active {
@@ -1202,14 +1240,7 @@ body.telegram-app {
   transition: all 0.25s ease;
 }
 
-.tab-btn:hover {
-  color: var(--text-color);
-}
 
-.tab-btn:hover svg {
-  opacity: 0.9;
-  transform: scale(1.1);
-}
 
 .tab-btn.active {
   color: var(--text-color);
@@ -1303,9 +1334,7 @@ body.telegram-app {
   transition: color 0.2s ease;
 }
 
-.close-btn:hover {
-  color: var(--text-color);
-}
+
 
 /* Form elements */
 .form-group {
@@ -1331,6 +1360,8 @@ input[type="date"] {
   font-size: 1rem;
   transition: border-color 0.2s ease;
   cursor: pointer;
+  height: 44px;
+  min-height: 44px;
 }
 
 /* Стили для контейнера поля даты */
@@ -1340,9 +1371,7 @@ input[type="date"] {
   cursor: pointer;
 }
 
-.date-field-container:hover input[type="date"] {
-  border-color: var(--border-color);
-}
+
 
 /* Стили для иконки календаря */
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -1363,8 +1392,9 @@ input[type="date"]:focus {
 /* Toggle group */
 .toggle-group .toggle-container {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-xs);
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .toggle-container input[type="radio"] {
@@ -1375,19 +1405,114 @@ input[type="date"]:focus {
 }
 
 .toggle-container label {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem;
   background-color: rgba(26, 26, 26, 0.5);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
   color: white !important;
+  font-size: 0.9rem;
+  flex: 1;
+  text-align: center;
 }
 
 .toggle-container input[type="radio"]:checked + label {
   background-color: var(--primary-color);
   color: white !important;
   border-color: var(--primary-color);
+}
+
+/* Новый стиль для селектора периодичности */
+.period-selector {
+  position: relative;
+  width: 100%;
+  height: 46px;
+  margin-top: 10px;
+}
+
+.period-selector input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+.period-selector-track {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(26, 26, 26, 0.5);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.period-indicator {
+  position: absolute;
+  width: 33.33%;
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: var(--radius-md);
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  z-index: 1;
+  left: 0;
+}
+
+/* Корректировка позиционирования для выбранного варианта */
+.period-selector input[type="radio"]:nth-of-type(1):checked ~ .period-selector-track .period-indicator {
+  transform: translateX(0);
+}
+
+.period-selector input[type="radio"]:nth-of-type(2):checked ~ .period-selector-track .period-indicator {
+  transform: translateX(100%);
+}
+
+.period-selector input[type="radio"]:nth-of-type(3):checked ~ .period-selector-track .period-indicator {
+  transform: translateX(200%);
+}
+
+.period-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.3s ease;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 10px 5px;
+  height: 100%;
+}
+
+.period-selector input[type="radio"]:checked + .period-selector-track .period-option {
+  color: var(--text-muted);
+}
+
+.period-selector input[type="radio"]:nth-of-type(1):checked ~ .period-selector-track .period-option:nth-of-type(1),
+.period-selector input[type="radio"]:nth-of-type(2):checked ~ .period-selector-track .period-option:nth-of-type(2),
+.period-selector input[type="radio"]:nth-of-type(3):checked ~ .period-selector-track .period-option:nth-of-type(3) {
+  color: white;
+}
+
+/* Удаляем стили для иконок, так как они больше не используются */
+.period-icon {
+  display: none;
+}
+
+/* Стили для Telegram */
+.telegram-app .period-selector input[type="radio"]:checked ~ .period-selector-track .period-indicator {
+  background-color: var(--primary-color) !important;
+}
+
+.telegram-app .period-selector input[type="radio"]:nth-of-type(1):checked ~ .period-selector-track .period-option:nth-of-type(1),
+.telegram-app .period-selector input[type="radio"]:nth-of-type(2):checked ~ .period-selector-track .period-option:nth-of-type(2),
+.telegram-app .period-selector input[type="radio"]:nth-of-type(3):checked ~ .period-selector-track .period-option:nth-of-type(3) {
+  color: white !important;
 }
 
 /* Color options */
@@ -1407,9 +1532,7 @@ input[type="date"]:focus {
   border: 2px solid transparent;
 }
 
-.color-option:hover {
-  transform: scale(1.1);
-}
+
 
 .color-option.selected {
   border-color: white;
@@ -1504,6 +1627,12 @@ input[type="date"]:focus {
   .modal-content {
     width: 95%;
     padding: 1.2rem;
+  }
+  
+  /* Меньшие отступы для мобильных устройств */
+  .period-option {
+    font-size: 1rem;
+    padding: 8px 3px;
   }
 }
 
@@ -1641,9 +1770,7 @@ input[type="date"]:focus {
   transition: all 0.2s ease;
 }
 
-.danger-btn:hover {
-  background-color: #c0392b;
-}
+
 
 /* Стили для функционала выбора иконки приложения */
 .icon-search-container {
@@ -1727,9 +1854,7 @@ input[type="date"]:focus {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.search-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
+
 
 .search-item:last-child {
   border-bottom: none;
@@ -1868,10 +1993,7 @@ input[type="date"]:focus {
   justify-content: center;
 }
 
-.edit-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--primary-color);
-}
+
 
 /* Удаляем неиспользуемые стили для атрибуции Logo.dev */
 .search-attribution {
@@ -1889,4 +2011,115 @@ input[type="date"]:focus {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Стили для контейнера цены и Trial чекбокса */
+.price-trial-container {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  height: 44px; /* Фиксированная высота для лучшего выравнивания */
+}
+
+.price-trial-container input[type="number"] {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  padding-right: 15px;
+  height: 100%;
+  min-height: unset;
+}
+
+.trial-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background-color: rgba(30, 30, 30, 0.7);
+  border-left: 1px solid var(--border-color);
+  width: 90px;
+  height: 44px;
+  padding-top: 10px; /* Скорректировано для больших элементов */
+  box-sizing: border-box;
+}
+
+
+
+.trial-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.trial-container input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.trial-checkmark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background-color: #444;
+  border-radius: 5px;
+  position: relative;
+}
+
+.trial-container input:checked ~ .trial-checkmark {
+  background-color: var(--primary-color);
+}
+
+.trial-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 8px;
+  top: 3px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.trial-container input:checked ~ .trial-checkmark:after {
+  display: block;
+}
+
+.trial-label {
+  margin-left: 8px;
+  color: var(--text-light);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.price-trial-container input[disabled] {
+  background-color: rgba(30, 30, 30, 0.3);
+  color: var(--primary-color);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Стили для Trial подписок */
+.trial-price {
+  color: var(--primary-color) !important;
+  font-weight: 500;
+}
+
+.subscription-price.trial-price {
+  font-size: 1.2rem;
+}
+
+/* Стили для цен в ближайших платежах */
+.uupi-price.trial-color {
+  color: #5AC8FA !important;
+  font-weight: 500;
+}
+
+.uupi-price.success-color {
+  color: var(--success-color) !important;
 } 
