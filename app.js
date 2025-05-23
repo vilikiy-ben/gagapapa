@@ -294,6 +294,13 @@ async function initApp() {
     subscriptions = [];
   }
   
+  // Инициализация элементов для работы с иконками
+  nameInput = document.getElementById('name');
+  searchDropdown = document.getElementById('search-dropdown');
+  iconPreview = document.getElementById('icon-preview');
+  trialCheckbox = document.getElementById('trial-checkbox');
+  priceInput = document.getElementById('price');
+  
   // Настраиваем обработчики событий
   setupEventListeners();
   
@@ -414,6 +421,25 @@ function setupEventListeners() {
   cancelFormBtn.addEventListener('click', () => {
     closeSubscriptionForm();
   });
+  
+  // Обработчик поиска иконок при вводе названия сервиса
+  if (nameInput) {
+    nameInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      const query = this.value.trim();
+      
+      if (query.length < 2) {
+        searchDropdown.innerHTML = '';
+        searchDropdown.classList.remove('active');
+        return;
+      }
+      
+      // Устанавливаем задержку для предотвращения слишком частых запросов
+      searchTimeout = setTimeout(() => {
+        searchAppIcons(query);
+      }, SEARCH_DELAY);
+    });
+  }
   
   // Отправка формы
   subscriptionForm.addEventListener('submit', handleFormSubmit);
@@ -637,11 +663,19 @@ function createSubscriptionCard(subscription) {
         `;
       }
     } else {
-      // Добавляем параметры для оптимизации иконки в карточке
-      const optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      // Формируем URL для иконки с учетом того, содержит ли он уже параметры
+      let optimizedIconUrl;
+      if (subscription.iconUrl.includes('?')) {
+        // URL уже содержит параметры, добавляем только размер и формат
+        optimizedIconUrl = `${subscription.iconUrl}&format=png&size=64`;
+      } else {
+        // URL без параметров, добавляем токен, размер и формат
+        optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      }
+      
       iconHtml = `
         <div class="subscription-icon">
-          <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy">
+          <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%233498db%22 rx=%224%22 /><text x=%2250%%22 y=%2250%%22 dy=%22.35em%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-size=%2214%22 font-weight=%22bold%22>${subscription.name.charAt(0).toUpperCase()}</text></svg>';">
         </div>
       `;
     }
@@ -893,11 +927,19 @@ function createPaymentItem(payment) {
         `;
       }
     } else {
-      // Добавляем параметры для оптимизации иконки в карточке
-      const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      // Формируем URL для иконки с учетом того, содержит ли он уже параметры
+      let optimizedIconUrl;
+      if (payment.iconUrl.includes('?')) {
+        // URL уже содержит параметры, добавляем только размер и формат
+        optimizedIconUrl = `${payment.iconUrl}&format=png&size=64`;
+      } else {
+        // URL без параметров, добавляем токен, размер и формат
+        optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      }
+      
       iconHtml = `
         <div class="payment-app-icon">
-          <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy">
+          <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%233498db%22 rx=%224%22 /><text x=%2250%%22 y=%2250%%22 dy=%22.35em%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-size=%2212%22 font-weight=%22bold%22>${payment.name.charAt(0).toUpperCase()}</text></svg>';">
         </div>
       `;
     }
@@ -1259,11 +1301,19 @@ function renderDailySubscriptions() {
             `;
           }
         } else {
-          // Добавляем параметры для оптимизации иконки в карточке
-          const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+          // Формируем URL для иконки с учетом того, содержит ли он уже параметры
+          let optimizedIconUrl;
+          if (sub.iconUrl.includes('?')) {
+            // URL уже содержит параметры, добавляем только размер и формат
+            optimizedIconUrl = `${sub.iconUrl}&format=png&size=64`;
+          } else {
+            // URL без параметров, добавляем токен, размер и формат
+            optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+          }
+          
           iconHtml = `
             <div class="subscription-icon">
-              <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy">
+              <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%233498db%22 rx=%224%22 /><text x=%2250%%22 y=%2250%%22 dy=%22.35em%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-size=%2214%22 font-weight=%22bold%22>${sub.name.charAt(0).toUpperCase()}</text></svg>';">
             </div>
           `;
         }
@@ -1321,7 +1371,15 @@ function renderDailySubscriptions() {
 
 // Поиск иконок приложений через API logo.dev
 async function searchAppIcons(query) {
+  console.log('Запуск поиска иконок для:', query);
+  
   if (!query || query.trim().length < 2) {
+    return;
+  }
+  
+  // Проверяем, инициализированы ли необходимые переменные
+  if (!searchDropdown) {
+    console.error('searchDropdown не инициализирован!');
     return;
   }
   
@@ -1342,34 +1400,48 @@ async function searchAppIcons(query) {
     let searchResults = [];
     let apiAccessible = true;
     
-    // Сначала пробуем получить результаты через Brand Search API
+    // Прямое использование API для получения логотипов по домену
     try {
-      const searchResponse = await fetch(`https://api.logo.dev/search?q=${encodeURIComponent(query)}`, {
-        headers: {
-          'Authorization': `Bearer ${BRAND_SEARCH_API_TOKEN}`
-        }
-      });
+      console.log('Использую прямой доступ к изображениям через img.logo.dev');
       
-      if (searchResponse.ok) {
-        const data = await searchResponse.json();
-        // Преобразуем результаты API в нужный формат
-        searchResults = data.map(item => ({
-          url: `https://img.logo.dev/${item.domain}?token=${API_TOKEN}&${apiParams}`,
-          domain: item.domain,
-          name: item.name
-        }));
-      } else if (searchResponse.status === 401) {
-        // Если получили ошибку авторизации, запоминаем это и переходим на резервный вариант
-        console.log('API Logo.dev недоступен из-за проблем с авторизацией (401), используем локальные иконки');
-        apiAccessible = false;
+      // Предполагаемые домены на основе поискового запроса
+      const searchTerms = query.toLowerCase().trim();
+      const domains = [
+        `${searchTerms}.com`,
+        `${searchTerms}.ru`,
+        `${searchTerms}.io`,
+        `${searchTerms}.app`,
+        `${searchTerms}.net`
+      ];
+      
+      // Добавляем домены без пробелов и с дефисами для мультисловных запросов
+      if (searchTerms.includes(' ')) {
+        const withoutSpaces = searchTerms.replace(/\s+/g, '');
+        const withDashes = searchTerms.replace(/\s+/g, '-');
+        
+        domains.push(`${withoutSpaces}.com`);
+        domains.push(`${withDashes}.com`);
       }
+      
+      console.log('Пробуем домены:', domains);
+      
+      // Создаем результаты для всех возможных доменов
+      searchResults = domains.map(domain => ({
+        url: `https://img.logo.dev/${domain}?token=${API_TOKEN}`,
+        domain: domain,
+        name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
+      }));
+      
+      console.log('Созданы результаты для доменов:', searchResults);
     } catch (error) {
-      console.warn('Brand Search API недоступен, используем запасной вариант:', error);
+      console.warn('Ошибка при создании URL для img.logo.dev:', error.message);
       apiAccessible = false;
     }
     
     // Если API недоступен или результатов нет, используем локальную генерацию иконок
     if (searchResults.length === 0 || !apiAccessible) {
+      console.log('Используем локальную генерацию иконок');
+      
       // Спецальный список популярных сервисов
       const lowerCaseQuery = query.toLowerCase().trim();
       const specialServices = {
@@ -1448,6 +1520,8 @@ async function searchAppIcons(query) {
         ];
         const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
         
+        console.log('Создание монограммы для:', query, 'Буква:', firstLetter, 'Цвет:', randomColor);
+        
         searchResults = [{
           url: 'local',
           domain: query.toLowerCase().replace(/\s+/g, '') + '.com',
@@ -1455,6 +1529,8 @@ async function searchAppIcons(query) {
           color: randomColor,
           letter: firstLetter
         }];
+        
+        console.log('Созданная локальная иконка:', searchResults[0]);
       }
     }
     
@@ -1462,9 +1538,12 @@ async function searchAppIcons(query) {
     searchDropdown.innerHTML = '';
     
     if (searchResults.length === 0) {
+      console.log('Нет результатов для отображения');
       searchDropdown.innerHTML = '<div class="search-empty">Сервисы не найдены</div>';
       return;
     }
+    
+    console.log('Отображаем результаты поиска:', searchResults.length, 'иконок');
     
     // Ограничиваем до 10 результатов
     const resultsToShow = searchResults.slice(0, 10);
@@ -1488,10 +1567,11 @@ async function searchAppIcons(query) {
           </div>
         `;
       } else {
-        // Используем обычную иконку из API
+        // Используем обычную иконку из API с параметрами для отображения
+        const iconDisplayUrl = `${result.url}&format=png&size=64`;
         iconHtml = `
           <div class="search-item-icon">
-            <img src="${result.url}" alt="${result.name}">
+            <img src="${iconDisplayUrl}" alt="${result.name}" onerror="this.style.display='none'">
           </div>
         `;
       }
@@ -1511,6 +1591,7 @@ async function searchAppIcons(query) {
           selectLocalIcon(result.letter, result.color, result.name);
         } else {
           selectAppIcon(result.url);
+          console.log('Выбран сервис:', result.name, 'с URL:', result.url);
         }
         // Не меняем название, оставляем то, что ввел пользователь
         searchDropdown.classList.remove('active');
@@ -1520,8 +1601,9 @@ async function searchAppIcons(query) {
     });
     
   } catch (error) {
-    console.error('Ошибка при поиске иконок:', error);
+    console.error('Ошибка при поиске иконок:', error.message, error.stack);
     searchDropdown.innerHTML = '<div class="search-empty">Ошибка при поиске сервисов</div>';
+    console.log('API Token:', API_TOKEN, 'BRAND_SEARCH_API_TOKEN:', BRAND_SEARCH_API_TOKEN);
   }
 }
 
@@ -1579,20 +1661,17 @@ function selectAppIcon(iconUrl) {
   if (iconUrl === 'local') {
     return; // Локальные иконки обрабатываются через selectLocalIcon
   }
-
-  // Удаляем параметры из URL (token, size и т.д.), сохраняем только базовый URL
-  let cleanIconUrl = iconUrl;
-  if (iconUrl.includes('?')) {
-    cleanIconUrl = iconUrl.split('?')[0];
-  }
   
-  selectedIconUrl = cleanIconUrl;
+  console.log('Выбрана иконка URL:', iconUrl);
+
+  // Сохраняем полный URL с токеном
+  selectedIconUrl = iconUrl;
   
   // Обновляем скрытое поле с URL иконки
-  document.getElementById('app-icon-url').value = cleanIconUrl;
+  document.getElementById('app-icon-url').value = iconUrl;
   
   // Обновляем превью с размером, подходящим для превью
-  const previewUrl = `${cleanIconUrl}?token=${API_TOKEN}&format=png&size=64`;
+  const previewUrl = `${iconUrl}&format=png&size=64`;
   const selectedIcon = document.getElementById('selected-icon');
   
   if (selectedIcon) {
