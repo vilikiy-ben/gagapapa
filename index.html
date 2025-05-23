@@ -96,6 +96,43 @@
       color: var(--text-muted) !important;
       opacity: 0.7 !important;
     }
+    
+    /* Стили для локальных иконок */
+    .local-icon {
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+      font-family: 'Rubik', sans-serif;
+    }
+    .search-item .local-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 18px;
+    }
+    .subscription-icon.local-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+    .payment-app-icon.local-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      text-align: center;
+      line-height: 32px;
+    }
+    .local-icon-preview {
+      font-size: 14px;
+      text-align: center;
+    }
+    .icon-letter {
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
@@ -113,7 +150,7 @@
           <div class="app-logo"><img src="logo.png" alt="App Logo"></div>
           <h1 class="app-title">SubsViewer</h1>
         </div>
-        <div class="app-version">beta v1.4.3</div>
+        <div class="app-version">beta v1.4.4</div>
       </div>
       
       <!-- Общая сумма -->

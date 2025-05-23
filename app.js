@@ -785,13 +785,37 @@ function createSubscriptionCard(subscription) {
   // Генерируем HTML с поддержкой иконки
   let iconHtml = '';
   if (subscription.iconUrl) {
-    // Добавляем параметры для оптимизации иконки в карточке
-    const optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-    iconHtml = `
-      <div class="subscription-icon">
-        <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy">
-      </div>
-    `;
+    // Проверяем, локальная ли это иконка
+    if (subscription.iconUrl.startsWith('data:local,')) {
+      try {
+        // Парсим данные локальной иконки
+        const iconDataStr = subscription.iconUrl.replace('data:local,', '');
+        const iconData = JSON.parse(iconDataStr);
+        
+        // Создаем HTML для локальной иконки
+        iconHtml = `
+          <div class="subscription-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+            <span>${iconData.letter}</span>
+          </div>
+        `;
+      } catch (e) {
+        console.error('Ошибка при парсинге данных локальной иконки:', e);
+        // Если не удалось распарсить, создаем стандартную иконку
+        iconHtml = `
+          <div class="subscription-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+            <span>${subscription.name.charAt(0).toUpperCase()}</span>
+          </div>
+        `;
+      }
+    } else {
+      // Добавляем параметры для оптимизации иконки в карточке
+      const optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      iconHtml = `
+        <div class="subscription-icon">
+          <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy">
+        </div>
+      `;
+    }
   }
   
   // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
@@ -1017,13 +1041,37 @@ function createPaymentItem(payment) {
   // Генерируем HTML для иконки
   let iconHtml = '';
   if (payment.iconUrl) {
-    // Добавляем параметры для оптимизации иконки в карточке
-    const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-    iconHtml = `
-      <div class="payment-app-icon">
-        <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy">
-      </div>
-    `;
+    // Проверяем, локальная ли это иконка
+    if (payment.iconUrl.startsWith('data:local,')) {
+      try {
+        // Парсим данные локальной иконки
+        const iconDataStr = payment.iconUrl.replace('data:local,', '');
+        const iconData = JSON.parse(iconDataStr);
+        
+        // Создаем HTML для локальной иконки
+        iconHtml = `
+          <div class="payment-app-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; width: 32px; height: 32px; border-radius: 8px;">
+            <span>${iconData.letter}</span>
+          </div>
+        `;
+      } catch (e) {
+        console.error('Ошибка при парсинге данных локальной иконки в платеже:', e);
+        // Если не удалось распарсить, создаем стандартную иконку
+        iconHtml = `
+          <div class="payment-app-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; width: 32px; height: 32px; border-radius: 8px;">
+            <span>${payment.name.charAt(0).toUpperCase()}</span>
+          </div>
+        `;
+      }
+    } else {
+      // Добавляем параметры для оптимизации иконки в карточке
+      const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+      iconHtml = `
+        <div class="payment-app-icon">
+          <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy">
+        </div>
+      `;
+    }
   }
   
   // Формируем HTML для цены - разный для триальных и обычных подписок
@@ -1356,34 +1404,58 @@ function renderDailySubscriptions() {
       const formattedPrice = sub.isTrial ? 'Бесплатно' : formatCurrency(sub.price);
       const period = formatSubscriptionPeriod(sub);
       
-      // Генерируем HTML с поддержкой иконки, точно как в createSubscriptionCard
+      // Генерируем HTML с поддержкой иконки
       let iconHtml = '';
       if (sub.iconUrl) {
-        // Добавляем параметры для оптимизации иконки в карточке
-        const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-        iconHtml = `
-          <div class="subscription-icon">
-            <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy">
+        // Проверяем, локальная ли это иконка
+        if (sub.iconUrl.startsWith('data:local,')) {
+          try {
+            // Парсим данные локальной иконки
+            const iconDataStr = sub.iconUrl.replace('data:local,', '');
+            const iconData = JSON.parse(iconDataStr);
+            
+            // Создаем HTML для локальной иконки
+            iconHtml = `
+              <div class="subscription-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                <span>${iconData.letter}</span>
+              </div>
+            `;
+          } catch (e) {
+            console.error('Ошибка при парсинге данных локальной иконки в календаре:', e);
+            // Если не удалось распарсить, создаем стандартную иконку
+            iconHtml = `
+              <div class="subscription-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                <span>${sub.name.charAt(0).toUpperCase()}</span>
+              </div>
+            `;
+          }
+        } else {
+          // Добавляем параметры для оптимизации иконки в карточке
+          const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+          iconHtml = `
+            <div class="subscription-icon">
+              <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy">
+            </div>
+          `;
+        }
+      }
+      
+      // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
+      let priceHtml = '';
+      if (sub.isTrial) {
+        priceHtml = `
+          <div class="subscription-price-group">
+            <span class="subscription-price trial-price">Триал</span>
+          </div>
+        `;
+      } else {
+        priceHtml = `
+          <div class="subscription-price-group">
+            <span class="subscription-price">${formattedPrice}</span>
+            <span class="subscription-period">за ${period}</span>
           </div>
         `;
       }
-      
-        // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
-  let priceHtml = '';
-  if (sub.isTrial) {
-    priceHtml = `
-      <div class="subscription-price-group">
-        <span class="subscription-price trial-price">Триал</span>
-      </div>
-    `;
-  } else {
-    priceHtml = `
-      <div class="subscription-price-group">
-        <span class="subscription-price">${formattedPrice}</span>
-        <span class="subscription-period">за ${period}</span>
-      </div>
-    `;
-  }
       
       html += `
         <div class="daily-subscription-item">
@@ -1439,6 +1511,7 @@ async function searchAppIcons(query) {
     
     // Подготовка результатов
     let searchResults = [];
+    let apiAccessible = true;
     
     // Сначала пробуем получить результаты через Brand Search API
     try {
@@ -1456,144 +1529,116 @@ async function searchAppIcons(query) {
           domain: item.domain,
           name: item.name
         }));
+      } else if (searchResponse.status === 401) {
+        // Если получили ошибку авторизации, запоминаем это и переходим на резервный вариант
+        console.log('API Logo.dev недоступен из-за проблем с авторизацией (401), используем локальные иконки');
+        apiAccessible = false;
       }
     } catch (error) {
       console.warn('Brand Search API недоступен, используем запасной вариант:', error);
+      apiAccessible = false;
     }
     
-    // Если не удалось получить результаты через Brand Search API или результатов нет,
-    // используем запасной вариант с предопределенными доменами
-    if (searchResults.length === 0) {
+    // Если API недоступен или результатов нет, используем локальную генерацию иконок
+    if (searchResults.length === 0 || !apiAccessible) {
+      // Спецальный список популярных сервисов
       const lowerCaseQuery = query.toLowerCase().trim();
-      
-      // Специальный случай для Telegram
-      if (lowerCaseQuery.includes('telegram')) {
-        const telegramDomains = [
-          { domain: 'telegram.org', name: 'Telegram Messenger' },
-          { domain: 'telegram.com', name: 'Telegram' },
-          { domain: 't.me', name: 'Telegram' }
-        ];
-        
-        telegramDomains.forEach(item => {
-          searchResults.push({
-            url: `https://img.logo.dev/${item.domain}?token=${API_TOKEN}&${apiParams}`,
-            domain: item.domain,
-            name: item.name
-          });
-        });
-      } else {
-        // Предопределенные популярные сервисы
-        const popularServices = {
-          'steam': [
-            { domain: 'steampowered.com', name: 'Steam (Valve Corporation)' },
-            { domain: 'steamcommunity.com', name: 'Steam Community' },
-            { domain: 'steam.com', name: 'Steam' }
-          ],
-          'netflix': [
-            { domain: 'netflix.com', name: 'Netflix' },
-            { domain: 'netflixinvestor.com', name: 'Netflix Investor' }
-          ],
-          'spotify': [
-            { domain: 'spotify.com', name: 'Spotify' },
-            { domain: 'spotifyforbrands.com', name: 'Spotify for Brands' }
-          ],
-          'amazon': [
-            { domain: 'amazon.com', name: 'Amazon' },
-            { domain: 'primevideo.com', name: 'Amazon Prime Video' },
-            { domain: 'audible.com', name: 'Audible' }
-          ],
-          'google': [
-            { domain: 'google.com', name: 'Google' },
-            { domain: 'gmail.com', name: 'Gmail' },
-            { domain: 'youtube.com', name: 'YouTube' }
-          ],
-          'apple': [
-            { domain: 'apple.com', name: 'Apple' },
-            { domain: 'icloud.com', name: 'iCloud' }
-          ],
-          'microsoft': [
-            { domain: 'microsoft.com', name: 'Microsoft' },
-            { domain: 'xbox.com', name: 'Xbox' },
-            { domain: 'office.com', name: 'Microsoft Office' }
-          ]
-        };
-        
-        // Проверяем, есть ли запрос в популярных сервисах
-        let foundPopularService = false;
-        Object.keys(popularServices).forEach(service => {
-          if (lowerCaseQuery.includes(service)) {
-            foundPopularService = true;
-            popularServices[service].forEach(item => {
-              searchResults.push({
-                url: `https://img.logo.dev/${item.domain}?token=${API_TOKEN}&${apiParams}`,
-                domain: item.domain,
-                name: item.name
-              });
-            });
-          }
-        });
-        
-        // Если не найдено в популярных сервисах, пробуем наиболее вероятные домены
-        if (!foundPopularService) {
-          // Очищаем запрос от пробелов и специальных символов
-          const cleanQuery = lowerCaseQuery.replace(/[^a-z0-9]/gi, '');
-          
-          // Наиболее распространенные домены
-          const commonDomains = ['.com', '.app', '.io', '.net', '.tv'];
-          
-          commonDomains.forEach(ext => {
-            const domain = `${cleanQuery}${ext}`;
-            searchResults.push({
-              url: `https://img.logo.dev/${domain}?token=${API_TOKEN}&${apiParams}`,
-              domain: domain,
-              name: capitalizeFirstLetter(query)
-            });
-          });
+      const specialServices = {
+        'telegram': { 
+          name: 'Telegram', 
+          color: '#0088cc',
+          letter: 'T'
+        },
+        'netflix': { 
+          name: 'Netflix', 
+          color: '#e50914',
+          letter: 'N'
+        },
+        'spotify': { 
+          name: 'Spotify', 
+          color: '#1DB954',
+          letter: 'S'
+        },
+        'youtube': { 
+          name: 'YouTube', 
+          color: '#ff0000',
+          letter: 'Y'
+        },
+        'discord': { 
+          name: 'Discord', 
+          color: '#5865F2',
+          letter: 'D'
+        },
+        'twitch': { 
+          name: 'Twitch', 
+          color: '#9146ff',
+          letter: 'T'
+        },
+        'steam': { 
+          name: 'Steam', 
+          color: '#171a21',
+          letter: 'S'
+        },
+        'amazon': { 
+          name: 'Amazon', 
+          color: '#ff9900',
+          letter: 'A'
+        },
+        'apple': { 
+          name: 'Apple', 
+          color: '#555555',
+          letter: 'A'
+        },
+        'google': { 
+          name: 'Google', 
+          color: '#4285f4',
+          letter: 'G'
         }
+      };
+      
+      // Проверяем, если запрос соответствует известному сервису
+      const matchedService = Object.keys(specialServices).find(key => 
+        lowerCaseQuery.includes(key));
+      
+      if (matchedService) {
+        const service = specialServices[matchedService];
+        // Создаем локальную иконку для известного сервиса
+        searchResults = [{
+          url: 'local',
+          domain: matchedService + '.com',
+          name: service.name,
+          color: service.color,
+          letter: service.letter
+        }];
+      } else {
+        // Если сервис не известен, создаем общую иконку
+        const firstLetter = query.charAt(0).toUpperCase();
+        const randomColors = [
+          '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
+          '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
+        ];
+        const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+        
+        searchResults = [{
+          url: 'local',
+          domain: query.toLowerCase().replace(/\s+/g, '') + '.com',
+          name: capitalizeFirstLetter(query),
+          color: randomColor,
+          letter: firstLetter
+        }];
       }
     }
-    
-    // Выполняем запросы на получение логотипов параллельно
-    const results = await Promise.all(
-      searchResults.map(async (result) => {
-        try {
-          const response = await fetch(result.url);
-          if (response.ok) {
-            return {
-              url: response.url,
-              domain: result.domain,
-              name: result.name
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error(`Ошибка при запросе ${result.url}:`, error);
-          return null;
-        }
-      })
-    );
-    
-    // Фильтруем успешные результаты и удаляем дубликаты
-    const validResults = results.filter(result => result !== null);
-    const uniqueDomains = {};
-    const uniqueResults = validResults.filter(result => {
-      if (uniqueDomains[result.domain]) {
-        return false;
-      }
-      uniqueDomains[result.domain] = true;
-      return true;
-    });
     
     // Очищаем контейнер
     searchDropdown.innerHTML = '';
     
-    if (uniqueResults.length === 0) {
+    if (searchResults.length === 0) {
       searchDropdown.innerHTML = '<div class="search-empty">Сервисы не найдены</div>';
       return;
     }
     
     // Ограничиваем до 10 результатов
-    const resultsToShow = uniqueResults.slice(0, 10);
+    const resultsToShow = searchResults.slice(0, 10);
     
     // Отображаем найденные иконки в выпадающем списке
     resultsToShow.forEach(result => {
@@ -1603,10 +1648,27 @@ async function searchAppIcons(query) {
       // Форматируем домен для отображения
       const displayDomain = formatDomainForDisplay(result.domain);
       
+      let iconHtml = '';
+      
+      // Проверяем, локальная ли это иконка
+      if (result.url === 'local') {
+        // Создаем SVG-монограмму с первой буквой названия
+        iconHtml = `
+          <div class="search-item-icon local-icon" style="background-color: ${result.color};">
+            <span class="icon-letter">${result.letter}</span>
+          </div>
+        `;
+      } else {
+        // Используем обычную иконку из API
+        iconHtml = `
+          <div class="search-item-icon">
+            <img src="${result.url}" alt="${result.name}">
+          </div>
+        `;
+      }
+      
       searchItem.innerHTML = `
-        <div class="search-item-icon">
-          <img src="${result.url}" alt="${result.name}">
-        </div>
+        ${iconHtml}
         <div class="search-item-details">
           <div class="search-item-name">${result.name}</div>
           <div class="search-item-domain">${displayDomain}</div>
@@ -1615,7 +1677,12 @@ async function searchAppIcons(query) {
       
       // Обработчик выбора сервиса
       searchItem.addEventListener('click', () => {
-        selectAppIcon(result.url);
+        if (result.url === 'local') {
+          // Для локальных иконок используем другой способ отображения
+          selectLocalIcon(result.letter, result.color, result.name);
+        } else {
+          selectAppIcon(result.url);
+        }
         // Не меняем название, оставляем то, что ввел пользователь
         searchDropdown.classList.remove('active');
       });
@@ -1626,6 +1693,36 @@ async function searchAppIcons(query) {
   } catch (error) {
     console.error('Ошибка при поиске иконок:', error);
     searchDropdown.innerHTML = '<div class="search-empty">Ошибка при поиске сервисов</div>';
+  }
+}
+
+// Выбор локальной иконки (монограммы)
+function selectLocalIcon(letter, color, serviceName) {
+  // Создаем и сохраняем данные для локальной иконки
+  const iconData = {
+    type: 'local',
+    letter: letter,
+    color: color,
+    name: serviceName
+  };
+  
+  // Сохраняем в JSON строку для возможности хранения в localStorage
+  selectedIconUrl = 'data:local,' + JSON.stringify(iconData);
+  
+  // Обновляем скрытое поле с URL иконки
+  document.getElementById('app-icon-url').value = selectedIconUrl;
+  
+  // Обновляем превью
+  const selectedIcon = document.getElementById('selected-icon');
+  
+  if (selectedIcon) {
+    // Заменяем тег img на div с буквой для превью
+    const iconPreviewContainer = document.getElementById('icon-preview');
+    iconPreviewContainer.innerHTML = `
+      <div id="selected-icon" class="local-icon-preview" style="background-color: ${color}; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: white; font-weight: bold;">
+        ${letter}
+      </div>
+    `;
   }
 }
 
@@ -1649,6 +1746,11 @@ function capitalizeFirstLetter(string) {
 
 // Выбор иконки приложения
 function selectAppIcon(iconUrl) {
+  // Если URL уже указывает на локальную иконку, просто используем его напрямую
+  if (iconUrl === 'local') {
+    return; // Локальные иконки обрабатываются через selectLocalIcon
+  }
+
   // Удаляем параметры из URL (token, size и т.д.), сохраняем только базовый URL
   let cleanIconUrl = iconUrl;
   if (iconUrl.includes('?')) {
@@ -1665,8 +1767,37 @@ function selectAppIcon(iconUrl) {
   const selectedIcon = document.getElementById('selected-icon');
   
   if (selectedIcon) {
-    selectedIcon.src = previewUrl;
-    selectedIcon.style.display = 'block';
+    // Проверяем доступность изображения перед отображением
+    const img = new Image();
+    img.onload = function() {
+      // Успешно загружено, отображаем
+      const iconPreviewContainer = document.getElementById('icon-preview');
+      iconPreviewContainer.innerHTML = `
+        <img id="selected-icon" src="${previewUrl}" alt="Иконка сервиса" style="display: block; width: 32px; height: 32px; border-radius: 8px; object-fit: contain;">
+      `;
+    };
+    
+    img.onerror = function() {
+      // Ошибка загрузки, создаем локальную иконку
+      console.log('Не удалось загрузить иконку из API, создаем локальную');
+      
+      // Получаем имя сервиса из поля ввода
+      const serviceName = document.getElementById('name').value.trim();
+      const firstLetter = serviceName.charAt(0).toUpperCase();
+      
+      // Выбираем случайный цвет
+      const randomColors = [
+        '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
+        '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
+      ];
+      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      
+      // Создаем локальную иконку
+      selectLocalIcon(firstLetter, randomColor, serviceName);
+    };
+    
+    // Начинаем загрузку изображения
+    img.src = previewUrl;
   }
 }
 
@@ -1848,7 +1979,22 @@ function openEditSubscriptionForm(subscription) {
   
   // Устанавливаем иконку, если она есть
   if (subscription.iconUrl) {
-    selectAppIcon(subscription.iconUrl);
+    if (subscription.iconUrl.startsWith('data:local,')) {
+      // Для локальных иконок
+      try {
+        const iconDataStr = subscription.iconUrl.replace('data:local,', '');
+        const iconData = JSON.parse(iconDataStr);
+        
+        // Используем функцию для выбора локальной иконки
+        selectLocalIcon(iconData.letter, iconData.color, iconData.name || subscription.name);
+      } catch (e) {
+        console.error('Ошибка при парсинге данных локальной иконки:', e);
+        resetAppIcon();
+      }
+    } else {
+      // Для обычных иконок из API
+      selectAppIcon(subscription.iconUrl);
+    }
   } else {
     resetAppIcon();
   }
