@@ -1,12 +1,12 @@
 // Конфигурация Supabase для подключения к базе данных
-import { createClient } from '@supabase/supabase-js'
+// Используем глобальный объект Supabase, загруженный через CDN
 
 // Учетные данные Supabase
 const supabaseUrl = 'https://kfzrrdppyjmspsswpuij.supabase.co' 
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmenJyZHBweWptc3Bzc3dwdWlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMjY2MzIsImV4cCI6MjA2MzYwMjYzMn0.nxKuQrJuzwM4Cnpbuo7ByLsuZG2dAPgAgZgSQB5IDQs'
 
 // Создание клиента Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
 // Функция для сохранения профиля пользователя из Telegram
 export async function saveUserProfile(telegramUser) {

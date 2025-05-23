@@ -2,7 +2,7 @@
 // Инициализация Telegram Mini App
 
 // Импорт функций для работы с Supabase
-import { supabase, saveUserProfile, loadUserSubscriptions, saveSubscription, deleteSubscription } from './supabase.js';
+import { supabase, saveUserProfile, loadUserSubscriptions, saveSubscription, deleteSubscription } from './supabase';
 
 // Глобальная переменная для хранения ID пользователя
 let currentUserId = null;
