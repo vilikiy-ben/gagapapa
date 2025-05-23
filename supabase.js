@@ -122,6 +122,14 @@ window.loadUserSubscriptions = async function(userId) {
   }
 
   try {
+    // ОТЛАДКА: Проверяем localStorage
+    try {
+      const localData = localStorage.getItem('subscriptions');
+      logDebug('Текущие данные в localStorage', localData);
+    } catch(e) {
+      logDebug('Ошибка при чтении localStorage', e);
+    }
+
     logDebug('Отправка запроса на загрузку подписок');
     const { data, error } = await window.supabaseClient
       .from('subscriptions')
@@ -264,14 +272,24 @@ window.saveSubscription = async function(userId, subscription) {
         const storedData = localStorage.getItem('subscriptions');
         if (storedData) {
           localSubscriptions = JSON.parse(storedData);
+          logDebug('Загружены существующие подписки из localStorage', localSubscriptions.length);
         }
       } catch (e) {
         logDebug('Ошибка при загрузке подписок из localStorage', e.message);
       }
       
+      // Создаем уникальный ID для локальной подписки, если его еще нет
+      if (!subscription.id || (subscription.id && subscription.id.startsWith('local_'))) {
+        // Проверяем, есть ли подписка с таким ID
+        const exists = localSubscriptions.some(s => s.id === subscription.id);
+        if (!exists) {
+          subscription.id = 'local_' + Date.now();
+        }
+      }
+      
       // Преобразуем для локального хранения
       const localSubscription = {
-        id: subscription.id || 'local_' + Date.now(),
+        id: subscription.id,
         user_id: userId,
         name: subscription.name,
         price: subscription.price,
@@ -283,12 +301,14 @@ window.saveSubscription = async function(userId, subscription) {
         color: subscription.color || null
       };
       
-      if (subscription.id && localSubscriptions.some(s => s.id === subscription.id)) {
+      if (localSubscriptions.some(s => s.id === subscription.id)) {
         // Обновляем существующую подписку
+        logDebug('Обновление существующей подписки в localStorage', subscription.id);
         localSubscriptions = localSubscriptions.map(s => 
           s.id === subscription.id ? localSubscription : s);
       } else {
         // Добавляем новую
+        logDebug('Добавление новой подписки в localStorage', localSubscription.id);
         localSubscriptions.push(localSubscription);
       }
       
@@ -296,6 +316,20 @@ window.saveSubscription = async function(userId, subscription) {
       try {
         localStorage.setItem('subscriptions', JSON.stringify(localSubscriptions));
         logDebug('Подписка сохранена в localStorage', localSubscription.id);
+        
+        // Дополнительная проверка, чтобы убедиться, что данные сохранились
+        setTimeout(() => {
+          try {
+            const checkData = localStorage.getItem('subscriptions');
+            if (checkData) {
+              const parsed = JSON.parse(checkData);
+              logDebug('Проверка сохранения в localStorage: сохранено подписок', parsed.length);
+            }
+          } catch (e) {
+            logDebug('Ошибка при проверке сохранения в localStorage', e.message);
+          }
+        }, 100);
+        
         result = localSubscription;
       } catch (storageError) {
         logDebug('Ошибка при сохранении в localStorage', storageError.message);

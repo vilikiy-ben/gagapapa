@@ -334,8 +334,8 @@ async function initApp() {
   try {
     // Проверка библиотеки Supabase
     if (typeof window.supabaseClient === 'undefined') {
-      logDebug('Ошибка: supabaseClient не определен');
-      throw new Error('Supabase client не инициализирован');
+      logDebug('Ошибка: supabaseClient не определен, использую только localStorage');
+      // Даже если Supabase не доступен, продолжаем работу с localStorage
     }
     
     // Инициализация элементов для работы с иконками
@@ -347,7 +347,13 @@ async function initApp() {
     trialCheckbox = document.getElementById('trial-checkbox');
     priceInput = document.getElementById('price');
     
-    // Авторизация пользователя через Telegram
+    // Загрузка данных из localStorage до авторизации
+    await loadSubscriptionsFromLocalStorage();
+    const hasLocalData = subscriptions.length > 0;
+    logDebug('Найдены локальные данные в localStorage', hasLocalData ? subscriptions.length + ' подписок' : 'нет');
+    
+    // Попытка авторизации пользователя через Telegram
+    let supabaseAuthSuccess = false;
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
       logDebug('Получены данные пользователя Telegram', window.Telegram.WebApp.initDataUnsafe.user.id);
       
@@ -362,21 +368,31 @@ async function initApp() {
           if (userSubscriptions && userSubscriptions.length > 0) {
             subscriptions = userSubscriptions;
             logDebug('Загружены подписки из Supabase', subscriptions.length);
-          } else {
-            // Если в Supabase нет подписок, попробуем использовать локальные
-            logDebug('В Supabase нет подписок, проверяем локальное хранилище');
+            supabaseAuthSuccess = true;
+            
+            // Обновляем локальное хранилище
+            await saveSubscriptionsToLocalStorage();
+          } else if (hasLocalData) {
+            // Если в Supabase нет подписок, но есть в localStorage, пробуем мигрировать их
+            logDebug('В Supabase нет подписок, выполняем миграцию из localStorage');
             await migrateLocalSubscriptions();
+            supabaseAuthSuccess = true;
+          } else {
+            logDebug('В Supabase и localStorage нет подписок');
           }
         }
       } catch (error) {
         console.error('Ошибка при авторизации пользователя:', error);
-        logDebug('Ошибка при авторизации пользователя', error.message);
-        // В случае ошибки используем локальное хранилище
-        await loadSubscriptionsFromLocalStorage();
+        logDebug('Ошибка при авторизации пользователя, использую локальное хранилище', error.message);
+        // Продолжаем использовать localStorage
       }
     } else {
-      logDebug('Пользователь не авторизован или запущено локально');
-      await loadSubscriptionsFromLocalStorage();
+      logDebug('Пользователь не авторизован или запущено локально, использую локальное хранилище');
+    }
+    
+    // Если не удалось загрузить данные из Supabase, используем данные из localStorage (они уже загружены)
+    if (!supabaseAuthSuccess && !hasLocalData) {
+      logDebug('Не удалось загрузить данные ни из Supabase, ни из localStorage. Начинаем с пустого списка.');
     }
     
     // Обработчик событий для поиска иконок при вводе
@@ -528,45 +544,92 @@ async function initApp() {
 }
 
 // Загрузка подписок из localStorage
-async function loadSubscriptions() {
+async function loadSubscriptionsFromLocalStorage() {
+  logDebug('Загрузка подписок из localStorage');
   try {
     const storedData = localStorage.getItem('subscriptions');
     if (storedData) {
-      subscriptions = JSON.parse(storedData);
-      
-      // Преобразуем строковые даты в объекты Date
-      subscriptions = subscriptions.map(sub => {
-        // Проверяем формат даты
-        if (typeof sub.billingDate === 'string') {
-          return {
-            ...sub,
-            billingDate: new Date(sub.billingDate)
-          };
-        }
-        return sub;
-      });
+      try {
+        const parsedData = JSON.parse(storedData);
+        logDebug('Данные успешно загружены из localStorage', parsedData.length + ' подписок');
+        
+        // Преобразуем строковые даты в объекты Date
+        subscriptions = parsedData.map(sub => {
+          // Проверяем формат даты и билинг дату
+          if (typeof sub.billingDate === 'string') {
+            return {
+              ...sub,
+              billingDate: new Date(sub.billingDate)
+            };
+          } else if (sub.billing_date && typeof sub.billing_date === 'string') {
+            // Для совместимости с форматом Supabase
+            return {
+              ...sub,
+              billingDate: new Date(sub.billing_date),
+              // Добавляем поля в camelCase для совместимости
+              isYearly: sub.is_yearly || sub.isYearly || false,
+              isWeekly: sub.is_weekly || sub.isWeekly || false,
+              isTrial: sub.is_trial || sub.isTrial || false,
+              iconUrl: sub.icon_url || sub.iconUrl || null
+            };
+          }
+          return sub;
+        });
+        
+        // Дублируем логирование для отладки
+        console.log('Загружено из localStorage:', subscriptions);
+      } catch (parseError) {
+        console.error('Ошибка при парсинге данных из localStorage:', parseError);
+        logDebug('Ошибка при парсинге данных из localStorage', parseError.message);
+        subscriptions = [];
+      }
+    } else {
+      logDebug('В localStorage нет данных о подписках');
+      subscriptions = [];
     }
   } catch (error) {
-    console.error('Ошибка при загрузке подписок:', error);
+    console.error('Ошибка при загрузке подписок из localStorage:', error);
+    logDebug('Ошибка при загрузке подписок из localStorage', error.message);
     subscriptions = [];
   }
 }
 
-// Сохранение подписок в Supabase или localStorage
-async function saveSubscriptions() {
-  if (currentUserId) {
-    // Если есть ID пользователя, сохраняем в Supabase
-    console.log('Сохраняем подписки в Supabase');
-    return true; // Подписки сохраняются индивидуально через saveSubscription
-  } else {
-    // Запасной вариант - сохраняем в localStorage
-    try {
-      localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-      return true;
-    } catch (error) {
-      console.error('Ошибка при сохранении подписок в localStorage:', error);
-      return false;
+// Сохранение подписок в localStorage
+async function saveSubscriptionsToLocalStorage() {
+  logDebug('Сохранение подписок в localStorage', subscriptions.length + ' подписок');
+  try {
+    // Подготавливаем данные для сохранения
+    const dataToSave = subscriptions.map(sub => {
+      // Если это объект с датой, преобразуем ее в строку
+      if (sub.billingDate instanceof Date) {
+        return {
+          ...sub,
+          // Оставляем дату как есть, JSON.stringify преобразует ее в строку
+        };
+      }
+      return sub;
+    });
+
+    localStorage.setItem('subscriptions', JSON.stringify(dataToSave));
+    console.log('Подписки сохранены в localStorage:', dataToSave);
+    logDebug('Подписки успешно сохранены в localStorage');
+    
+    // Для отладки: повторно читаем данные, чтобы убедиться, что они сохранились
+    const savedData = localStorage.getItem('subscriptions');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        logDebug('Проверка сохраненных данных', parsedData.length + ' подписок прочитано из localStorage');
+      } catch (e) {
+        logDebug('Ошибка при проверке сохраненных данных', e.message);
+      }
     }
+    
+    return true;
+  } catch (error) {
+    console.error('Ошибка при сохранении подписок в localStorage:', error);
+    logDebug('Ошибка при сохранении подписок в localStorage', error.message);
+    return false;
   }
 }
 
@@ -1896,7 +1959,7 @@ async function confirmDelete() {
     } else {
       // Если нет подключения к Supabase, удаляем только локально
       subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-      await saveSubscriptions();
+      await saveSubscriptionsToLocalStorage();
     }
     
     closeConfirmDeleteModal();
@@ -2053,7 +2116,7 @@ async function handleFormSubmit(e) {
   let index = -1;
   
   if (currentUserId) {
-    // Если пользователь авторизован, сохраняем в Supabase
+    // Если пользователь авторизован, пробуем сохранить в Supabase
     savedSubscription = await window.saveSubscription(currentUserId, subscription);
     
     if (formMode === 'edit') {
@@ -2069,8 +2132,11 @@ async function handleFormSubmit(e) {
         subscriptions.push(savedSubscription);
       }
     }
+    
+    // Обязательно сохраняем в localStorage даже при успешном сохранении в Supabase
+    await saveSubscriptionsToLocalStorage();
   } else {
-    // Запасной вариант для локального режима
+    // Локальный режим без Supabase
     if (formMode === 'edit') {
       index = subscriptions.findIndex(sub => sub.id === id);
       if (index !== -1) {
@@ -2081,7 +2147,7 @@ async function handleFormSubmit(e) {
     }
     
     // Сохраняем в localStorage
-    await saveSubscriptions();
+    await saveSubscriptionsToLocalStorage();
   }
   
   closeSubscriptionForm();
@@ -2093,63 +2159,81 @@ async function migrateLocalSubscriptions() {
   try {
     const storedData = localStorage.getItem('subscriptions');
     if (storedData && currentUserId) {
-      const localSubscriptions = JSON.parse(storedData);
+      let localSubscriptions = [];
+      try {
+        localSubscriptions = JSON.parse(storedData);
+        logDebug('Загружены подписки для миграции', localSubscriptions.length);
+      } catch (parseError) {
+        logDebug('Ошибка при парсинге данных для миграции', parseError.message);
+        return;
+      }
       
       // Преобразуем строковые даты в объекты Date
       const formattedSubscriptions = localSubscriptions.map(sub => {
+        const newSub = {...sub};
+        
         if (typeof sub.billingDate === 'string') {
-          return {
-            ...sub,
-            billingDate: new Date(sub.billingDate)
-          };
+          newSub.billingDate = new Date(sub.billingDate);
+        } else if (sub.billing_date && typeof sub.billing_date === 'string') {
+          // Для совместимости с форматом Supabase
+          newSub.billingDate = new Date(sub.billing_date);
         }
-        return sub;
+        
+        // Добавляем совместимые поля
+        newSub.isYearly = sub.is_yearly || sub.isYearly || false;
+        newSub.isWeekly = sub.is_weekly || sub.isWeekly || false;
+        newSub.isTrial = sub.is_trial || sub.isTrial || false;
+        newSub.iconUrl = sub.icon_url || sub.iconUrl || null;
+        
+        return newSub;
       });
       
       if (formattedSubscriptions.length > 0) {
-        console.log('Мигрируем', formattedSubscriptions.length, 'подписок из localStorage в Supabase');
+        logDebug('Мигрируем ' + formattedSubscriptions.length + ' подписок из localStorage в Supabase');
         
         // Сохраняем каждую подписку в Supabase
         const savedSubscriptions = [];
+        let allSuccessful = true;
+        
         for (const sub of formattedSubscriptions) {
-          const saved = await window.saveSubscription(currentUserId, sub);
-          if (saved) savedSubscriptions.push(saved);
+          try {
+            const saved = await window.saveSubscription(currentUserId, sub);
+            if (saved) {
+              savedSubscriptions.push(saved);
+            } else {
+              allSuccessful = false;
+              logDebug('Не удалось сохранить подписку в Supabase');
+            }
+          } catch (e) {
+            allSuccessful = false;
+            logDebug('Ошибка при сохранении подписки в Supabase', e.message);
+          }
         }
         
-        subscriptions = savedSubscriptions;
-        console.log('Миграция завершена, сохранено', savedSubscriptions.length, 'подписок');
-        
-        // Очищаем локальное хранилище после успешной миграции
-        localStorage.removeItem('subscriptions');
+        if (savedSubscriptions.length > 0) {
+          subscriptions = savedSubscriptions;
+          logDebug('Миграция завершена, сохранено ' + savedSubscriptions.length + ' подписок');
+          
+          // Обновляем данные в localStorage
+          await saveSubscriptionsToLocalStorage();
+          
+          // Очищаем устаревшие данные, только если всё сохранилось успешно
+          if (allSuccessful && savedSubscriptions.length === formattedSubscriptions.length) {
+            localStorage.removeItem('subscriptions_old');
+            localStorage.setItem('subscriptions_old', storedData); // сохраняем резервную копию
+            logDebug('Создана резервная копия в localStorage (subscriptions_old)');
+          }
+        } else {
+          // Если ничего не удалось сохранить, используем локальные данные
+          subscriptions = formattedSubscriptions;
+          logDebug('Миграция в Supabase не удалась, используем локальные данные');
+        }
       }
     }
   } catch (error) {
     console.error('Ошибка при миграции подписок:', error);
+    logDebug('Ошибка при миграции подписок', error.message);
     // В случае ошибки загружаем из локального хранилища
     await loadSubscriptionsFromLocalStorage();
-  }
-}
-
-// Загрузка подписок из localStorage (запасной вариант)
-async function loadSubscriptionsFromLocalStorage() {
-  try {
-    const storedData = localStorage.getItem('subscriptions');
-    if (storedData) {
-      subscriptions = JSON.parse(storedData);
-      
-      // Преобразуем строковые даты в объекты Date
-      subscriptions = subscriptions.map(sub => {
-        if (typeof sub.billingDate === 'string') {
-          return {
-            ...sub,
-            billingDate: new Date(sub.billingDate)
-          };
-        }
-        return sub;
-      });
-    }
-  } catch (error) {
-    console.error('Ошибка при загрузке подписок из localStorage:', error);
-    subscriptions = [];
   }
 } 
