@@ -85,7 +85,27 @@
           
           <!-- Все подписки в виде карточек -->
           <div class="section">
-            <h2 class="section-title" id="all-subscriptions-title">Все подписки (0)</h2>
+            <div class="section-header">
+              <h2 class="section-title" id="all-subscriptions-title">Все подписки (0)</h2>
+              <div class="sort-container">
+                <div class="custom-sort-toggle" id="sort-toggle">
+                  <div class="sort-current">
+                    <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 7H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M6 12H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M8 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <span class="sort-label">Сортировка</span>
+                  </div>
+                  <div class="sort-dropdown" id="sort-dropdown">
+                    <div class="sort-option" data-sort="nearest">Ближайшие</div>
+                    <div class="sort-option" data-sort="furthest">Дальние</div>
+                    <div class="sort-option" data-sort="cheapest">Дешевые</div>
+                    <div class="sort-option" data-sort="expensive">Дорогие</div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="subscription-cards" id="subscriptions-list">
               <!-- Будет заполнено динамически -->
               <div class="empty-list-message" id="empty-subscriptions-message">Нет активных подписок</div>
@@ -106,63 +126,21 @@
             </div>
           </div>
         </div>
-        
-        <!-- Таб 3: Статистика -->
-        <div class="tab-pane" id="tab-stats">
-          <div class="section">
-            <h2 class="section-title">Статистика платежей</h2>
-            
-            <div class="stats-cards">
-              <div class="stats-card">
-                <div class="stats-title">Распределение</div>
-                <div class="stats-chart" id="distribution-chart">
-                  <div class="placeholder-chart">
-                    <div class="chart-bar" style="height: 40%; background-color: #e74c3c;"></div>
-                    <div class="chart-bar" style="height: 70%; background-color: #3498db;"></div>
-                    <div class="chart-bar" style="height: 30%; background-color: #2ecc71;"></div>
-                    <div class="chart-bar" style="height: 60%; background-color: #f1c40f;"></div>
-                    <div class="chart-bar" style="height: 50%; background-color: #9b59b6;"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="stats-card">
-                <div class="stats-title">Типы платежей</div>
-                <div class="payment-types">
-                  <div class="payment-type-item">
-                    <div class="payment-type-label">Еженедельные</div>
-                    <div class="payment-type-value" id="weekly-count">0</div>
-                  </div>
-                  <div class="payment-type-item">
-                    <div class="payment-type-label">Ежемесячные</div>
-                    <div class="payment-type-value" id="monthly-count">0</div>
-                  </div>
-                  <div class="payment-type-item">
-                    <div class="payment-type-label">Ежегодные</div>
-                    <div class="payment-type-value" id="yearly-count">0</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-      
-      <!-- Кнопка добавления (плавающая) -->
-      <button class="fab-button" id="add-subscription-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 7V17M7 12H17" stroke="white" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </button>
       
       <!-- Навигация по табам -->
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="tab-overview">
+        <button class="tab-btn active" data-tab="tab-overview" title="Обзор">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 5L19 11V20H14V14H10V20H5V11L12 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </button>
-        <button class="tab-btn" data-tab="tab-calendar">
+        <button class="fab-button" id="add-subscription-btn" title="Добавить подписку">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 7V17M7 12H17" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-calendar" title="Календарь">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
             <rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
             <path d="M4 9H20" stroke="currentColor" stroke-width="1.5"/>
@@ -170,12 +148,6 @@
             <path d="M14 13H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M8 17H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M14 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <button class="tab-btn" data-tab="tab-stats">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 3V19C3 20.1046 3.89543 21 5 21H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M7 14L11 10L15 14L21 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
@@ -267,6 +239,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js" type="module"></script>
 </body>
 </html> 

@@ -1,6 +1,12 @@
 // SubsViewer - мини-приложение для Telegram
 // Инициализация Telegram Mini App
 
+// Импорт функций для работы с Supabase
+import { supabase, saveUserProfile, loadUserSubscriptions, saveSubscription, deleteSubscription } from './supabase.js';
+
+// Глобальная переменная для хранения ID пользователя
+let currentUserId = null;
+
 // Эмуляция Telegram WebApp API для локальной разработки
 if (!window.Telegram && window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.log('Запущена локальная эмуляция Telegram WebApp API');
@@ -239,8 +245,6 @@ const calendarContainer = document.getElementById('calendar-container');
 const dailySubscriptions = document.getElementById('daily-subscriptions');
 const emptySubscriptionsMessage = document.getElementById('empty-subscriptions-message');
 const upcomingPayments = document.getElementById('upcoming-payments');
-const monthlyCountElement = document.getElementById('monthly-count');
-const yearlyCountElement = document.getElementById('yearly-count');
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanes = document.querySelectorAll('.tab-pane');
 const formTitle = document.getElementById('form-title');
@@ -271,6 +275,34 @@ async function initApp() {
   // Инициализация элементов для Trial-функционала
   trialCheckbox = document.getElementById('trial-checkbox');
   priceInput = document.getElementById('price');
+  
+  // Авторизация пользователя через Telegram
+  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    try {
+      // Сохраняем профиль пользователя в Supabase
+      currentUserId = await saveUserProfile(tg.initDataUnsafe.user);
+      console.log('Пользователь авторизован:', currentUserId);
+      
+      // Загружаем подписки пользователя из Supabase
+      if (currentUserId) {
+        const userSubscriptions = await loadUserSubscriptions(currentUserId);
+        if (userSubscriptions && userSubscriptions.length > 0) {
+          subscriptions = userSubscriptions;
+          console.log('Загружены подписки из Supabase:', subscriptions.length);
+        } else {
+          // Если в Supabase нет подписок, попробуем использовать локальные
+          await migrateLocalSubscriptions();
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при авторизации пользователя:', error);
+      // В случае ошибки используем локальное хранилище
+      await loadSubscriptionsFromLocalStorage();
+    }
+  } else {
+    console.log('Пользователь не авторизован или запущено локально, используем localStorage');
+    await loadSubscriptionsFromLocalStorage();
+  }
   
   // Обработчик событий для поиска иконок при вводе
   if (nameInput) {
@@ -326,7 +358,33 @@ async function initApp() {
     }
   });
 
-  await loadSubscriptions();
+  // Обработчик для чекбокса Trial
+  if (trialCheckbox && priceInput) {
+    trialCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        // Запоминаем текущее значение цены
+        priceInput.dataset.previousValue = priceInput.value;
+        
+        // Блокируем поле и устанавливаем "Бесплатно"
+        priceInput.disabled = true;
+        priceInput.value = '';
+        priceInput.placeholder = 'Бесплатно';
+      } else {
+        // Восстанавливаем поле и предыдущее значение
+        priceInput.disabled = false;
+        
+        // Восстанавливаем предыдущее значение, если оно было
+        if (priceInput.dataset.previousValue) {
+          priceInput.value = priceInput.dataset.previousValue;
+        }
+        
+        // Восстанавливаем placeholder
+        priceInput.placeholder = 'например, 20';
+      }
+    });
+  }
+
+  // Примечание: loadSubscriptions() больше не вызывается здесь, т.к. загрузка происходит выше через Supabase
   setupEventListeners();
   renderCalendar(selectedDate);
   updateUI();
@@ -364,32 +422,6 @@ async function initApp() {
       forceMobileStyles();
     }, 500);
   }
-
-  // Обработчик для чекбокса Trial
-  if (trialCheckbox && priceInput) {
-    trialCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        // Запоминаем текущее значение цены
-        priceInput.dataset.previousValue = priceInput.value;
-        
-        // Блокируем поле и устанавливаем "Бесплатно"
-        priceInput.disabled = true;
-        priceInput.value = '';
-        priceInput.placeholder = 'Бесплатно';
-      } else {
-        // Восстанавливаем поле и предыдущее значение
-        priceInput.disabled = false;
-        
-        // Восстанавливаем предыдущее значение, если оно было
-        if (priceInput.dataset.previousValue) {
-          priceInput.value = priceInput.dataset.previousValue;
-        }
-        
-        // Восстанавливаем placeholder
-        priceInput.placeholder = 'например, 20';
-      }
-    });
-  }
 }
 
 // Загрузка подписок из localStorage
@@ -417,14 +449,21 @@ async function loadSubscriptions() {
   }
 }
 
-// Сохранение подписок в localStorage
+// Сохранение подписок в Supabase или localStorage
 async function saveSubscriptions() {
-  try {
-    localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-    return true;
-  } catch (error) {
-    console.error('Ошибка при сохранении подписок:', error);
-    return false;
+  if (currentUserId) {
+    // Если есть ID пользователя, сохраняем в Supabase
+    console.log('Сохраняем подписки в Supabase');
+    return true; // Подписки сохраняются индивидуально через saveSubscription
+  } else {
+    // Запасной вариант - сохраняем в localStorage
+    try {
+      localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
+      return true;
+    } catch (error) {
+      console.error('Ошибка при сохранении подписок в localStorage:', error);
+      return false;
+    }
   }
 }
 
@@ -491,6 +530,48 @@ function setupEventListeners() {
       switchTab(tabId);
     });
   });
+  
+  // Обработчик для кастомного меню сортировки
+  const sortToggle = document.getElementById('sort-toggle');
+  const sortDropdown = document.getElementById('sort-dropdown');
+  const sortLabel = document.querySelector('.sort-label');
+  const sortOptions = document.querySelectorAll('.sort-option');
+  
+  if (sortToggle) {
+    // Показать/скрыть выпадающее меню
+    sortToggle.addEventListener('click', (e) => {
+      if (!e.target.closest('.sort-dropdown')) {
+        sortDropdown.classList.toggle('active');
+      }
+    });
+    
+    // Клик вне меню скрывает его
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.custom-sort-toggle') && sortDropdown.classList.contains('active')) {
+        sortDropdown.classList.remove('active');
+      }
+    });
+    
+    // Обработка выбора опции сортировки
+    sortOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        const sortType = option.dataset.sort;
+        
+        // Обновляем активную опцию
+        sortOptions.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        
+        // Обновляем текст текущей сортировки
+        sortLabel.textContent = option.textContent;
+        
+        // Закрываем меню
+        sortDropdown.classList.remove('active');
+        
+        // Запускаем сортировку с выбранным типом
+        renderAllSubscriptions(sortType);
+      });
+    });
+  }
 }
 
 // Переключение между табами
@@ -511,16 +592,24 @@ function switchTab(tabId) {
 
 // Обновление интерфейса
 function updateUI() {
+  // Сбрасываем меню сортировки
+  const sortOptions = document.querySelectorAll('.sort-option');
+  const sortLabel = document.querySelector('.sort-label');
+  
+  if (sortOptions && sortLabel) {
+    sortOptions.forEach(opt => opt.classList.remove('active'));
+    sortLabel.textContent = 'Сортировка';
+  }
+  
   renderAllSubscriptions();
   renderUpcomingPayments();
   updateTotals();
   renderDailySubscriptions();
-  updateStatsData();
   renderCalendar(selectedDate);
 }
 
 // Рендеринг всех подписок
-function renderAllSubscriptions() {
+function renderAllSubscriptions(sortType = null) {
   subscriptionsList.innerHTML = '';
   
   if (subscriptions.length === 0) {
@@ -528,8 +617,41 @@ function renderAllSubscriptions() {
   } else {
     emptySubscriptionsMessage.style.display = 'none';
     
-    // Сортировка подписок по имени (можно добавить другие варианты сортировки)
-    const sortedSubscriptions = [...subscriptions].sort((a, b) => a.name.localeCompare(b.name));
+    // Используем переданный тип сортировки или сортируем по умолчанию по ближайшей дате
+    const currentSortType = sortType || 'nearest';
+    
+    // Сортировка подписок в зависимости от выбранного типа
+    const sortedSubscriptions = [...subscriptions].sort((a, b) => {
+      switch (currentSortType) {
+        case 'nearest':
+          // Ближайшие (от ближайшей даты к самой дальней)
+          const dateA = getNextBillingDate(a.billingDate, a.isYearly, a.isWeekly);
+          const dateB = getNextBillingDate(b.billingDate, b.isYearly, b.isWeekly);
+          return dateA - dateB;
+        case 'furthest':
+          // Дальние (от самой дальней даты к самой ближайшей)
+          const dateC = getNextBillingDate(a.billingDate, a.isYearly, a.isWeekly);
+          const dateD = getNextBillingDate(b.billingDate, b.isYearly, b.isWeekly);
+          return dateD - dateC;
+        case 'cheapest':
+          // Дешевые (от самой дешевой к самой дорогой)
+          // Сначала показываем триальные подписки, затем сортируем по возрастанию цены
+          if (a.isTrial && !b.isTrial) return -1;
+          if (!a.isTrial && b.isTrial) return 1;
+          return a.price - b.price;
+        case 'expensive':
+          // Дорогие (от самой дорогой к самой дешевой)
+          // Последними показываем триальные подписки, сначала сортируем по убыванию цены
+          if (a.isTrial && !b.isTrial) return 1;
+          if (!a.isTrial && b.isTrial) return -1;
+          return b.price - a.price;
+        default:
+          // По умолчанию сортируем по ближайшей дате
+          const dateE = getNextBillingDate(a.billingDate, a.isYearly, a.isWeekly);
+          const dateF = getNextBillingDate(b.billingDate, b.isYearly, b.isWeekly);
+          return dateE - dateF;
+      }
+    });
     
     sortedSubscriptions.forEach(subscription => {
       const subscriptionElement = createSubscriptionCard(subscription);
@@ -543,14 +665,8 @@ function renderAllSubscriptions() {
 
 // Создание карточки подписки
 function createSubscriptionCard(subscription) {
-  // Создаем контейнер для свайп-действий
-  const containerElement = document.createElement('div');
-  containerElement.className = 'subscription-card-container';
-
-  // Создаем карточку
   const subscriptionElement = document.createElement('div');
   subscriptionElement.className = 'subscription-card';
-  subscriptionElement.setAttribute('data-id', subscription.id);
   
   const nextBillingDate = getNextBillingDate(subscription.billingDate, subscription.isYearly, subscription.isWeekly);
   const formattedDate = formatDate(nextBillingDate);
@@ -610,7 +726,7 @@ function createSubscriptionCard(subscription) {
     </div>
   `;
   
-  // Добавляем обработчик для удаления через кнопку
+  // Добавляем обработчик для удаления
   const deleteButton = subscriptionElement.querySelector('.subscription-delete');
   deleteButton.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -621,159 +737,8 @@ function createSubscriptionCard(subscription) {
   subscriptionElement.addEventListener('click', () => {
     openEditSubscriptionForm(subscription);
   });
-
-  // Добавляем карточку в контейнер свайп-действий
-  containerElement.appendChild(subscriptionElement);
-
-  // Добавляем обработчики свайпа
-  setupSwipeHandlers(containerElement, subscriptionElement, subscription);
   
-  return containerElement;
-}
-
-// Функция для настройки обработчиков свайпа
-function setupSwipeHandlers(container, card, subscription) {
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
-  const swipeThreshold = 50; // Минимальное расстояние для срабатывания свайпа
-  let swipeActionsElement = null;
-  
-  // Обработчик начала касания
-  card.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isDragging = true;
-    card.classList.add('swiping');
-  });
-  
-  // Обработчик движения пальца
-  card.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    
-    currentX = e.touches[0].clientX;
-    const diffX = currentX - startX;
-    
-    // Если пользователь двигает палец достаточно далеко, создаем элементы свайп-действий
-    if ((Math.abs(diffX) > 10) && !swipeActionsElement) {
-      swipeActionsElement = createSwipeActions();
-    }
-    
-    // Ограничиваем смещение
-    if (diffX > 80) {
-      card.style.transform = `translateX(80px)`;
-      // Добавляем классы к контейнеру для видимости кнопок
-      container.classList.add('swiping-left');
-      container.classList.remove('swiping-right');
-    } else if (diffX < -80) {
-      card.style.transform = `translateX(-80px)`;
-      // Добавляем классы к контейнеру для видимости кнопок
-      container.classList.add('swiping-right');
-      container.classList.remove('swiping-left');
-    } else {
-      card.style.transform = `translateX(${diffX}px)`;
-      container.classList.remove('swiping-left', 'swiping-right');
-    }
-  });
-  
-  // Обработчик окончания касания
-  card.addEventListener('touchend', (e) => {
-    if (!isDragging) return;
-    
-    isDragging = false;
-    card.classList.remove('swiping');
-    
-    const diffX = currentX - startX;
-    
-    // Если смещение больше порога - выполняем действие
-    if (diffX > swipeThreshold) {
-      // Свайп вправо - редактирование
-      openEditSubscriptionForm(subscription);
-    } else if (diffX < -swipeThreshold) {
-      // Свайп влево - удаление
-      showConfirmDeleteModal(subscription.id);
-    }
-    
-    // Возвращаем карточку в исходное положение и удаляем свайп-действия
-    resetCardPosition();
-    removeSwipeActions();
-  });
-  
-  // Обработчик отмены касания
-  card.addEventListener('touchcancel', () => {
-    if (isDragging) {
-      isDragging = false;
-      resetCardPosition();
-      removeSwipeActions();
-    }
-  });
-  
-  // Функция для создания элементов свайп-действий
-  function createSwipeActions() {
-    // Удалим существующие элементы свайп-действий, если они есть
-    removeSwipeActions();
-    
-    // Создаем элементы свайп-действий
-    const actions = document.createElement('div');
-    actions.className = 'swipe-actions';
-    
-    // Левое действие (редактирование)
-    const leftAction = document.createElement('div');
-    leftAction.className = 'swipe-action-left';
-    leftAction.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-    
-    // Правое действие (удаление)
-    const rightAction = document.createElement('div');
-    rightAction.className = 'swipe-action-right';
-    rightAction.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 6H5H21" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-    
-    // Добавляем элементы в DOM
-    actions.appendChild(leftAction);
-    actions.appendChild(rightAction);
-    container.insertBefore(actions, container.firstChild);
-    
-    // Добавляем обработчики событий для кнопок
-    leftAction.addEventListener('click', () => {
-      openEditSubscriptionForm(subscription);
-      resetCardPosition();
-      removeSwipeActions();
-    });
-    
-    rightAction.addEventListener('click', () => {
-      showConfirmDeleteModal(subscription.id);
-      resetCardPosition();
-      removeSwipeActions();
-    });
-    
-    return actions;
-  }
-  
-  // Функция для удаления элементов свайп-действий
-  function removeSwipeActions() {
-    const existingActions = container.querySelector('.swipe-actions');
-    if (existingActions) {
-      container.removeChild(existingActions);
-    }
-    swipeActionsElement = null;
-    // Удаляем классы свайпа с контейнера
-    container.classList.remove('swiping-left', 'swiping-right');
-  }
-  
-  // Функция для сброса позиции карточки
-  function resetCardPosition() {
-    card.style.transform = 'translateX(0)';
-    // Удаляем классы свайпа с контейнера
-    container.classList.remove('swiping-left', 'swiping-right');
-  }
+  return subscriptionElement;
 }
 
 // Рендеринг предстоящих платежей
@@ -976,205 +941,6 @@ function createPaymentItem(payment) {
   `;
   
   return paymentElement;
-}
-
-// Обновление статистических данных
-function updateStatsData() {
-  // Количество подписок по типам
-  const weeklyCount = subscriptions.filter(sub => sub.isWeekly).length;
-  const monthlyCount = subscriptions.filter(sub => !sub.isYearly && !sub.isWeekly).length;
-  const yearlyCount = subscriptions.filter(sub => sub.isYearly).length;
-  
-  document.getElementById('weekly-count').textContent = weeklyCount;
-  monthlyCountElement.textContent = monthlyCount;
-  yearlyCountElement.textContent = yearlyCount;
-  
-  // Здесь можно добавить больше статистики
-}
-
-// Показать модальное окно подтверждения удаления
-function showConfirmDeleteModal(id) {
-  subscriptionToDeleteId = id;
-  
-  confirmDeleteModal.style.opacity = '0';
-  confirmDeleteModal.style.visibility = 'visible';
-  setTimeout(() => {
-    confirmDeleteModal.style.opacity = '1';
-  }, 10);
-}
-
-// Закрыть модальное окно подтверждения удаления
-function closeConfirmDeleteModal() {
-  confirmDeleteModal.style.opacity = '0';
-  setTimeout(() => {
-    confirmDeleteModal.style.visibility = 'hidden';
-    subscriptionToDeleteId = null;
-  }, 300);
-}
-
-// Подтверждение удаления
-async function confirmDelete() {
-  if (subscriptionToDeleteId !== null) {
-    subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-    await saveSubscriptions();
-    closeConfirmDeleteModal();
-    updateUI();
-  }
-}
-
-// Открытие формы добавления подписки
-function openSubscriptionForm() {
-  // Сбрасываем режим формы на добавление
-  formMode = 'add';
-  formTitle.textContent = 'Добавить подписку';
-  formSubmitBtn.textContent = 'Добавить';
-  subscriptionIdInput.value = '';
-  
-  // Установка текущей даты по умолчанию
-  const today = new Date();
-  const formattedDate = today.toISOString().split('T')[0];
-  document.getElementById('billing-date').value = formattedDate;
-  
-  // Сброс формы
-  subscriptionForm.reset();
-  resetTrialCheckbox();
-  
-  // Снова устанавливаем текущую дату (после сброса формы)
-  document.getElementById('billing-date').value = formattedDate;
-  
-  // Сброс выбранной иконки
-  resetAppIcon();
-  
-  // Установка цвета по умолчанию
-  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
-  
-  // Отображение формы
-  subscriptionFormModal.style.opacity = '0';
-  subscriptionFormModal.style.visibility = 'visible';
-  setTimeout(() => {
-    subscriptionFormModal.style.opacity = '1';
-  }, 10);
-}
-
-// Открытие формы редактирования подписки
-function openEditSubscriptionForm(subscription) {
-  // Устанавливаем режим формы на редактирование
-  formMode = 'edit';
-  formTitle.textContent = 'Редактировать подписку';
-  formSubmitBtn.textContent = 'Сохранить';
-  
-  // Заполняем форму данными подписки
-  subscriptionIdInput.value = subscription.id;
-  nameInput.value = subscription.name;
-  
-  // Проверяем, является ли подписка бесплатной (триальной)
-  if (subscription.isTrial) {
-    document.getElementById('trial-checkbox').checked = true;
-    priceInput.disabled = true;
-    priceInput.value = '';
-    priceInput.placeholder = 'Триал';
-  } else {
-    document.getElementById('trial-checkbox').checked = false;
-    priceInput.disabled = false;
-    document.getElementById('price').value = subscription.price;
-  }
-  
-  // Устанавливаем периодичность
-  if (subscription.isYearly) {
-    document.getElementById('yearly').checked = true;
-  } else if (subscription.isWeekly) {
-    document.getElementById('weekly').checked = true;
-  } else {
-    document.getElementById('monthly').checked = true;
-  }
-  
-  // Устанавливаем дату
-  const dateString = subscription.billingDate.toISOString().split('T')[0];
-  document.getElementById('billing-date').value = dateString;
-  
-  // Устанавливаем цвет по умолчанию
-  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
-  
-  // Устанавливаем иконку, если она есть
-  if (subscription.iconUrl) {
-    selectAppIcon(subscription.iconUrl);
-  } else {
-    resetAppIcon();
-  }
-  
-  // Отображение формы
-  subscriptionFormModal.style.opacity = '0';
-  subscriptionFormModal.style.visibility = 'visible';
-  setTimeout(() => {
-    subscriptionFormModal.style.opacity = '1';
-  }, 10);
-}
-
-// Закрытие формы добавления подписки
-function closeSubscriptionForm() {
-  subscriptionFormModal.style.opacity = '0';
-  setTimeout(() => {
-    subscriptionFormModal.style.visibility = 'hidden';
-  }, 300);
-}
-
-/// Обработка отправки формы (добавление или редактирование)
-async function handleFormSubmit(e) {
-  e.preventDefault();
-  
-  const name = document.getElementById('name').value.trim();
-  const isTrial = document.getElementById('trial-checkbox').checked;
-  const price = isTrial ? 0 : parseFloat(document.getElementById('price').value);
-  const billingDateStr = document.getElementById('billing-date').value;
-  const billingDate = new Date(billingDateStr);
-  const isYearly = document.getElementById('yearly').checked;
-  const isWeekly = document.getElementById('weekly').checked;
-  const color = colorInput.value;
-  const iconUrl = document.getElementById('app-icon-url').value;
-  
-  if (!name || (!isTrial && (isNaN(price) || price < 0)) || !billingDate) {
-    alert('Пожалуйста, заполните все обязательные поля формы');
-    return;
-  }
-  
-  if (formMode === 'add') {
-    // Добавление новой подписки
-    const newSubscription = {
-      id: Date.now(),
-      name,
-      price,
-      isTrial,
-      billingDate,
-      color,
-      isYearly,
-      isWeekly,
-      iconUrl
-    };
-    
-    subscriptions.push(newSubscription);
-  } else {
-    // Редактирование существующей подписки
-    const id = parseInt(subscriptionIdInput.value);
-    const index = subscriptions.findIndex(sub => sub.id === id);
-    
-    if (index !== -1) {
-      subscriptions[index] = {
-        ...subscriptions[index],
-        name,
-        price,
-        isTrial,
-        billingDate,
-        color,
-        isYearly,
-        isWeekly,
-        iconUrl
-      };
-    }
-  }
-  
-  await saveSubscriptions();
-  closeSubscriptionForm();
-  updateUI();
 }
 
 // Обновление сумм подписок
@@ -1456,18 +1222,17 @@ function checkIfDateHasSubscription(date) {
 // Рендеринг подписок на выбранный день
 function renderDailySubscriptions() {
   // Получаем подписки для выбранной даты с помощью существующей функции
-  const selectedDateCopy = new Date(selectedDate);
-  selectedDateCopy.setHours(0, 0, 0, 0);
-  
-  // Форматируем дату для заголовка
-  const formattedHeaderDate = formatDate(selectedDateCopy);
-  
-  // Фильтруем подписки, платежи по которым приходятся на выбранный день
-  const subsForDate = subscriptions.filter(sub => {
-    const nextPaymentDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
-    const paymentDateCopy = new Date(nextPaymentDate);
-    paymentDateCopy.setHours(0, 0, 0, 0);
-    return paymentDateCopy.getTime() === selectedDateCopy.getTime();
+  const subscriptionOnThisDay = checkIfDateHasSubscription(selectedDate);
+  const subsForDate = subscriptionOnThisDay ? subscriptionOnThisDay.subscriptions.map(sub => {
+    const nextBillingDate = getNextBillingDate(sub.billingDate, sub.isYearly, sub.isWeekly);
+    return { ...sub, nextBillingDate };
+  }) : [];
+
+  // Форматируем выбранную дату для заголовка (например, "22 мая 2025 г.")
+  const formattedHeaderDate = selectedDate.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
 
   // Обновляем отображение
@@ -1500,41 +1265,38 @@ function renderDailySubscriptions() {
         `;
       }
       
-      // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
-      let priceHtml = '';
-      if (sub.isTrial) {
-        priceHtml = `
-          <div class="subscription-price-group">
-            <span class="subscription-price trial-price">Триал</span>
-          </div>
-        `;
-      } else {
-        priceHtml = `
-          <div class="subscription-price-group">
-            <span class="subscription-price">${formattedPrice}</span>
-            <span class="subscription-period">за ${period}</span>
-          </div>
-        `;
-      }
+        // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
+  let priceHtml = '';
+  if (sub.isTrial) {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price trial-price">Триал</span>
+      </div>
+    `;
+  } else {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price">${formattedPrice}</span>
+        <span class="subscription-period">за ${period}</span>
+      </div>
+    `;
+  }
       
-      // Создаем контейнер для карточки (без предварительного создания кнопок)
       html += `
-        <div class="subscription-card-container daily-subscription-container">
-          <div class="daily-subscription-item" data-id="${sub.id}">
-            <div class="subscription-content">
-              ${iconHtml}
-              <div class="subscription-details">
-                <div class="subscription-name">${sub.name}</div>
-                ${priceHtml}
-              </div>
+        <div class="daily-subscription-item">
+          <div class="subscription-content">
+            ${iconHtml}
+            <div class="subscription-details">
+              <div class="subscription-name">${sub.name}</div>
+              ${priceHtml}
             </div>
-            <div class="payment-date">
-              <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>${sub.isTrial ? 'Закончится' : 'Оплата'} ${formattedDate}</span>
-            </div>
+          </div>
+          <div class="payment-date">
+            <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>${sub.isTrial ? 'Закончится' : 'Оплата'} ${formattedDate}</span>
           </div>
         </div>
       `;
@@ -1545,15 +1307,10 @@ function renderDailySubscriptions() {
     
     // Добавляем обработчики событий для карточек
     const cards = dailySubscriptions.querySelectorAll('.daily-subscription-item');
-    const containers = dailySubscriptions.querySelectorAll('.daily-subscription-container');
-    
     cards.forEach((card, index) => {
       card.addEventListener('click', () => {
         openEditSubscriptionForm(subsForDate[index]);
       });
-      
-      // Настраиваем обработчики свайпа
-      setupSwipeHandlers(containers[index], card, subsForDate[index]);
     });
   }
 }
@@ -1867,5 +1624,283 @@ function resetTrialCheckbox() {
     trialCheckbox.checked = false;
     priceInput.disabled = false;
     priceInput.placeholder = 'например, 20';
+  }
+}
+
+// Показать модальное окно подтверждения удаления
+function showConfirmDeleteModal(id) {
+  subscriptionToDeleteId = id;
+  
+  confirmDeleteModal.style.opacity = '0';
+  confirmDeleteModal.style.visibility = 'visible';
+  setTimeout(() => {
+    confirmDeleteModal.style.opacity = '1';
+  }, 10);
+}
+
+// Закрыть модальное окно подтверждения удаления
+function closeConfirmDeleteModal() {
+  confirmDeleteModal.style.opacity = '0';
+  setTimeout(() => {
+    confirmDeleteModal.style.visibility = 'hidden';
+    subscriptionToDeleteId = null;
+  }, 300);
+}
+
+// Подтверждение удаления
+async function confirmDelete() {
+  if (subscriptionToDeleteId !== null) {
+    if (currentUserId) {
+      // Удаление из Supabase
+      const success = await deleteSubscription(subscriptionToDeleteId);
+      if (success) {
+        // Если успешно удалено, обновляем локальный массив
+        subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
+      } else {
+        console.error('Ошибка при удалении подписки из Supabase');
+      }
+    } else {
+      // Если нет подключения к Supabase, удаляем только локально
+      subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
+      await saveSubscriptions();
+    }
+    
+    closeConfirmDeleteModal();
+    updateUI();
+  }
+}
+
+// Открытие формы добавления подписки
+function openSubscriptionForm() {
+  // Сбрасываем режим формы на добавление
+  formMode = 'add';
+  formTitle.textContent = 'Добавить подписку';
+  formSubmitBtn.textContent = 'Добавить';
+  subscriptionIdInput.value = '';
+  
+  // Установка текущей даты по умолчанию
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+  document.getElementById('billing-date').value = formattedDate;
+  
+  // Сброс формы
+  subscriptionForm.reset();
+  resetTrialCheckbox();
+  
+  // Снова устанавливаем текущую дату (после сброса формы)
+  document.getElementById('billing-date').value = formattedDate;
+  
+  // Сброс выбранной иконки
+  resetAppIcon();
+  
+  // Установка цвета по умолчанию
+  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
+  
+  // Отображение формы
+  subscriptionFormModal.style.opacity = '0';
+  subscriptionFormModal.style.visibility = 'visible';
+  setTimeout(() => {
+    subscriptionFormModal.style.opacity = '1';
+  }, 10);
+}
+
+// Открытие формы редактирования подписки
+function openEditSubscriptionForm(subscription) {
+  // Устанавливаем режим формы на редактирование
+  formMode = 'edit';
+  formTitle.textContent = 'Редактировать подписку';
+  formSubmitBtn.textContent = 'Сохранить';
+  
+  // Заполняем форму данными подписки
+  subscriptionIdInput.value = subscription.id;
+  nameInput.value = subscription.name;
+  
+  // Проверяем, является ли подписка бесплатной (триальной)
+  if (subscription.isTrial) {
+    document.getElementById('trial-checkbox').checked = true;
+    priceInput.disabled = true;
+    priceInput.value = '';
+    priceInput.placeholder = 'Триал';
+  } else {
+    document.getElementById('trial-checkbox').checked = false;
+    priceInput.disabled = false;
+    document.getElementById('price').value = subscription.price;
+  }
+  
+  // Устанавливаем периодичность
+  if (subscription.isYearly) {
+    document.getElementById('yearly').checked = true;
+  } else if (subscription.isWeekly) {
+    document.getElementById('weekly').checked = true;
+  } else {
+    document.getElementById('monthly').checked = true;
+  }
+  
+  // Устанавливаем дату
+  const dateString = subscription.billingDate.toISOString().split('T')[0];
+  document.getElementById('billing-date').value = dateString;
+  
+  // Устанавливаем цвет по умолчанию
+  document.getElementById('color').value = DEFAULT_SUBSCRIPTION_COLOR;
+  
+  // Устанавливаем иконку, если она есть
+  if (subscription.iconUrl) {
+    selectAppIcon(subscription.iconUrl);
+  } else {
+    resetAppIcon();
+  }
+  
+  // Отображение формы
+  subscriptionFormModal.style.opacity = '0';
+  subscriptionFormModal.style.visibility = 'visible';
+  setTimeout(() => {
+    subscriptionFormModal.style.opacity = '1';
+  }, 10);
+}
+
+// Закрытие формы добавления подписки
+function closeSubscriptionForm() {
+  subscriptionFormModal.style.opacity = '0';
+  setTimeout(() => {
+    subscriptionFormModal.style.visibility = 'hidden';
+  }, 300);
+}
+
+/// Обработка отправки формы (добавление или редактирование)
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('name').value.trim();
+  const isTrial = document.getElementById('trial-checkbox').checked;
+  const price = isTrial ? 0 : parseFloat(document.getElementById('price').value);
+  const billingDateStr = document.getElementById('billing-date').value;
+  const billingDate = new Date(billingDateStr);
+  const isYearly = document.getElementById('yearly').checked;
+  const isWeekly = document.getElementById('weekly').checked;
+  const color = colorInput.value;
+  const iconUrl = document.getElementById('app-icon-url').value;
+  const id = subscriptionIdInput.value;
+  
+  if (!name || (!isTrial && (isNaN(price) || price < 0)) || !billingDate) {
+    alert('Пожалуйста, заполните все обязательные поля формы');
+    return;
+  }
+  
+  // Подготовка объекта подписки
+  const subscription = {
+    id: id || 'local_' + Date.now(), // Если нет ID, создаем временный локальный ID
+    name,
+    price,
+    isTrial,
+    billingDate,
+    color,
+    isYearly,
+    isWeekly,
+    iconUrl
+  };
+  
+  // Сохранение подписки
+  let savedSubscription;
+  let index = -1;
+  
+  if (currentUserId) {
+    // Если пользователь авторизован, сохраняем в Supabase
+    savedSubscription = await saveSubscription(currentUserId, subscription);
+    
+    if (formMode === 'edit') {
+      // Для редактирования находим индекс подписки в массиве
+      index = subscriptions.findIndex(sub => sub.id === id);
+      if (index !== -1 && savedSubscription) {
+        // Заменяем существующую подписку на обновленную
+        subscriptions[index] = savedSubscription;
+      }
+    } else {
+      // Для новой подписки просто добавляем в массив
+      if (savedSubscription) {
+        subscriptions.push(savedSubscription);
+      }
+    }
+  } else {
+    // Запасной вариант для локального режима
+    if (formMode === 'edit') {
+      index = subscriptions.findIndex(sub => sub.id === id);
+      if (index !== -1) {
+        subscriptions[index] = subscription;
+      }
+    } else {
+      subscriptions.push(subscription);
+    }
+    
+    // Сохраняем в localStorage
+    await saveSubscriptions();
+  }
+  
+  closeSubscriptionForm();
+  updateUI();
+}
+
+// Функция для миграции локальных подписок в Supabase
+async function migrateLocalSubscriptions() {
+  try {
+    const storedData = localStorage.getItem('subscriptions');
+    if (storedData && currentUserId) {
+      const localSubscriptions = JSON.parse(storedData);
+      
+      // Преобразуем строковые даты в объекты Date
+      const formattedSubscriptions = localSubscriptions.map(sub => {
+        if (typeof sub.billingDate === 'string') {
+          return {
+            ...sub,
+            billingDate: new Date(sub.billingDate)
+          };
+        }
+        return sub;
+      });
+      
+      if (formattedSubscriptions.length > 0) {
+        console.log('Мигрируем', formattedSubscriptions.length, 'подписок из localStorage в Supabase');
+        
+        // Сохраняем каждую подписку в Supabase
+        const savedSubscriptions = [];
+        for (const sub of formattedSubscriptions) {
+          const saved = await saveSubscription(currentUserId, sub);
+          if (saved) savedSubscriptions.push(saved);
+        }
+        
+        subscriptions = savedSubscriptions;
+        console.log('Миграция завершена, сохранено', savedSubscriptions.length, 'подписок');
+        
+        // Очищаем локальное хранилище после успешной миграции
+        localStorage.removeItem('subscriptions');
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка при миграции подписок:', error);
+    // В случае ошибки загружаем из локального хранилища
+    await loadSubscriptionsFromLocalStorage();
+  }
+}
+
+// Загрузка подписок из localStorage (запасной вариант)
+async function loadSubscriptionsFromLocalStorage() {
+  try {
+    const storedData = localStorage.getItem('subscriptions');
+    if (storedData) {
+      subscriptions = JSON.parse(storedData);
+      
+      // Преобразуем строковые даты в объекты Date
+      subscriptions = subscriptions.map(sub => {
+        if (typeof sub.billingDate === 'string') {
+          return {
+            ...sub,
+            billingDate: new Date(sub.billingDate)
+          };
+        }
+        return sub;
+      });
+    }
+  } catch (error) {
+    console.error('Ошибка при загрузке подписок из localStorage:', error);
+    subscriptions = [];
   }
 } 

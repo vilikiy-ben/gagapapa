@@ -27,7 +27,7 @@
   --space-xl: 2rem;
   --header-height: 60px;
   --tab-nav-height: 60px;
-  --banner-height: 70px;
+  --banner-height: 60px;
 }
 
 * {
@@ -215,7 +215,7 @@ body.telegram-app {
   justify-content: center;
   background-color: var(--card-bg);
   height: var(--banner-height);
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-md) calc(var(--space-md) - 2px);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: var(--header-height);
@@ -225,24 +225,55 @@ body.telegram-app {
 .totals-item {
   flex: 1;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
 }
 
 .totals-label {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--text-muted) !important;
+  margin-bottom: 5px;
+  font-weight: 500;
+  text-shadow: none;
+  opacity: 1;
 }
 
 .totals-value {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--success-color);
+  line-height: 1.2;
 }
 
 .totals-divider {
   width: 1px;
-  height: 70%;
+  height: 60%;
   background-color: var(--border-color);
+  margin: 0 5px;
+}
+
+/* Добавляем перезапись стилей для меток "В месяц" и "В год" */
+.totals-banner .totals-item:first-child .totals-label,
+.totals-banner .totals-item:last-child .totals-label {
+  color: #999999 !important;
+  text-shadow: none;
+  opacity: 1;
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+}
+
+/* Стили для значений */
+.totals-banner .totals-item:first-child .totals-value,
+.totals-banner .totals-item:last-child .totals-value {
+  color: var(--success-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 /* Tab Content */
@@ -568,65 +599,6 @@ body.telegram-app {
   margin-top: 12px;
 }
 
-/* Свайп-действия для карточек подписок */
-.subscription-card-container {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  margin-bottom: 8px;
-}
-
-.swipe-actions {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  z-index: 1;
-  pointer-events: none; /* Чтобы события мыши/касания проходили через элемент к карточке */
-  opacity: 0; /* По умолчанию невидимые */
-  transition: opacity 0.2s ease;
-}
-
-/* Классы swiping-left и swiping-right теперь на контейнере */
-.subscription-card-container.swiping-left .swipe-actions,
-.subscription-card-container.swiping-right .swipe-actions,
-.daily-subscription-container.swiping-left .swipe-actions,
-.daily-subscription-container.swiping-right .swipe-actions {
-  opacity: 1; /* Показываем действия при свайпе */
-}
-
-.swipe-action-left,
-.swipe-action-right {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 100%;
-  transition: all 0.3s ease;
-  pointer-events: auto; /* Восстанавливаем события для кнопок */
-}
-
-.swipe-action-left {
-  background-color: #555; /* Серый цвет для редактирования (слева) */
-  left: 0;
-}
-
-.swipe-action-right {
-  background-color: var(--danger-color); /* Красный цвет для удаления (справа) */
-  right: 0;
-}
-
-.swipe-action-left svg,
-.swipe-action-right svg {
-  width: 24px;
-  height: 24px;
-  color: white;
-}
-
 /* Карточка подписки в стиле списка */
 .subscription-card {
   background-color: var(--card-bg);
@@ -637,38 +609,20 @@ body.telegram-app {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  transition: transform 0.3s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border-left: 5px solid var(--sub-color, #383838);
+  margin-bottom: 8px;
   height: 80px;
-  touch-action: pan-y; /* Разрешаем свайп по горизонтали */
-  z-index: 2; /* Карточка над действиями */
 }
 
 /* Эффекты для активного состояния (для мобильных устройств) */
+
 .subscription-card:active {
   transform: translateY(0);
   background-color: var(--card-bg);
-}
-
-/* Теперь классы swiping-left и swiping-right на контейнере, но трансформация карточки */
-.subscription-card-container.swiping-left .subscription-card {
-  transform: translateX(80px);
-}
-
-.subscription-card-container.swiping-right .subscription-card {
-  transform: translateX(-80px);
-}
-
-/* Те же стили для ежедневных подписок */
-.daily-subscription-container.swiping-left .daily-subscription-item {
-  transform: translateX(80px);
-}
-
-.daily-subscription-container.swiping-right .daily-subscription-item {
-  transform: translateX(-80px);
 }
 
 /* Контент карточки */
@@ -1043,10 +997,6 @@ body.telegram-app {
   margin-top: 15px;
 }
 
-.daily-subscription-container {
-  margin-bottom: 8px;
-}
-
 .daily-subscription-item {
   background-color: #1a1a1a;
   border-radius: var(--radius-md);
@@ -1056,16 +1006,16 @@ body.telegram-app {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  transition: transform 0.3s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border-left: 5px solid var(--sub-color, #383838);
-  margin-bottom: 0;
+  margin-bottom: 8px;
   height: 75px;
-  touch-action: pan-y;
-  z-index: 2;
 }
+
+
 
 .daily-subscription-item:active {
   transform: translateY(0);
@@ -1142,64 +1092,10 @@ body.telegram-app {
   object-fit: contain;
 }
 
-/* Statistics section */
-.stats-cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-md);
-}
-
-.stats-card {
-  background-color: var(--card-bg-light);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  border: 1px solid var(--border-color);
-}
-
-.stats-title {
-  font-weight: 600;
-  margin-bottom: var(--space-md);
-  text-align: center;
-}
-
-.placeholder-chart {
-  height: 150px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: var(--space-sm);
-  gap: 6px;
-}
-
-.chart-bar {
-  flex: 1;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  transition: height 0.5s ease;
-}
-
-.payment-types {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.payment-type-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.payment-type-value {
-  font-weight: 600;
-  font-size: 1.2rem;
-}
-
 /* Tab Navigation */
 .tab-nav {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   background-color: rgba(30, 30, 30, 0.95);
   height: var(--tab-nav-height);
@@ -1215,6 +1111,7 @@ body.telegram-app {
   padding: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  gap: 36px;
 }
 
 .tab-btn {
@@ -1226,42 +1123,43 @@ body.telegram-app {
   color: var(--text-muted);
   padding: 0;
   margin: 0;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
 }
 
 .tab-btn svg {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   opacity: 0.7;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-
 
 .tab-btn.active {
   color: var(--text-color);
 }
 
 .tab-btn.active::before {
-  content: '';
-  position: absolute;
-  width: 38px;
-  height: 38px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  z-index: -1;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  display: none;
 }
 
 .tab-btn.active svg {
   opacity: 1;
   color: var(--text-color);
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+  transform: scale(1.1);
+}
+
+/* Дополнительный эффект свечения для вкладки "Обзор" */
+.tab-btn.active[data-tab="tab-overview"] svg {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+/* Дополнительный эффект свечения для вкладки "Календарь" */
+.tab-btn.active[data-tab="tab-calendar"] svg {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
 }
 
 /* Дополнительные правила для гарантированного белого цвета иконок во вкладках */
@@ -1591,10 +1489,6 @@ input[type="date"]:focus {
     grid-template-columns: repeat(4, 1fr);
   }
   
-  .stats-cards {
-    grid-template-columns: 1fr 1fr;
-  }
-  
   .fab-button {
     bottom: 90px;
   }
@@ -1608,20 +1502,88 @@ input[type="date"]:focus {
 
 @media (max-width: 480px) {
   :root {
-    font-size: 14px;
+    --space-lg: 1.25rem;
+    --banner-height: 64px;
+    font-size: 16px; /* Увеличиваем базовый размер шрифта */
+  }
+  
+  .totals-banner {
+    padding: var(--space-md) var(--space-md) calc(var(--space-md) - 1px);
+  }
+  
+  .totals-label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+  
+  /* Переопределение стилей для мобильной версии */
+  .totals-banner .totals-item:first-child .totals-label,
+  .totals-banner .totals-item:last-child .totals-label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #999999 !important;
+  }
+  
+  .totals-value {
+    font-size: 1.2rem;
+  }
+  
+  /* Переопределение стилей значений для мобильной версии */
+  .totals-banner .totals-item:first-child .totals-value,
+  .totals-banner .totals-item:last-child .totals-value {
+    font-size: 1.2rem;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+  
+  .subscription-name {
+    font-size: 1.1rem !important;
+  }
+  
+  .tab-nav {
+    bottom: 16px;
+    height: 56px;
+    padding: 0;
+    gap: 24px;
+  }
+  
+  .fab-button {
+    width: 52px;
+    height: 52px;
+    transform: translateY(-12px);
+  }
+  
+  .fab-button:hover {
+    transform: translateY(-12px) scale(1.05);
+  }
+  
+  .fab-button:active {
+    transform: translateY(-12px) scale(0.95);
+  }
+  
+  .tab-btn {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .tab-btn svg {
+    width: 30px;
+    height: 30px;
   }
   
   .calendar-grid {
-    gap: 3px;
+    grid-template-columns: repeat(7, 1fr);
   }
-
+  
   .calendar-day {
-    min-height: 40px; /* Увеличиваем для мобильных */
     font-size: 0.85rem;
   }
   
   .subscription-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   
   .modal-content {
@@ -1633,6 +1595,35 @@ input[type="date"]:focus {
   .period-option {
     font-size: 1rem;
     padding: 8px 3px;
+  }
+  
+  .subscription-card {
+    padding: 15px 18px;
+    height: 85px;
+  }
+  
+  .subscription-card .subscription-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .subscription-price {
+    font-size: 1.2rem;
+  }
+  
+  .subscription-period {
+    font-size: 0.95rem;
+  }
+  
+  .payment-date {
+    font-size: 1rem;
+    right: 18px;
+    bottom: 13px;
+  }
+  
+  .empty-list-message {
+    font-size: 1.05rem;
+    padding: 18px;
   }
 }
 
@@ -1666,10 +1657,7 @@ input[type="date"]:focus {
 
 /* Плавающая кнопка добавления (FAB) */
 .fab-button {
-  position: fixed;
-  bottom: calc(var(--tab-nav-height) + 32px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -1681,9 +1669,11 @@ input[type="date"]:focus {
   border: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  z-index: 90;
+  z-index: 95;
   transition: all 0.3s ease;
   overflow: hidden;
+  margin: 0;
+  transform: translateY(-15px);
 }
 
 .fab-button::before {
@@ -1701,7 +1691,7 @@ input[type="date"]:focus {
 
 .fab-button:hover {
   background-color: var(--primary-dark);
-  transform: translateX(-50%) scale(1.05);
+  transform: translateY(-15px) scale(1.05);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -1710,17 +1700,17 @@ input[type="date"]:focus {
 }
 
 .fab-button:active {
-  transform: translateX(-50%) scale(0.95);
+  transform: translateY(-15px) scale(0.95);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 768px) {
   .fab-button:hover {
-    transform: scale(1.05);
+    transform: translateY(-15px) scale(1.05);
   }
   
   .fab-button:active {
-    transform: scale(0.95);
+    transform: translateY(-15px) scale(0.95);
   }
 }
 
@@ -2122,4 +2112,114 @@ input[type="date"]:focus {
 
 .uupi-price.success-color {
   color: var(--success-color) !important;
+}
+
+/* Стили для секции с заголовком и сортировкой */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header .section-title {
+  margin-bottom: 0; /* Убираем нижний отступ заголовка */
+}
+
+/* Стили для контейнера с сортировкой */
+.sort-container {
+  position: relative;
+}
+
+/* Кастомное меню сортировки */
+.custom-sort-toggle {
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sort-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(30, 30, 30, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+.sort-current:hover {
+  background-color: rgba(40, 40, 40, 0.8);
+  border-color: var(--primary-color);
+}
+
+.sort-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  white-space: nowrap;
+  position: relative;
+  top: 1px; /* Это значение можно изменять по пикселю для точной настройки */
+}
+
+.sort-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Выпадающее меню */
+.sort-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 150px;
+  background-color: rgba(25, 25, 25, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.sort-dropdown.active {
+  display: flex;
+  animation: fadeInSort 0.2s ease-out;
+}
+
+@keyframes fadeInSort {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sort-option {
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sort-option:last-child {
+  border-bottom: none;
+}
+
+.sort-option:hover {
+  background-color: rgba(74, 144, 226, 0.15);
+}
+
+.sort-option.active {
+  color: var(--primary-color);
+  font-weight: 500;
+  background-color: rgba(74, 144, 226, 0.1);
 } 
