@@ -39,6 +39,47 @@ function logDebug(message, data) {
 // Глобальная переменная для хранения ID пользователя
 let currentUserId = null;
 
+// Функция для принудительного применения стилей на мобильных устройствах
+// Глобальная функция для использования во всем приложении
+function forceMobileStyles() {
+  // Определяем мобильное устройство
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    // Обрабатываем все иконки вкладок для обеспечения единообразия
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = btn.classList.contains('active');
+      const svg = btn.querySelector('svg');
+      
+      if (svg) {
+        // Устанавливаем одинаковые стили для всех SVG
+        svg.style.fill = 'none';
+        svg.setAttribute('fill', 'none');
+        svg.style.stroke = 'currentColor';
+        svg.style.color = 'currentColor';
+        svg.setAttribute('stroke-width', '1.5');
+        
+        // Обрабатываем все дочерние элементы SVG
+        const elements = svg.querySelectorAll('*');
+        elements.forEach(el => {
+          el.style.fill = 'none';
+          el.setAttribute('fill', 'none');
+          el.style.stroke = 'currentColor';
+          el.style.color = 'currentColor';
+          
+          // Принудительно устанавливаем атрибуты
+          if (el.hasAttribute('stroke')) {
+            el.setAttribute('stroke', 'currentColor');
+          }
+          if (!el.hasAttribute('stroke-width')) {
+            el.setAttribute('stroke-width', '1.5');
+          }
+        });
+      }
+    });
+  }
+}
+
 // Эмуляция Telegram WebApp API для локальной разработки
 if (!window.Telegram && window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.log('Запущена локальная эмуляция Telegram WebApp API');
@@ -191,47 +232,7 @@ if (tg) {
   document.documentElement.style.setProperty('--text-color', '#e0e0e0');    // Значение из :root
   document.documentElement.style.setProperty('--dark-bg', '#0d0d0d');       // Значение из :root
   
-  // Функция для принудительного применения стилей на мобильных устройствах
-  const forceMobileStyles = () => {
-    // Определяем мобильное устройство
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // Обрабатываем все иконки вкладок для обеспечения единообразия
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        const isActive = btn.classList.contains('active');
-        const svg = btn.querySelector('svg');
-        
-        if (svg) {
-          // Устанавливаем одинаковые стили для всех SVG
-          svg.style.fill = 'none';
-          svg.setAttribute('fill', 'none');
-          svg.style.stroke = 'currentColor';
-          svg.style.color = 'currentColor';
-          svg.setAttribute('stroke-width', '1.5');
-          
-          // Обрабатываем все дочерние элементы SVG
-          const elements = svg.querySelectorAll('*');
-          elements.forEach(el => {
-            el.style.fill = 'none';
-            el.setAttribute('fill', 'none');
-            el.style.stroke = 'currentColor';
-            el.style.color = 'currentColor';
-            
-            // Принудительно устанавливаем атрибуты
-            if (el.hasAttribute('stroke')) {
-              el.setAttribute('stroke', 'currentColor');
-            }
-            if (!el.hasAttribute('stroke-width')) {
-              el.setAttribute('stroke-width', '1.5');
-            }
-          });
-        }
-      });
-    }
-  };
-  
-  // Вызываем функцию сразу и добавляем в список обработчиков событий
+  // Вызываем функцию принудительного применения стилей
   forceMobileStyles();
   
   // Добавляем наблюдателя за изменениями DOM
