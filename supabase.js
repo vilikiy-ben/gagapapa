@@ -67,48 +67,98 @@ window.saveUserProfile = async function(telegramUser) {
   }
 
   try {
-    logDebug('Отправка запроса на сохранение профиля');
+    logDebug('Подготовка данных пользователя для Supabase');
     
-    // Проверяем существует ли профиль
+    // Преобразуем ID пользователя к строке для совместимости с разными типами данных
+    const userId = String(telegramUser.id);
+    
+    // Проверяем наличие пользователя в таблице profiles
     const { data: existingProfiles, error: selectError } = await window.supabaseClient
       .from('profiles')
       .select('id')
-      .eq('id', telegramUser.id);
+      .eq('id', userId);
       
     if (selectError) {
       logDebug('Ошибка при проверке существования профиля', selectError);
-      // Если даже проверка не работает из-за RLS, просто возвращаем ID пользователя
-      // Это позволит приложению продолжить работу, даже если запись в базу не удалась
-      return telegramUser.id;
-    }
-    
-    // Если профиль не существует и нужно его создать
-    if (!existingProfiles || existingProfiles.length === 0) {
-      // Для обхода ограничений RLS используем специальные API функции или 
-      // просто возвращаем ID, так как основная функциональность приложения работает 
-      // и без сохранения профиля
-      logDebug('Профиль не существует, но мы продолжим работу с ID пользователя');
-      return telegramUser.id;
-    }
-    
-    // Если профиль существует, просто обновляем last_active
-    const { error: updateError } = await window.supabaseClient
-      .from('profiles')
-      .update({ last_active: new Date() })
-      .eq('id', telegramUser.id);
+      // Если происходит ошибка при проверке, проверяем, связана ли она с RLS
+      if (selectError.code === '42501' || selectError.message.includes('policy')) {
+        logDebug('Обнаружена ошибка RLS, пытаемся создать профиль');
+        
+        // Создаем новую запись профиля
+        const profileData = {
+          id: userId,
+          username: telegramUser.username || null,
+          first_name: telegramUser.first_name || null,
+          last_name: telegramUser.last_name || null,
+          last_active: new Date()
+        };
+        
+        const { error: insertError } = await window.supabaseClient
+          .from('profiles')
+          .insert([profileData]);
+          
+        if (insertError) {
+          logDebug('Не удалось создать профиль', insertError);
+          
+          // Даже если не удалось создать профиль, возвращаем ID пользователя
+          // для продолжения работы приложения
+          return userId;
+        }
+        
+        logDebug('Профиль успешно создан');
+        return userId;
+      }
       
-    if (updateError) {
-      logDebug('Ошибка при обновлении времени активности', updateError);
-      // Это не критично, основная информация у нас уже есть
+      // Возвращаем ID пользователя, чтобы приложение могло работать
+      return userId;
+    }
+    
+    // Если профиль не существует, создаем его
+    if (!existingProfiles || existingProfiles.length === 0) {
+      logDebug('Профиль не существует, создаем новый');
+      
+      const profileData = {
+        id: userId,
+        username: telegramUser.username || null,
+        first_name: telegramUser.first_name || null,
+        last_name: telegramUser.last_name || null,
+        last_active: new Date()
+      };
+      
+      const { error: insertError } = await window.supabaseClient
+        .from('profiles')
+        .insert([profileData]);
+        
+      if (insertError) {
+        logDebug('Ошибка при создании профиля', insertError);
+        
+        // Даже если не удалось создать профиль, возвращаем ID пользователя
+        return userId;
+      }
+      
+      logDebug('Профиль успешно создан');
+    } else {
+      // Если профиль существует, обновляем время активности
+      logDebug('Обновление времени последней активности');
+      
+      const { error: updateError } = await window.supabaseClient
+        .from('profiles')
+        .update({ last_active: new Date() })
+        .eq('id', userId);
+        
+      if (updateError) {
+        logDebug('Ошибка при обновлении времени активности', updateError);
+        // Это не критично, основная информация у нас уже есть
+      }
     }
 
-    logDebug('Профиль успешно обработан', telegramUser.id);
-    return telegramUser.id;
+    logDebug('Обработка профиля завершена', userId);
+    return userId;
   } catch (error) {
     console.error('Исключение при сохранении профиля:', error);
     logDebug('Исключение при сохранении профиля', error.message);
-    // Несмотря на ошибку, возвращаем ID пользователя чтобы приложение могло работать
-    return telegramUser.id;
+    // Возвращаем ID пользователя чтобы приложение могло работать
+    return String(telegramUser.id);
   }
 }
 
@@ -122,51 +172,24 @@ window.loadUserSubscriptions = async function(userId) {
   }
 
   try {
-    // ОТЛАДКА: Проверяем localStorage
-    try {
-      const localData = localStorage.getItem('subscriptions');
-      logDebug('Текущие данные в localStorage', localData);
-    } catch(e) {
-      logDebug('Ошибка при чтении localStorage', e);
-    }
-
-    logDebug('Отправка запроса на загрузку подписок');
+    // Преобразуем ID пользователя к строке для совместимости с разными типами данных
+    const userIdStr = String(userId);
+    
+    logDebug('Отправка запроса на загрузку подписок из Supabase');
     const { data, error } = await window.supabaseClient
       .from('subscriptions')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userIdStr);
 
     if (error) {
-      console.error('Ошибка при загрузке подписок:', error);
-      logDebug('Ошибка при загрузке подписок', error);
+      console.error('Ошибка при загрузке подписок из Supabase:', error);
+      logDebug('Ошибка при загрузке подписок из Supabase', error);
       
-      // В случае ошибки RLS используем локальное хранилище
-      logDebug('Попытка загрузки из localStorage');
-      try {
-        const storedData = localStorage.getItem('subscriptions');
-        if (storedData) {
-          const localSubscriptions = JSON.parse(storedData);
-          logDebug('Загружены подписки из localStorage', localSubscriptions.length);
-          
-          // Преобразуем строковые даты в объекты Date
-          return localSubscriptions.map(sub => {
-            if (typeof sub.billingDate === 'string') {
-              return {
-                ...sub,
-                billingDate: new Date(sub.billingDate)
-              };
-            }
-            return sub;
-          });
-        }
-      } catch (localError) {
-        logDebug('Ошибка при загрузке из localStorage', localError.message);
-      }
-      
-      return [];
+      // В случае ошибки RLS или других проблем с Supabase используем локальное хранилище
+      return await loadFromLocalStorage();
     }
 
-    logDebug(`Загружено ${data?.length || 0} подписок`);
+    logDebug(`Успешно загружено ${data?.length || 0} подписок из Supabase`);
     
     // Преобразуем строковые даты в объекты Date
     const subscriptions = (data || []).map(sub => ({
@@ -179,18 +202,48 @@ window.loadUserSubscriptions = async function(userId) {
       iconUrl: sub.icon_url
     }));
     
-    // Сохраняем в localStorage для резервного копирования
+    // Обновляем localStorage для синхронизации с сервером
     try {
       localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-      logDebug('Подписки сохранены в localStorage для резервного копирования');
+      logDebug('Подписки из Supabase синхронизированы с localStorage');
     } catch (storageError) {
       logDebug('Ошибка при сохранении в localStorage', storageError.message);
+      // Это не критично для работы
     }
     
     return subscriptions;
   } catch (error) {
-    console.error('Исключение при загрузке подписок:', error);
-    logDebug('Исключение при загрузке подписок', error.message);
+    console.error('Исключение при загрузке подписок из Supabase:', error);
+    logDebug('Исключение при загрузке подписок из Supabase, пробуем localStorage', error.message);
+    
+    // При любой ошибке используем localStorage
+    return await loadFromLocalStorage();
+  }
+  
+  // Вспомогательная функция для загрузки из localStorage
+  async function loadFromLocalStorage() {
+    logDebug('Загрузка подписок из localStorage');
+    try {
+      const storedData = localStorage.getItem('subscriptions');
+      if (storedData) {
+        const localSubscriptions = JSON.parse(storedData);
+        logDebug('Загружены подписки из localStorage', localSubscriptions.length);
+        
+        // Преобразуем строковые даты в объекты Date и фильтруем по ID пользователя
+        return localSubscriptions.map(sub => {
+          if (typeof sub.billingDate === 'string') {
+            return {
+              ...sub,
+              billingDate: new Date(sub.billingDate)
+            };
+          }
+          return sub;
+        }).filter(sub => String(sub.user_id) === String(userId)); // Строгое сравнение строковых представлений ID
+      }
+    } catch (localError) {
+      logDebug('Ошибка при загрузке из localStorage', localError.message);
+    }
+    
     return [];
   }
 }
@@ -205,9 +258,12 @@ window.saveSubscription = async function(userId, subscription) {
   }
 
   try {
+    // Преобразуем ID пользователя к строке для совместимости с разными типами данных
+    const userIdStr = String(userId);
+    
     // Преобразуем структуру подписки для Supabase
     const supabaseSubscription = {
-      user_id: userId,
+      user_id: userIdStr,
       name: subscription.name,
       price: subscription.price,
       is_yearly: subscription.isYearly || false,
@@ -221,76 +277,115 @@ window.saveSubscription = async function(userId, subscription) {
     logDebug('Подготовлены данные для Supabase', supabaseSubscription);
     
     let result;
-    let success = false;
     
-    // Сначала пробуем сохранить в Supabase
-    try {
-      if (subscription.id && !subscription.id.startsWith('local_')) {
-        // Обновление существующей подписки
-        logDebug('Обновление существующей подписки', subscription.id);
-        const { data, error } = await window.supabaseClient
-          .from('subscriptions')
-          .update(supabaseSubscription)
-          .eq('id', subscription.id)
-          .select();
+    // Сохраняем в Supabase
+    if (subscription.id && !subscription.id.startsWith('local_')) {
+      // Обновление существующей подписки
+      logDebug('Обновление существующей подписки', subscription.id);
+      const { data, error } = await window.supabaseClient
+        .from('subscriptions')
+        .update(supabaseSubscription)
+        .eq('id', subscription.id)
+        .select();
 
-        if (error) {
-          logDebug('Ошибка при обновлении подписки в Supabase', error);
-          throw error;
-        }
-        
-        result = data[0];
-        success = true;
-        logDebug('Подписка успешно обновлена в Supabase', result?.id);
-      } else {
-        // Создание новой подписки
-        logDebug('Создание новой подписки в Supabase');
-        const { data, error } = await window.supabaseClient
-          .from('subscriptions')
-          .insert(supabaseSubscription)
-          .select();
-
-        if (error) {
-          logDebug('Ошибка при создании подписки в Supabase', error);
-          throw error;
-        }
-        
-        result = data[0];
-        success = true;
-        logDebug('Подписка успешно создана в Supabase', result?.id);
-      }
-    } catch (supabaseError) {
-      logDebug('Не удалось сохранить в Supabase, сохраняем локально', supabaseError.message);
-      success = false;
-    }
-    
-    // Если не удалось сохранить в Supabase, сохраняем локально
-    if (!success) {
-      // Получаем существующие подписки из localStorage
-      let localSubscriptions = [];
-      try {
-        const storedData = localStorage.getItem('subscriptions');
-        if (storedData) {
-          localSubscriptions = JSON.parse(storedData);
-          logDebug('Загружены существующие подписки из localStorage', localSubscriptions.length);
-        }
-      } catch (e) {
-        logDebug('Ошибка при загрузке подписок из localStorage', e.message);
+      if (error) {
+        logDebug('Ошибка при обновлении подписки в Supabase', error);
+        throw error;
       }
       
-      // Создаем уникальный ID для локальной подписки, если его еще нет
-      if (!subscription.id || (subscription.id && subscription.id.startsWith('local_'))) {
-        // Проверяем, есть ли подписка с таким ID
-        const exists = localSubscriptions.some(s => s.id === subscription.id);
-        if (!exists) {
-          subscription.id = 'local_' + Date.now();
-        }
+      result = data[0];
+      logDebug('Подписка успешно обновлена в Supabase', result?.id);
+    } else {
+      // Создание новой подписки
+      logDebug('Создание новой подписки в Supabase');
+      const { data, error } = await window.supabaseClient
+        .from('subscriptions')
+        .insert(supabaseSubscription)
+        .select();
+
+      if (error) {
+        logDebug('Ошибка при создании подписки в Supabase', error);
+        throw error;
       }
+      
+      result = data[0];
+      logDebug('Подписка успешно создана в Supabase', result?.id);
+    }
+
+    // Сохраняем копию в localStorage для резервного копирования
+    try {
+      // Получаем существующие подписки
+      let localSubscriptions = [];
+      const storedData = localStorage.getItem('subscriptions');
+      if (storedData) {
+        localSubscriptions = JSON.parse(storedData);
+      }
+      
+      // Находим индекс подписки в массиве если она существует
+      const index = localSubscriptions.findIndex(s => s.id === result.id);
       
       // Преобразуем для локального хранения
       const localSubscription = {
-        id: subscription.id,
-        user_id: userId,
+        id: result.id,
+        user_id: userIdStr, // Используем строковое представление ID
+        name: result.name,
+        price: result.price,
+        isYearly: result.is_yearly || false,
+        isWeekly: result.is_weekly || false,
+        isTrial: result.is_trial || false,
+        billingDate: new Date(result.billing_date),
+        iconUrl: result.icon_url || null,
+        color: result.color || null
+      };
+      
+      if (index !== -1) {
+        // Обновляем существующую подписку
+        localSubscriptions[index] = localSubscription;
+      } else {
+        // Добавляем новую
+        localSubscriptions.push(localSubscription);
+      }
+      
+      // Сохраняем в localStorage
+      localStorage.setItem('subscriptions', JSON.stringify(localSubscriptions));
+      logDebug('Подписка также сохранена в localStorage для резервного копирования');
+    } catch (storageError) {
+      logDebug('Ошибка при сохранении в localStorage, но в Supabase сохранено успешно', storageError.message);
+      // Это не критично, так как данные уже сохранены в Supabase
+    }
+
+    // Преобразуем обратно в формат приложения для возврата
+    return {
+      ...subscription,
+      id: result.id,
+      billingDate: new Date(result.billing_date),
+      isYearly: result.is_yearly,
+      isWeekly: result.is_weekly,
+      isTrial: result.is_trial,
+      iconUrl: result.icon_url
+    };
+  } catch (error) {
+    console.error('Ошибка при сохранении подписки:', error);
+    logDebug('Ошибка при сохранении подписки', error.message);
+    
+    // Если произошла ошибка при сохранении в Supabase, 
+    // пытаемся временно сохранить только в localStorage
+    logDebug('Пытаемся временно сохранить только в localStorage');
+    try {
+      // Получаем существующие подписки из localStorage
+      let localSubscriptions = [];
+      const storedData = localStorage.getItem('subscriptions');
+      if (storedData) {
+        localSubscriptions = JSON.parse(storedData);
+      }
+      
+      // Создаем уникальный ID для локальной подписки
+      const localId = subscription.id || 'local_' + Date.now();
+      
+      // Преобразуем для локального хранения
+      const localSubscription = {
+        id: localId,
+        user_id: String(userId), // Используем строковое представление ID
         name: subscription.name,
         price: subscription.price,
         isYearly: subscription.isYearly || false,
@@ -301,56 +396,24 @@ window.saveSubscription = async function(userId, subscription) {
         color: subscription.color || null
       };
       
-      if (localSubscriptions.some(s => s.id === subscription.id)) {
+      const index = localSubscriptions.findIndex(s => s.id === localId);
+      if (index !== -1) {
         // Обновляем существующую подписку
-        logDebug('Обновление существующей подписки в localStorage', subscription.id);
-        localSubscriptions = localSubscriptions.map(s => 
-          s.id === subscription.id ? localSubscription : s);
+        localSubscriptions[index] = localSubscription;
       } else {
         // Добавляем новую
-        logDebug('Добавление новой подписки в localStorage', localSubscription.id);
         localSubscriptions.push(localSubscription);
       }
       
       // Сохраняем в localStorage
-      try {
-        localStorage.setItem('subscriptions', JSON.stringify(localSubscriptions));
-        logDebug('Подписка сохранена в localStorage', localSubscription.id);
-        
-        // Дополнительная проверка, чтобы убедиться, что данные сохранились
-        setTimeout(() => {
-          try {
-            const checkData = localStorage.getItem('subscriptions');
-            if (checkData) {
-              const parsed = JSON.parse(checkData);
-              logDebug('Проверка сохранения в localStorage: сохранено подписок', parsed.length);
-            }
-          } catch (e) {
-            logDebug('Ошибка при проверке сохранения в localStorage', e.message);
-          }
-        }, 100);
-        
-        result = localSubscription;
-      } catch (storageError) {
-        logDebug('Ошибка при сохранении в localStorage', storageError.message);
-        return null;
-      }
+      localStorage.setItem('subscriptions', JSON.stringify(localSubscriptions));
+      logDebug('Подписка временно сохранена в localStorage', localSubscription.id);
+      
+      return localSubscription;
+    } catch (storageError) {
+      logDebug('Не удалось сохранить даже в localStorage', storageError.message);
+      return null;
     }
-
-    // Преобразуем обратно в формат приложения
-    return success && result ? {
-      ...subscription,
-      id: result.id,
-      billingDate: new Date(result.billing_date),
-      isYearly: result.is_yearly,
-      isWeekly: result.is_weekly,
-      isTrial: result.is_trial,
-      iconUrl: result.icon_url
-    } : result; // Для локального сохранения
-  } catch (error) {
-    console.error('Исключение при сохранении подписки:', error);
-    logDebug('Исключение при сохранении подписки', error.message);
-    return null;
   }
 }
 
@@ -364,55 +427,73 @@ window.deleteSubscription = async function(subscriptionId) {
   }
 
   try {
+    // Преобразуем ID в строку для совместимости
+    const subscriptionIdStr = String(subscriptionId);
+    
     // Проверяем, является ли ID локальным
-    const isLocalId = subscriptionId.startsWith('local_');
-    let success = false;
+    const isLocalId = subscriptionIdStr.startsWith('local_');
     
     if (!isLocalId) {
-      // Пробуем удалить из Supabase
+      // Удаляем из Supabase
       logDebug('Отправка запроса на удаление подписки из Supabase');
       const { error } = await window.supabaseClient
         .from('subscriptions')
         .delete()
-        .eq('id', subscriptionId);
+        .eq('id', subscriptionIdStr);
 
       if (error) {
         console.error('Ошибка при удалении подписки из Supabase:', error);
         logDebug('Ошибка при удалении подписки из Supabase', error);
-      } else {
-        success = true;
-        logDebug('Подписка успешно удалена из Supabase');
+        throw error; // Пробрасываем ошибку для дальнейшей обработки
       }
+      
+      logDebug('Подписка успешно удалена из Supabase');
+    } else {
+      logDebug('Удаление локальной подписки (не из Supabase)');
     }
     
-    // В любом случае (успешно или нет) удаляем из localStorage
+    // Также удаляем из localStorage, чтобы синхронизировать данные
     try {
       const storedData = localStorage.getItem('subscriptions');
       if (storedData) {
         const localSubscriptions = JSON.parse(storedData);
-        const filteredSubscriptions = localSubscriptions.filter(sub => sub.id !== subscriptionId);
+        const filteredSubscriptions = localSubscriptions.filter(sub => String(sub.id) !== subscriptionIdStr);
         
         if (filteredSubscriptions.length !== localSubscriptions.length) {
           // Если есть изменения, сохраняем обновленный список
           localStorage.setItem('subscriptions', JSON.stringify(filteredSubscriptions));
-          logDebug('Подписка удалена из localStorage');
-          success = true;
+          logDebug('Подписка также удалена из localStorage');
         }
       }
     } catch (localError) {
       logDebug('Ошибка при удалении подписки из localStorage', localError.message);
-      
-      // Если удаление из Supabase было успешным, но из localStorage нет,
-      // всё равно считаем операцию успешной
-      if (!success) {
-        return false;
-      }
+      // Это не критично, так как из Supabase уже удалено
     }
 
-    return success;
+    return true; // Возвращаем успех операции
   } catch (error) {
     console.error('Исключение при удалении подписки:', error);
     logDebug('Исключение при удалении подписки', error.message);
+    
+    // Если не удалось удалить из Supabase, но ID локальный, то пытаемся удалить только из localStorage
+    if (String(subscriptionId).startsWith('local_')) {
+      try {
+        const storedData = localStorage.getItem('subscriptions');
+        if (storedData) {
+          const localSubscriptions = JSON.parse(storedData);
+          const filteredSubscriptions = localSubscriptions.filter(sub => String(sub.id) !== String(subscriptionId));
+          
+          if (filteredSubscriptions.length !== localSubscriptions.length) {
+            localStorage.setItem('subscriptions', JSON.stringify(filteredSubscriptions));
+            logDebug('Локальная подписка удалена из localStorage');
+            return true;
+          }
+        }
+      } catch (e) {
+        logDebug('Ошибка при удалении локальной подписки', e.message);
+      }
+    }
+    
     return false;
   }
 } 
