@@ -9,67 +9,11 @@
   <meta name="HandheldFriendly" content="True">
   <meta name="robots" content="noindex, nofollow">
   <title>SubsViewer</title>
-  <!-- Отладочный скрипт для вывода ошибок -->
-  <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      const errorDiv = document.createElement('div');
-      errorDiv.style.background = 'rgba(255, 0, 0, 0.7)';
-      errorDiv.style.color = 'white';
-      errorDiv.style.padding = '10px';
-      errorDiv.style.margin = '5px';
-      errorDiv.style.fontFamily = 'monospace';
-      errorDiv.style.fontSize = '12px';
-      errorDiv.style.whiteSpace = 'pre-wrap';
-      errorDiv.style.position = 'fixed';
-      errorDiv.style.top = '0';
-      errorDiv.style.left = '0';
-      errorDiv.style.right = '0';
-      errorDiv.style.zIndex = '9999';
-      errorDiv.textContent = `Ошибка: ${message}\nСтрока: ${lineno}:${colno}\nИсточник: ${source}`;
-      document.body.appendChild(errorDiv);
-      console.error(message, source, lineno, colno, error);
-      return true;
-    };
-  </script>
+
   <!-- Telegram MiniApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
-  <!-- Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-  
-  <!-- Альтернативный способ загрузки Supabase, если CDN не работает -->
-  <script>
-    // Если Supabase не загрузился через CDN, создадим заглушку
-    window.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function() {
-        if (typeof window.supabase === 'undefined') {
-          console.error('Supabase не загружен через CDN, создаем заглушку');
-          
-          window.supabase = {
-            createClient: function() {
-              return {
-                from: function() {
-                  return {
-                    select: function() { return Promise.resolve({ data: [], error: null }); },
-                    insert: function() { return Promise.resolve({ data: [], error: null }); },
-                    update: function() { return Promise.resolve({ data: [], error: null }); },
-                    delete: function() { return Promise.resolve({ data: [], error: null }); },
-                    upsert: function() { return Promise.resolve({ data: [], error: null }); },
-                    eq: function() { return this; }
-                  };
-                }
-              };
-            }
-          };
-          
-          // Создаем глобальный клиент
-          if (typeof window.supabaseClient === 'undefined') {
-            window.supabaseClient = window.supabase.createClient('https://dummy-url.com', 'dummy-key');
-          }
-        }
-      }, 1000); // Проверяем через 1 секунду после загрузки DOM
-    });
-  </script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,29 +78,7 @@
       line-height: 1;
     }
     
-    /* Стили для отладочной информации */
-    [class*="Debug"] {
-      position: fixed;
-      font-family: monospace;
-      font-size: 10px;
-      padding: 5px;
-      margin: 2px;
-      z-index: 9999;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      pointer-events: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      border-radius: 4px;
-      opacity: 0.85;
-    }
-    [class*="Debug"]:hover {
-      opacity: 1;
-      width: 90%;
-      white-space: normal;
-      word-wrap: break-word;
-    }
+
   </style>
 </head>
 <body>
@@ -359,8 +281,6 @@
     </div>
   </div>
 
-  <!-- Supabase конфигурация -->
-  <script src="supabase.js"></script>
   
   <script src="app.js" type="module"></script>
 </body>
