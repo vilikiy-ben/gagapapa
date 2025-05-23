@@ -35,10 +35,47 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 logDebug('Supabase инициализация, проверка объекта', typeof window.supabase);
 
+// Функция для анонимной аутентификации пользователя
+window.signInAnonymously = async function() {
+  try {
+    logDebug('Попытка анонимной аутентификации');
+    
+    // Генерируем уникальный ID для сессии
+    const sessionId = 'telegram_user_' + Date.now();
+    
+    // Создаем анонимного пользователя
+    const { data, error } = await window.supabaseClient.auth.signUp({
+      email: `${sessionId}@anonymous.app`,
+      password: sessionId + '_random_password',
+    });
+    
+    if (error) {
+      logDebug('Ошибка при анонимной аутентификации', error);
+      return false;
+    }
+    
+    logDebug('Анонимная аутентификация успешна', data?.user?.id);
+    return true;
+  } catch (err) {
+    logDebug('Исключение при анонимной аутентификации', err.message);
+    return false;
+  }
+}
+
 try {
   // Создание клиента Supabase, доступного глобально
   window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
   logDebug('Supabase клиент создан');
+  
+  // Выполняем анонимную аутентификацию сразу после создания клиента
+  window.signInAnonymously()
+    .then(success => {
+      if (success) {
+        logDebug('Пользователь успешно аутентифицирован анонимно');
+      } else {
+        logDebug('Не удалось выполнить анонимную аутентификацию');
+      }
+    });
 } catch (error) {
   console.error('Ошибка при создании клиента Supabase:', error);
   logDebug('Ошибка при создании клиента Supabase', error.message);
@@ -67,6 +104,18 @@ window.saveUserProfile = async function(telegramUser) {
   }
 
   try {
+    // Сначала проверим текущую сессию и при необходимости выполним анонимную аутентификацию
+    const { data: session } = await window.supabaseClient.auth.getSession();
+    if (!session || !session.session) {
+      logDebug('Активная сессия не найдена, выполняем анонимную аутентификацию');
+      const authSuccess = await window.signInAnonymously();
+      if (!authSuccess) {
+        logDebug('Не удалось выполнить аутентификацию, но продолжаем работу');
+      }
+    } else {
+      logDebug('Используем существующую сессию', session.session.user.id);
+    }
+    
     logDebug('Подготовка данных пользователя для Supabase');
     
     // Преобразуем ID пользователя к строке для совместимости с разными типами данных
@@ -172,6 +221,19 @@ window.loadUserSubscriptions = async function(userId) {
   }
 
   try {
+    // Проверяем текущую сессию и при необходимости выполняем анонимную аутентификацию
+    const { data: session } = await window.supabaseClient.auth.getSession();
+    if (!session || !session.session) {
+      logDebug('Активная сессия не найдена перед загрузкой подписок, выполняем анонимную аутентификацию');
+      const authSuccess = await window.signInAnonymously();
+      if (!authSuccess) {
+        logDebug('Не удалось выполнить аутентификацию перед загрузкой подписок');
+        // Продолжаем работу, но могут быть проблемы с RLS
+      }
+    } else {
+      logDebug('Используем существующую сессию для загрузки подписок', session.session.user.id);
+    }
+    
     // Преобразуем ID пользователя к строке для совместимости с разными типами данных
     const userIdStr = String(userId);
     
@@ -258,6 +320,19 @@ window.saveSubscription = async function(userId, subscription) {
   }
 
   try {
+    // Проверяем текущую сессию и при необходимости выполняем анонимную аутентификацию
+    const { data: session } = await window.supabaseClient.auth.getSession();
+    if (!session || !session.session) {
+      logDebug('Активная сессия не найдена перед сохранением подписки, выполняем анонимную аутентификацию');
+      const authSuccess = await window.signInAnonymously();
+      if (!authSuccess) {
+        logDebug('Не удалось выполнить аутентификацию перед сохранением подписки');
+        // Продолжаем работу, но могут быть проблемы с RLS
+      }
+    } else {
+      logDebug('Используем существующую сессию для сохранения подписки', session.session.user.id);
+    }
+    
     // Преобразуем ID пользователя к строке для совместимости с разными типами данных
     const userIdStr = String(userId);
     
@@ -427,6 +502,19 @@ window.deleteSubscription = async function(subscriptionId) {
   }
 
   try {
+    // Проверяем текущую сессию и при необходимости выполняем анонимную аутентификацию
+    const { data: session } = await window.supabaseClient.auth.getSession();
+    if (!session || !session.session) {
+      logDebug('Активная сессия не найдена перед удалением подписки, выполняем анонимную аутентификацию');
+      const authSuccess = await window.signInAnonymously();
+      if (!authSuccess) {
+        logDebug('Не удалось выполнить аутентификацию перед удалением подписки');
+        // Продолжаем работу, но могут быть проблемы с RLS
+      }
+    } else {
+      logDebug('Используем существующую сессию для удаления подписки', session.session.user.id);
+    }
+    
     // Преобразуем ID в строку для совместимости
     const subscriptionIdStr = String(subscriptionId);
     
