@@ -1,8 +1,12 @@
 // SubsViewer - мини-приложение для Telegram
 // Инициализация Telegram Mini App
 
-// Импорт функций для работы с Supabase
-import { supabase, saveUserProfile, loadUserSubscriptions, saveSubscription, deleteSubscription } from './supabase';
+// Глобальные функции Supabase определены в supabase.js:
+// - window.supabaseClient - клиент Supabase
+// - window.saveUserProfile - сохранение профиля пользователя
+// - window.loadUserSubscriptions - загрузка подписок
+// - window.saveSubscription - сохранение подписки
+// - window.deleteSubscription - удаление подписки
 
 // Глобальная переменная для хранения ID пользователя
 let currentUserId = null;
@@ -280,12 +284,12 @@ async function initApp() {
   if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     try {
       // Сохраняем профиль пользователя в Supabase
-      currentUserId = await saveUserProfile(tg.initDataUnsafe.user);
+      currentUserId = await window.saveUserProfile(tg.initDataUnsafe.user);
       console.log('Пользователь авторизован:', currentUserId);
       
       // Загружаем подписки пользователя из Supabase
       if (currentUserId) {
-        const userSubscriptions = await loadUserSubscriptions(currentUserId);
+        const userSubscriptions = await window.loadUserSubscriptions(currentUserId);
         if (userSubscriptions && userSubscriptions.length > 0) {
           subscriptions = userSubscriptions;
           console.log('Загружены подписки из Supabase:', subscriptions.length);
@@ -1652,7 +1656,7 @@ async function confirmDelete() {
   if (subscriptionToDeleteId !== null) {
     if (currentUserId) {
       // Удаление из Supabase
-      const success = await deleteSubscription(subscriptionToDeleteId);
+      const success = await window.deleteSubscription(subscriptionToDeleteId);
       if (success) {
         // Если успешно удалено, обновляем локальный массив
         subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
@@ -1805,7 +1809,7 @@ async function handleFormSubmit(e) {
   
   if (currentUserId) {
     // Если пользователь авторизован, сохраняем в Supabase
-    savedSubscription = await saveSubscription(currentUserId, subscription);
+    savedSubscription = await window.saveSubscription(currentUserId, subscription);
     
     if (formMode === 'edit') {
       // Для редактирования находим индекс подписки в массиве
@@ -1863,7 +1867,7 @@ async function migrateLocalSubscriptions() {
         // Сохраняем каждую подписку в Supabase
         const savedSubscriptions = [];
         for (const sub of formattedSubscriptions) {
-          const saved = await saveSubscription(currentUserId, sub);
+          const saved = await window.saveSubscription(currentUserId, sub);
           if (saved) savedSubscriptions.push(saved);
         }
         

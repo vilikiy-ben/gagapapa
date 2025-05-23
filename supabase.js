@@ -5,18 +5,18 @@
 const supabaseUrl = 'https://kfzrrdppyjmspsswpuij.supabase.co' 
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmenJyZHBweWptc3Bzc3dwdWlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMjY2MzIsImV4cCI6MjA2MzYwMjYzMn0.nxKuQrJuzwM4Cnpbuo7ByLsuZG2dAPgAgZgSQB5IDQs'
 
-// Создание клиента Supabase
-export const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+// Создание клиента Supabase, доступного глобально
+window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
 
 // Функция для сохранения профиля пользователя из Telegram
-export async function saveUserProfile(telegramUser) {
+window.saveUserProfile = async function(telegramUser) {
   if (!telegramUser || !telegramUser.id) {
     console.error('Ошибка: не удалось получить данные пользователя Telegram')
     return null
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabaseClient
       .from('profiles')
       .upsert({
         id: telegramUser.id,
@@ -42,11 +42,11 @@ export async function saveUserProfile(telegramUser) {
 }
 
 // Функция для загрузки подписок пользователя
-export async function loadUserSubscriptions(userId) {
+window.loadUserSubscriptions = async function(userId) {
   if (!userId) return []
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabaseClient
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
@@ -73,7 +73,7 @@ export async function loadUserSubscriptions(userId) {
 }
 
 // Функция для сохранения подписки пользователя
-export async function saveSubscription(userId, subscription) {
+window.saveSubscription = async function(userId, subscription) {
   if (!userId || !subscription) return null
 
   try {
@@ -94,7 +94,7 @@ export async function saveSubscription(userId, subscription) {
     
     if (subscription.id && !subscription.id.startsWith('local_')) {
       // Обновление существующей подписки
-      const { data, error } = await supabase
+      const { data, error } = await window.supabaseClient
         .from('subscriptions')
         .update(supabaseSubscription)
         .eq('id', subscription.id)
@@ -104,7 +104,7 @@ export async function saveSubscription(userId, subscription) {
       result = data[0]
     } else {
       // Создание новой подписки
-      const { data, error } = await supabase
+      const { data, error } = await window.supabaseClient
         .from('subscriptions')
         .insert(supabaseSubscription)
         .select()
@@ -130,11 +130,11 @@ export async function saveSubscription(userId, subscription) {
 }
 
 // Функция для удаления подписки
-export async function deleteSubscription(subscriptionId) {
+window.deleteSubscription = async function(subscriptionId) {
   if (!subscriptionId) return false
 
   try {
-    const { error } = await supabase
+    const { error } = await window.supabaseClient
       .from('subscriptions')
       .delete()
       .eq('id', subscriptionId)
