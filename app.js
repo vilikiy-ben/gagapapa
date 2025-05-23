@@ -1,85 +1,6 @@
 // SubsViewer - мини-приложение для Telegram
 // Инициализация Telegram Mini App
 
-// Глобальные функции Supabase определены в supabase.js:
-// - window.supabaseClient - клиент Supabase
-// - window.saveUserProfile - сохранение профиля пользователя
-// - window.loadUserSubscriptions - загрузка подписок
-// - window.saveSubscription - сохранение подписки
-// - window.deleteSubscription - удаление подписки
-
-// Функция для логирования
-function logDebug(message, data) {
-  console.log(`[App Debug] ${message}`, data || '');
-  
-  // Создаем элемент для вывода на страницу
-  if (document.body) {
-    const logDiv = document.createElement('div');
-    logDiv.style.background = 'rgba(0, 128, 0, 0.6)';
-    logDiv.style.color = 'white';
-    logDiv.style.padding = '5px';
-    logDiv.style.margin = '2px';
-    logDiv.style.fontFamily = 'monospace';
-    logDiv.style.fontSize = '10px';
-    logDiv.style.position = 'fixed';
-    logDiv.style.bottom = '0';
-    logDiv.style.left = '0';
-    logDiv.style.right = '0';
-    logDiv.style.zIndex = '9998';
-    logDiv.textContent = message + (data ? ` ${JSON.stringify(data).slice(0, 100)}...` : '');
-    document.body.appendChild(logDiv);
-    
-    // Удаляем через 5 секунд
-    setTimeout(() => {
-      document.body.removeChild(logDiv);
-    }, 5000);
-  }
-}
-
-// Глобальная переменная для хранения ID пользователя
-let currentUserId = null;
-
-// Функция для принудительного применения стилей на мобильных устройствах
-// Глобальная функция для использования во всем приложении
-function forceMobileStyles() {
-  // Определяем мобильное устройство
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  if (isMobile) {
-    // Обрабатываем все иконки вкладок для обеспечения единообразия
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      const isActive = btn.classList.contains('active');
-      const svg = btn.querySelector('svg');
-      
-      if (svg) {
-        // Устанавливаем одинаковые стили для всех SVG
-        svg.style.fill = 'none';
-        svg.setAttribute('fill', 'none');
-        svg.style.stroke = 'currentColor';
-        svg.style.color = 'currentColor';
-        svg.setAttribute('stroke-width', '1.5');
-        
-        // Обрабатываем все дочерние элементы SVG
-        const elements = svg.querySelectorAll('*');
-        elements.forEach(el => {
-          el.style.fill = 'none';
-          el.setAttribute('fill', 'none');
-          el.style.stroke = 'currentColor';
-          el.style.color = 'currentColor';
-          
-          // Принудительно устанавливаем атрибуты
-          if (el.hasAttribute('stroke')) {
-            el.setAttribute('stroke', 'currentColor');
-          }
-          if (!el.hasAttribute('stroke-width')) {
-            el.setAttribute('stroke-width', '1.5');
-          }
-        });
-      }
-    });
-  }
-}
-
 // Эмуляция Telegram WebApp API для локальной разработки
 if (!window.Telegram && window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.log('Запущена локальная эмуляция Telegram WebApp API');
@@ -232,7 +153,47 @@ if (tg) {
   document.documentElement.style.setProperty('--text-color', '#e0e0e0');    // Значение из :root
   document.documentElement.style.setProperty('--dark-bg', '#0d0d0d');       // Значение из :root
   
-  // Вызываем функцию принудительного применения стилей
+  // Функция для принудительного применения стилей на мобильных устройствах
+  const forceMobileStyles = () => {
+    // Определяем мобильное устройство
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Обрабатываем все иконки вкладок для обеспечения единообразия
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.classList.contains('active');
+        const svg = btn.querySelector('svg');
+        
+        if (svg) {
+          // Устанавливаем одинаковые стили для всех SVG
+          svg.style.fill = 'none';
+          svg.setAttribute('fill', 'none');
+          svg.style.stroke = 'currentColor';
+          svg.style.color = 'currentColor';
+          svg.setAttribute('stroke-width', '1.5');
+          
+          // Обрабатываем все дочерние элементы SVG
+          const elements = svg.querySelectorAll('*');
+          elements.forEach(el => {
+            el.style.fill = 'none';
+            el.setAttribute('fill', 'none');
+            el.style.stroke = 'currentColor';
+            el.style.color = 'currentColor';
+            
+            // Принудительно устанавливаем атрибуты
+            if (el.hasAttribute('stroke')) {
+              el.setAttribute('stroke', 'currentColor');
+            }
+            if (!el.hasAttribute('stroke-width')) {
+              el.setAttribute('stroke-width', '1.5');
+            }
+          });
+        }
+      });
+    }
+  };
+  
+  // Вызываем функцию сразу и добавляем в список обработчиков событий
   forceMobileStyles();
   
   // Добавляем наблюдателя за изменениями DOM
@@ -295,340 +256,172 @@ let subscriptionToDeleteId = null;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
-  logDebug('DOMContentLoaded вызван');
-  
-  if (window.Telegram && window.Telegram.WebApp) {
-    logDebug('Telegram WebApp объект доступен');
-    
-    // Сообщаем Telegram, что приложение готово
-    window.Telegram.WebApp.ready();
-    
-    // Устанавливаем обработчик события готовности
-    window.Telegram.WebApp.onEvent('mainButtonClicked', function() {
-      logDebug('Telegram MainButton нажата');
-    });
-  } else {
-    logDebug('Telegram WebApp объект не найден');
-  }
-  
-  // Пробуем инициализировать приложение
-  initApp().catch(error => {
-    console.error('Ошибка при инициализации приложения:', error);
-    logDebug('Ошибка при инициализации приложения', error.message);
-    
-    // Скрываем экран загрузки в случае ошибки
-    const loadingElement = document.querySelector('.loading');
-    if (loadingElement) {
-      loadingElement.style.opacity = '0';
-      setTimeout(() => {
-        loadingElement.style.display = 'none';
-      }, 300);
-    }
-  });
+  initApp();
 });
 
 // Функция инициализации приложения
 async function initApp() {
-  logDebug('Запуск initApp');
+  // Инициализация элементов для работы с иконками
+  nameInput = document.getElementById('name');
+  searchDropdown = document.getElementById('search-dropdown');
+  iconPreview = document.getElementById('icon-preview');
   
-  try {
-    // Проверка библиотеки Supabase
-    if (typeof window.supabaseClient === 'undefined') {
-      logDebug('Ошибка: supabaseClient не определен, использую только localStorage');
-      // Даже если Supabase не доступен, продолжаем работу с localStorage
-    }
-    
-    // Инициализация элементов для работы с иконками
-    nameInput = document.getElementById('name');
-    searchDropdown = document.getElementById('search-dropdown');
-    iconPreview = document.getElementById('icon-preview');
-    
-    // Инициализация элементов для Trial-функционала
-    trialCheckbox = document.getElementById('trial-checkbox');
-    priceInput = document.getElementById('price');
-    
-    // Загрузка данных из localStorage до авторизации
-    await loadSubscriptionsFromLocalStorage();
-    const hasLocalData = subscriptions.length > 0;
-    logDebug('Найдены локальные данные в localStorage', hasLocalData ? subscriptions.length + ' подписок' : 'нет');
-    
-    // Попытка авторизации пользователя через Telegram
-    let supabaseAuthSuccess = false;
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-      logDebug('Получены данные пользователя Telegram', window.Telegram.WebApp.initDataUnsafe.user.id);
-      
-      try {
-        // Сохраняем профиль пользователя в Supabase
-        currentUserId = await window.saveUserProfile(window.Telegram.WebApp.initDataUnsafe.user);
-        logDebug('Пользователь авторизован', currentUserId);
-        
-        // Загружаем подписки пользователя из Supabase
-        if (currentUserId) {
-          const userSubscriptions = await window.loadUserSubscriptions(currentUserId);
-          if (userSubscriptions && userSubscriptions.length > 0) {
-            subscriptions = userSubscriptions;
-            logDebug('Загружены подписки из Supabase', subscriptions.length);
-            supabaseAuthSuccess = true;
-            
-            // Обновляем локальное хранилище
-            await saveSubscriptionsToLocalStorage();
-          } else if (hasLocalData) {
-            // Если в Supabase нет подписок, но есть в localStorage, пробуем мигрировать их
-            logDebug('В Supabase нет подписок, выполняем миграцию из localStorage');
-            await migrateLocalSubscriptions();
-            supabaseAuthSuccess = true;
-          } else {
-            logDebug('В Supabase и localStorage нет подписок');
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка при авторизации пользователя:', error);
-        logDebug('Ошибка при авторизации пользователя, использую локальное хранилище', error.message);
-        // Продолжаем использовать localStorage
+  // Инициализация элементов для Trial-функционала
+  trialCheckbox = document.getElementById('trial-checkbox');
+  priceInput = document.getElementById('price');
+  
+  // Обработчик событий для поиска иконок при вводе
+  if (nameInput) {
+    nameInput.addEventListener('input', () => {
+      // Отменяем предыдущий таймер, если он есть
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
       }
-    } else {
-      logDebug('Пользователь не авторизован или запущено локально, использую локальное хранилище');
-    }
-    
-    // Если не удалось загрузить данные из Supabase, используем данные из localStorage (они уже загружены)
-    if (!supabaseAuthSuccess && !hasLocalData) {
-      logDebug('Не удалось загрузить данные ни из Supabase, ни из localStorage. Начинаем с пустого списка.');
-    }
-    
-    // Обработчик событий для поиска иконок при вводе
-    if (nameInput) {
-      nameInput.addEventListener('input', () => {
-        // Отменяем предыдущий таймер, если он есть
-        if (searchTimeout) {
-          clearTimeout(searchTimeout);
-        }
-        
-        const query = nameInput.value.trim();
-        
-        // Если поле ввода пустое, скрываем выпадающий список
-        if (!query) {
-          searchDropdown.classList.remove('active');
-          searchDropdown.innerHTML = '';
-          return;
-        }
-        
-        // Устанавливаем новый таймер для задержки поиска
-        searchTimeout = setTimeout(() => {
-          searchAppIcons(query);
-        }, SEARCH_DELAY);
-      });
       
-      // Скрываем выпадающий список при клике вне его
-      document.addEventListener('click', (e) => {
-        if (!searchDropdown.contains(e.target) && e.target !== nameInput) {
-          searchDropdown.classList.remove('active');
-        }
-      });
+      const query = nameInput.value.trim();
       
-      // При фокусе на поле ввода, показываем выпадающий список, если в нем есть результаты
-      nameInput.addEventListener('focus', () => {
-        if (searchDropdown.innerHTML.trim() !== '') {
-          searchDropdown.classList.add('active');
-        }
-      });
-    }
-
-    // Улучшение работы поля выбора даты
+      // Если поле ввода пустое, скрываем выпадающий список
+      if (!query) {
+        searchDropdown.classList.remove('active');
+        searchDropdown.innerHTML = '';
+        return;
+      }
+      
+      // Устанавливаем новый таймер для задержки поиска
+      searchTimeout = setTimeout(() => {
+        searchAppIcons(query);
+      }, SEARCH_DELAY);
+    });
+    
+    // Скрываем выпадающий список при клике вне его
     document.addEventListener('click', (e) => {
-      // Если клик был по input[type="date"] или его родительскому элементу с классом form-group для даты
-      if ((e.target.classList.contains('date-field-container') || 
-           e.target.closest('.date-field-container')) && 
-          !e.target.matches('input[type="date"]')) {
-        // Находим input даты и имитируем клик
-        const dateInput = e.target.querySelector('input[type="date"]') || 
-                          e.target.closest('.date-field-container').querySelector('input[type="date"]');
-        if (dateInput) {
-          dateInput.click();
-          dateInput.focus();
-        }
+      if (!searchDropdown.contains(e.target) && e.target !== nameInput) {
+        searchDropdown.classList.remove('active');
       }
     });
-
-    // Обработчик для чекбокса Trial
-    if (trialCheckbox && priceInput) {
-      trialCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-          // Запоминаем текущее значение цены
-          priceInput.dataset.previousValue = priceInput.value;
-          
-          // Блокируем поле и устанавливаем "Бесплатно"
-          priceInput.disabled = true;
-          priceInput.value = '';
-          priceInput.placeholder = 'Бесплатно';
-        } else {
-          // Восстанавливаем поле и предыдущее значение
-          priceInput.disabled = false;
-          
-          // Восстанавливаем предыдущее значение, если оно было
-          if (priceInput.dataset.previousValue) {
-            priceInput.value = priceInput.dataset.previousValue;
-          }
-          
-          // Восстанавливаем placeholder
-          priceInput.placeholder = 'например, 20';
-        }
-      });
-    }
-
-    logDebug('Настройка обработчиков событий');
     
-    // Примечание: loadSubscriptions() больше не вызывается здесь, т.к. загрузка происходит выше через Supabase
-    setupEventListeners();
-    
-    logDebug('Рендеринг календаря');
-    renderCalendar(selectedDate);
-    
-    logDebug('Обновление UI');
-    updateUI();
-    
-    // Удаляем загрузочный экран, если он есть
-    const loadingElement = document.querySelector('.loading');
-    if (loadingElement) {
-      logDebug('Скрытие экрана загрузки');
-      loadingElement.style.opacity = '0';
-      setTimeout(() => {
-        loadingElement.style.display = 'none';
-      }, 300);
-    } else {
-      logDebug('Элемент загрузки не найден');
-    }
-    
-    // Принудительная установка размеров логотипа, особенно для мобильных устройств
-    try {
-      const logoImg = document.querySelector('.app-logo img');
-      if (logoImg) {
-        logoImg.style.height = '30px';
-        logoImg.style.width = '30px';
-        logoImg.style.objectFit = 'contain';
+    // При фокусе на поле ввода, показываем выпадающий список, если в нем есть результаты
+    nameInput.addEventListener('focus', () => {
+      if (searchDropdown.innerHTML.trim() !== '') {
+        searchDropdown.classList.add('active');
       }
-    } catch (error) {
-      console.error("Error resizing logo via JS:", error);
-      logDebug('Ошибка при изменении размера логотипа', error.message);
+    });
+  }
+
+  // Улучшение работы поля выбора даты
+  document.addEventListener('click', (e) => {
+    // Если клик был по input[type="date"] или его родительскому элементу с классом form-group для даты
+    if ((e.target.classList.contains('date-field-container') || 
+         e.target.closest('.date-field-container')) && 
+        !e.target.matches('input[type="date"]')) {
+      // Находим input даты и имитируем клик
+      const dateInput = e.target.querySelector('input[type="date"]') || 
+                        e.target.closest('.date-field-container').querySelector('input[type="date"]');
+      if (dateInput) {
+        dateInput.click();
+        dateInput.focus();
+      }
     }
-    
-    // Исправляем стили для мобильной версии после инициализации
-    if (tg) {
-      setTimeout(() => {
-        document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
-          label.style.backgroundColor = '#4a90e2';
-          label.style.color = 'white';
-        });
-        
-        // Вызываем функцию принудительного применения стилей
-        forceMobileStyles();
-      }, 500);
+  });
+
+  await loadSubscriptions();
+  setupEventListeners();
+  renderCalendar(selectedDate);
+  updateUI();
+  
+  // Удаляем загрузочный экран, если он есть
+  const loadingElement = document.querySelector('.loading');
+  if (loadingElement) {
+    loadingElement.style.opacity = '0';
+    setTimeout(() => {
+      loadingElement.style.display = 'none';
+    }, 300);
+  }
+  
+  // Принудительная установка размеров логотипа, особенно для мобильных устройств
+  try {
+    const logoImg = document.querySelector('.app-logo img');
+    if (logoImg) {
+      logoImg.style.height = '30px';
+      logoImg.style.width = '30px';
+      logoImg.style.objectFit = 'contain';
     }
-    
-    logDebug('Инициализация приложения завершена');
-    return true; // Успешная инициализация
   } catch (error) {
-    console.error('Ошибка при инициализации приложения:', error);
-    logDebug('Ошибка при инициализации приложения', error.message);
-    
-    // Скрываем экран загрузки в случае ошибки
-    const loadingElement = document.querySelector('.loading');
-    if (loadingElement) {
-      loadingElement.style.opacity = '0';
-      setTimeout(() => {
-        loadingElement.style.display = 'none';
-      }, 300);
-    }
-    
-    throw error; // Пробрасываем ошибку для обработки в вызывающем коде
+    console.error("Error resizing logo via JS:", error);
+  }
+  
+  // Исправляем стили для мобильной версии после инициализации
+  if (tg) {
+    setTimeout(() => {
+      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
+        label.style.backgroundColor = '#4a90e2';
+        label.style.color = 'white';
+      });
+      
+      // Вызываем функцию принудительного применения стилей
+      forceMobileStyles();
+    }, 500);
+  }
+
+  // Обработчик для чекбокса Trial
+  if (trialCheckbox && priceInput) {
+    trialCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        // Запоминаем текущее значение цены
+        priceInput.dataset.previousValue = priceInput.value;
+        
+        // Блокируем поле и устанавливаем "Бесплатно"
+        priceInput.disabled = true;
+        priceInput.value = '';
+        priceInput.placeholder = 'Бесплатно';
+      } else {
+        // Восстанавливаем поле и предыдущее значение
+        priceInput.disabled = false;
+        
+        // Восстанавливаем предыдущее значение, если оно было
+        if (priceInput.dataset.previousValue) {
+          priceInput.value = priceInput.dataset.previousValue;
+        }
+        
+        // Восстанавливаем placeholder
+        priceInput.placeholder = 'например, 20';
+      }
+    });
   }
 }
 
 // Загрузка подписок из localStorage
-async function loadSubscriptionsFromLocalStorage() {
-  logDebug('Загрузка подписок из localStorage');
+async function loadSubscriptions() {
   try {
     const storedData = localStorage.getItem('subscriptions');
     if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        logDebug('Данные успешно загружены из localStorage', parsedData.length + ' подписок');
-        
-        // Преобразуем строковые даты в объекты Date
-        subscriptions = parsedData.map(sub => {
-          // Проверяем формат даты и билинг дату
-          if (typeof sub.billingDate === 'string') {
-            return {
-              ...sub,
-              billingDate: new Date(sub.billingDate)
-            };
-          } else if (sub.billing_date && typeof sub.billing_date === 'string') {
-            // Для совместимости с форматом Supabase
-            return {
-              ...sub,
-              billingDate: new Date(sub.billing_date),
-              // Добавляем поля в camelCase для совместимости
-              isYearly: sub.is_yearly || sub.isYearly || false,
-              isWeekly: sub.is_weekly || sub.isWeekly || false,
-              isTrial: sub.is_trial || sub.isTrial || false,
-              iconUrl: sub.icon_url || sub.iconUrl || null
-            };
-          }
-          return sub;
-        });
-        
-        // Дублируем логирование для отладки
-        console.log('Загружено из localStorage:', subscriptions);
-      } catch (parseError) {
-        console.error('Ошибка при парсинге данных из localStorage:', parseError);
-        logDebug('Ошибка при парсинге данных из localStorage', parseError.message);
-        subscriptions = [];
-      }
-    } else {
-      logDebug('В localStorage нет данных о подписках');
-      subscriptions = [];
+      subscriptions = JSON.parse(storedData);
+      
+      // Преобразуем строковые даты в объекты Date
+      subscriptions = subscriptions.map(sub => {
+        // Проверяем формат даты
+        if (typeof sub.billingDate === 'string') {
+          return {
+            ...sub,
+            billingDate: new Date(sub.billingDate)
+          };
+        }
+        return sub;
+      });
     }
   } catch (error) {
-    console.error('Ошибка при загрузке подписок из localStorage:', error);
-    logDebug('Ошибка при загрузке подписок из localStorage', error.message);
+    console.error('Ошибка при загрузке подписок:', error);
     subscriptions = [];
   }
 }
 
 // Сохранение подписок в localStorage
-async function saveSubscriptionsToLocalStorage() {
-  logDebug('Сохранение подписок в localStorage', subscriptions.length + ' подписок');
+async function saveSubscriptions() {
   try {
-    // Подготавливаем данные для сохранения
-    const dataToSave = subscriptions.map(sub => {
-      // Если это объект с датой, преобразуем ее в строку
-      if (sub.billingDate instanceof Date) {
-        return {
-          ...sub,
-          // Оставляем дату как есть, JSON.stringify преобразует ее в строку
-        };
-      }
-      return sub;
-    });
-
-    localStorage.setItem('subscriptions', JSON.stringify(dataToSave));
-    console.log('Подписки сохранены в localStorage:', dataToSave);
-    logDebug('Подписки успешно сохранены в localStorage');
-    
-    // Для отладки: повторно читаем данные, чтобы убедиться, что они сохранились
-    const savedData = localStorage.getItem('subscriptions');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        logDebug('Проверка сохраненных данных', parsedData.length + ' подписок прочитано из localStorage');
-      } catch (e) {
-        logDebug('Ошибка при проверке сохраненных данных', e.message);
-      }
-    }
-    
+    localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
     return true;
   } catch (error) {
-    console.error('Ошибка при сохранении подписок в localStorage:', error);
-    logDebug('Ошибка при сохранении подписок в localStorage', error.message);
+    console.error('Ошибка при сохранении подписок:', error);
     return false;
   }
 }
@@ -848,37 +641,13 @@ function createSubscriptionCard(subscription) {
   // Генерируем HTML с поддержкой иконки
   let iconHtml = '';
   if (subscription.iconUrl) {
-    // Проверяем, локальная ли это иконка
-    if (subscription.iconUrl.startsWith('data:local,')) {
-      try {
-        // Парсим данные локальной иконки
-        const iconDataStr = subscription.iconUrl.replace('data:local,', '');
-        const iconData = JSON.parse(iconDataStr);
-        
-        // Создаем HTML для локальной иконки
-        iconHtml = `
-          <div class="subscription-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-            <span>${iconData.letter}</span>
-          </div>
-        `;
-      } catch (e) {
-        console.error('Ошибка при парсинге данных локальной иконки:', e);
-        // Если не удалось распарсить, создаем стандартную иконку
-        iconHtml = `
-          <div class="subscription-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-            <span>${subscription.name.charAt(0).toUpperCase()}</span>
-          </div>
-        `;
-      }
-    } else {
-      // Добавляем параметры для оптимизации иконки в карточке
-      const optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-      iconHtml = `
-        <div class="subscription-icon">
-          <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy">
-        </div>
-      `;
-    }
+    // Добавляем параметры для оптимизации иконки в карточке
+    const optimizedIconUrl = `${subscription.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+    iconHtml = `
+      <div class="subscription-icon">
+        <img src="${optimizedIconUrl}" alt="${subscription.name}" loading="lazy">
+      </div>
+    `;
   }
   
   // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
@@ -1104,37 +873,13 @@ function createPaymentItem(payment) {
   // Генерируем HTML для иконки
   let iconHtml = '';
   if (payment.iconUrl) {
-    // Проверяем, локальная ли это иконка
-    if (payment.iconUrl.startsWith('data:local,')) {
-      try {
-        // Парсим данные локальной иконки
-        const iconDataStr = payment.iconUrl.replace('data:local,', '');
-        const iconData = JSON.parse(iconDataStr);
-        
-        // Создаем HTML для локальной иконки
-        iconHtml = `
-          <div class="payment-app-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; width: 32px; height: 32px; border-radius: 8px;">
-            <span>${iconData.letter}</span>
-          </div>
-        `;
-      } catch (e) {
-        console.error('Ошибка при парсинге данных локальной иконки в платеже:', e);
-        // Если не удалось распарсить, создаем стандартную иконку
-        iconHtml = `
-          <div class="payment-app-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; width: 32px; height: 32px; border-radius: 8px;">
-            <span>${payment.name.charAt(0).toUpperCase()}</span>
-          </div>
-        `;
-      }
-    } else {
-      // Добавляем параметры для оптимизации иконки в карточке
-      const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-      iconHtml = `
-        <div class="payment-app-icon">
-          <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy">
-        </div>
-      `;
-    }
+    // Добавляем параметры для оптимизации иконки в карточке
+    const optimizedIconUrl = `${payment.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+    iconHtml = `
+      <div class="payment-app-icon">
+        <img src="${optimizedIconUrl}" alt="${payment.name}" loading="lazy">
+      </div>
+    `;
   }
   
   // Формируем HTML для цены - разный для триальных и обычных подписок
@@ -1467,58 +1212,34 @@ function renderDailySubscriptions() {
       const formattedPrice = sub.isTrial ? 'Бесплатно' : formatCurrency(sub.price);
       const period = formatSubscriptionPeriod(sub);
       
-      // Генерируем HTML с поддержкой иконки
+      // Генерируем HTML с поддержкой иконки, точно как в createSubscriptionCard
       let iconHtml = '';
       if (sub.iconUrl) {
-        // Проверяем, локальная ли это иконка
-        if (sub.iconUrl.startsWith('data:local,')) {
-          try {
-            // Парсим данные локальной иконки
-            const iconDataStr = sub.iconUrl.replace('data:local,', '');
-            const iconData = JSON.parse(iconDataStr);
-            
-            // Создаем HTML для локальной иконки
-            iconHtml = `
-              <div class="subscription-icon local-icon" style="background-color: ${iconData.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                <span>${iconData.letter}</span>
-              </div>
-            `;
-          } catch (e) {
-            console.error('Ошибка при парсинге данных локальной иконки в календаре:', e);
-            // Если не удалось распарсить, создаем стандартную иконку
-            iconHtml = `
-              <div class="subscription-icon local-icon" style="background-color: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                <span>${sub.name.charAt(0).toUpperCase()}</span>
-              </div>
-            `;
-          }
-        } else {
-          // Добавляем параметры для оптимизации иконки в карточке
-          const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
-          iconHtml = `
-            <div class="subscription-icon">
-              <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy">
-            </div>
-          `;
-        }
+        // Добавляем параметры для оптимизации иконки в карточке
+        const optimizedIconUrl = `${sub.iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+        iconHtml = `
+          <div class="subscription-icon">
+            <img src="${optimizedIconUrl}" alt="${sub.name}" loading="lazy">
+          </div>
+        `;
       }
       
-      // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
-      let priceHtml = '';
-      if (sub.isTrial) {
-        priceHtml = `
-          <div class="subscription-price-group">
-            <span class="subscription-price trial-price">Триал</span>
-          </div>
-        `;
-      } else {
-        priceHtml = `
-          <div class="subscription-price-group">
-            <span class="subscription-price">${formattedPrice}</span>
-            <span class="subscription-period">за ${period}</span>
-          </div>
-        `;
-      }
+        // Формируем HTML для блока с ценой и периодом - разный для триальных и обычных подписок
+  let priceHtml = '';
+  if (sub.isTrial) {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price trial-price">Триал</span>
+      </div>
+    `;
+  } else {
+    priceHtml = `
+      <div class="subscription-price-group">
+        <span class="subscription-price">${formattedPrice}</span>
+        <span class="subscription-period">за ${period}</span>
+      </div>
+    `;
+  }
       
       html += `
         <div class="daily-subscription-item">
@@ -1574,7 +1295,6 @@ async function searchAppIcons(query) {
     
     // Подготовка результатов
     let searchResults = [];
-    let apiAccessible = true;
     
     // Сначала пробуем получить результаты через Brand Search API
     try {
@@ -1592,116 +1312,144 @@ async function searchAppIcons(query) {
           domain: item.domain,
           name: item.name
         }));
-      } else if (searchResponse.status === 401) {
-        // Если получили ошибку авторизации, запоминаем это и переходим на резервный вариант
-        console.log('API Logo.dev недоступен из-за проблем с авторизацией (401), используем локальные иконки');
-        apiAccessible = false;
       }
     } catch (error) {
       console.warn('Brand Search API недоступен, используем запасной вариант:', error);
-      apiAccessible = false;
     }
     
-    // Если API недоступен или результатов нет, используем локальную генерацию иконок
-    if (searchResults.length === 0 || !apiAccessible) {
-      // Спецальный список популярных сервисов
+    // Если не удалось получить результаты через Brand Search API или результатов нет,
+    // используем запасной вариант с предопределенными доменами
+    if (searchResults.length === 0) {
       const lowerCaseQuery = query.toLowerCase().trim();
-      const specialServices = {
-        'telegram': { 
-          name: 'Telegram', 
-          color: '#0088cc',
-          letter: 'T'
-        },
-        'netflix': { 
-          name: 'Netflix', 
-          color: '#e50914',
-          letter: 'N'
-        },
-        'spotify': { 
-          name: 'Spotify', 
-          color: '#1DB954',
-          letter: 'S'
-        },
-        'youtube': { 
-          name: 'YouTube', 
-          color: '#ff0000',
-          letter: 'Y'
-        },
-        'discord': { 
-          name: 'Discord', 
-          color: '#5865F2',
-          letter: 'D'
-        },
-        'twitch': { 
-          name: 'Twitch', 
-          color: '#9146ff',
-          letter: 'T'
-        },
-        'steam': { 
-          name: 'Steam', 
-          color: '#171a21',
-          letter: 'S'
-        },
-        'amazon': { 
-          name: 'Amazon', 
-          color: '#ff9900',
-          letter: 'A'
-        },
-        'apple': { 
-          name: 'Apple', 
-          color: '#555555',
-          letter: 'A'
-        },
-        'google': { 
-          name: 'Google', 
-          color: '#4285f4',
-          letter: 'G'
-        }
-      };
       
-      // Проверяем, если запрос соответствует известному сервису
-      const matchedService = Object.keys(specialServices).find(key => 
-        lowerCaseQuery.includes(key));
-      
-      if (matchedService) {
-        const service = specialServices[matchedService];
-        // Создаем локальную иконку для известного сервиса
-        searchResults = [{
-          url: 'local',
-          domain: matchedService + '.com',
-          name: service.name,
-          color: service.color,
-          letter: service.letter
-        }];
-      } else {
-        // Если сервис не известен, создаем общую иконку
-        const firstLetter = query.charAt(0).toUpperCase();
-        const randomColors = [
-          '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
-          '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
+      // Специальный случай для Telegram
+      if (lowerCaseQuery.includes('telegram')) {
+        const telegramDomains = [
+          { domain: 'telegram.org', name: 'Telegram Messenger' },
+          { domain: 'telegram.com', name: 'Telegram' },
+          { domain: 't.me', name: 'Telegram' }
         ];
-        const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
         
-        searchResults = [{
-          url: 'local',
-          domain: query.toLowerCase().replace(/\s+/g, '') + '.com',
-          name: capitalizeFirstLetter(query),
-          color: randomColor,
-          letter: firstLetter
-        }];
+        telegramDomains.forEach(item => {
+          searchResults.push({
+            url: `https://img.logo.dev/${item.domain}?token=${API_TOKEN}&${apiParams}`,
+            domain: item.domain,
+            name: item.name
+          });
+        });
+      } else {
+        // Предопределенные популярные сервисы
+        const popularServices = {
+          'steam': [
+            { domain: 'steampowered.com', name: 'Steam (Valve Corporation)' },
+            { domain: 'steamcommunity.com', name: 'Steam Community' },
+            { domain: 'steam.com', name: 'Steam' }
+          ],
+          'netflix': [
+            { domain: 'netflix.com', name: 'Netflix' },
+            { domain: 'netflixinvestor.com', name: 'Netflix Investor' }
+          ],
+          'spotify': [
+            { domain: 'spotify.com', name: 'Spotify' },
+            { domain: 'spotifyforbrands.com', name: 'Spotify for Brands' }
+          ],
+          'amazon': [
+            { domain: 'amazon.com', name: 'Amazon' },
+            { domain: 'primevideo.com', name: 'Amazon Prime Video' },
+            { domain: 'audible.com', name: 'Audible' }
+          ],
+          'google': [
+            { domain: 'google.com', name: 'Google' },
+            { domain: 'gmail.com', name: 'Gmail' },
+            { domain: 'youtube.com', name: 'YouTube' }
+          ],
+          'apple': [
+            { domain: 'apple.com', name: 'Apple' },
+            { domain: 'icloud.com', name: 'iCloud' }
+          ],
+          'microsoft': [
+            { domain: 'microsoft.com', name: 'Microsoft' },
+            { domain: 'xbox.com', name: 'Xbox' },
+            { domain: 'office.com', name: 'Microsoft Office' }
+          ]
+        };
+        
+        // Проверяем, есть ли запрос в популярных сервисах
+        let foundPopularService = false;
+        Object.keys(popularServices).forEach(service => {
+          if (lowerCaseQuery.includes(service)) {
+            foundPopularService = true;
+            popularServices[service].forEach(item => {
+              searchResults.push({
+                url: `https://img.logo.dev/${item.domain}?token=${API_TOKEN}&${apiParams}`,
+                domain: item.domain,
+                name: item.name
+              });
+            });
+          }
+        });
+        
+        // Если не найдено в популярных сервисах, пробуем наиболее вероятные домены
+        if (!foundPopularService) {
+          // Очищаем запрос от пробелов и специальных символов
+          const cleanQuery = lowerCaseQuery.replace(/[^a-z0-9]/gi, '');
+          
+          // Наиболее распространенные домены
+          const commonDomains = ['.com', '.app', '.io', '.net', '.tv'];
+          
+          commonDomains.forEach(ext => {
+            const domain = `${cleanQuery}${ext}`;
+            searchResults.push({
+              url: `https://img.logo.dev/${domain}?token=${API_TOKEN}&${apiParams}`,
+              domain: domain,
+              name: capitalizeFirstLetter(query)
+            });
+          });
+        }
       }
     }
+    
+    // Выполняем запросы на получение логотипов параллельно
+    const results = await Promise.all(
+      searchResults.map(async (result) => {
+        try {
+          const response = await fetch(result.url);
+          if (response.ok) {
+            return {
+              url: response.url,
+              domain: result.domain,
+              name: result.name
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Ошибка при запросе ${result.url}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    // Фильтруем успешные результаты и удаляем дубликаты
+    const validResults = results.filter(result => result !== null);
+    const uniqueDomains = {};
+    const uniqueResults = validResults.filter(result => {
+      if (uniqueDomains[result.domain]) {
+        return false;
+      }
+      uniqueDomains[result.domain] = true;
+      return true;
+    });
     
     // Очищаем контейнер
     searchDropdown.innerHTML = '';
     
-    if (searchResults.length === 0) {
+    if (uniqueResults.length === 0) {
       searchDropdown.innerHTML = '<div class="search-empty">Сервисы не найдены</div>';
       return;
     }
     
     // Ограничиваем до 10 результатов
-    const resultsToShow = searchResults.slice(0, 10);
+    const resultsToShow = uniqueResults.slice(0, 10);
     
     // Отображаем найденные иконки в выпадающем списке
     resultsToShow.forEach(result => {
@@ -1711,27 +1459,10 @@ async function searchAppIcons(query) {
       // Форматируем домен для отображения
       const displayDomain = formatDomainForDisplay(result.domain);
       
-      let iconHtml = '';
-      
-      // Проверяем, локальная ли это иконка
-      if (result.url === 'local') {
-        // Создаем SVG-монограмму с первой буквой названия
-        iconHtml = `
-          <div class="search-item-icon local-icon" style="background-color: ${result.color};">
-            <span class="icon-letter">${result.letter}</span>
-          </div>
-        `;
-      } else {
-        // Используем обычную иконку из API
-        iconHtml = `
-          <div class="search-item-icon">
-            <img src="${result.url}" alt="${result.name}">
-          </div>
-        `;
-      }
-      
       searchItem.innerHTML = `
-        ${iconHtml}
+        <div class="search-item-icon">
+          <img src="${result.url}" alt="${result.name}">
+        </div>
         <div class="search-item-details">
           <div class="search-item-name">${result.name}</div>
           <div class="search-item-domain">${displayDomain}</div>
@@ -1740,12 +1471,7 @@ async function searchAppIcons(query) {
       
       // Обработчик выбора сервиса
       searchItem.addEventListener('click', () => {
-        if (result.url === 'local') {
-          // Для локальных иконок используем другой способ отображения
-          selectLocalIcon(result.letter, result.color, result.name);
-        } else {
-          selectAppIcon(result.url);
-        }
+        selectAppIcon(result.url);
         // Не меняем название, оставляем то, что ввел пользователь
         searchDropdown.classList.remove('active');
       });
@@ -1756,36 +1482,6 @@ async function searchAppIcons(query) {
   } catch (error) {
     console.error('Ошибка при поиске иконок:', error);
     searchDropdown.innerHTML = '<div class="search-empty">Ошибка при поиске сервисов</div>';
-  }
-}
-
-// Выбор локальной иконки (монограммы)
-function selectLocalIcon(letter, color, serviceName) {
-  // Создаем и сохраняем данные для локальной иконки
-  const iconData = {
-    type: 'local',
-    letter: letter,
-    color: color,
-    name: serviceName
-  };
-  
-  // Сохраняем в JSON строку для возможности хранения в localStorage
-  selectedIconUrl = 'data:local,' + JSON.stringify(iconData);
-  
-  // Обновляем скрытое поле с URL иконки
-  document.getElementById('app-icon-url').value = selectedIconUrl;
-  
-  // Обновляем превью
-  const selectedIcon = document.getElementById('selected-icon');
-  
-  if (selectedIcon) {
-    // Заменяем тег img на div с буквой для превью
-    const iconPreviewContainer = document.getElementById('icon-preview');
-    iconPreviewContainer.innerHTML = `
-      <div id="selected-icon" class="local-icon-preview" style="background-color: ${color}; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: white; font-weight: bold;">
-        ${letter}
-      </div>
-    `;
   }
 }
 
@@ -1809,11 +1505,6 @@ function capitalizeFirstLetter(string) {
 
 // Выбор иконки приложения
 function selectAppIcon(iconUrl) {
-  // Если URL уже указывает на локальную иконку, просто используем его напрямую
-  if (iconUrl === 'local') {
-    return; // Локальные иконки обрабатываются через selectLocalIcon
-  }
-
   // Удаляем параметры из URL (token, size и т.д.), сохраняем только базовый URL
   let cleanIconUrl = iconUrl;
   if (iconUrl.includes('?')) {
@@ -1830,37 +1521,8 @@ function selectAppIcon(iconUrl) {
   const selectedIcon = document.getElementById('selected-icon');
   
   if (selectedIcon) {
-    // Проверяем доступность изображения перед отображением
-    const img = new Image();
-    img.onload = function() {
-      // Успешно загружено, отображаем
-      const iconPreviewContainer = document.getElementById('icon-preview');
-      iconPreviewContainer.innerHTML = `
-        <img id="selected-icon" src="${previewUrl}" alt="Иконка сервиса" style="display: block; width: 32px; height: 32px; border-radius: 8px; object-fit: contain;">
-      `;
-    };
-    
-    img.onerror = function() {
-      // Ошибка загрузки, создаем локальную иконку
-      console.log('Не удалось загрузить иконку из API, создаем локальную');
-      
-      // Получаем имя сервиса из поля ввода
-      const serviceName = document.getElementById('name').value.trim();
-      const firstLetter = serviceName.charAt(0).toUpperCase();
-      
-      // Выбираем случайный цвет
-      const randomColors = [
-        '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
-        '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
-      ];
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-      
-      // Создаем локальную иконку
-      selectLocalIcon(firstLetter, randomColor, serviceName);
-    };
-    
-    // Начинаем загрузку изображения
-    img.src = previewUrl;
+    selectedIcon.src = previewUrl;
+    selectedIcon.style.display = 'block';
   }
 }
 
@@ -1947,21 +1609,8 @@ function closeConfirmDeleteModal() {
 // Подтверждение удаления
 async function confirmDelete() {
   if (subscriptionToDeleteId !== null) {
-    if (currentUserId) {
-      // Удаление из Supabase
-      const success = await window.deleteSubscription(subscriptionToDeleteId);
-      if (success) {
-        // Если успешно удалено, обновляем локальный массив
-        subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-      } else {
-        console.error('Ошибка при удалении подписки из Supabase');
-      }
-    } else {
-      // Если нет подключения к Supabase, удаляем только локально
-      subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-      await saveSubscriptionsToLocalStorage();
-    }
-    
+    subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
+    await saveSubscriptions();
     closeConfirmDeleteModal();
     updateUI();
   }
@@ -2042,22 +1691,7 @@ function openEditSubscriptionForm(subscription) {
   
   // Устанавливаем иконку, если она есть
   if (subscription.iconUrl) {
-    if (subscription.iconUrl.startsWith('data:local,')) {
-      // Для локальных иконок
-      try {
-        const iconDataStr = subscription.iconUrl.replace('data:local,', '');
-        const iconData = JSON.parse(iconDataStr);
-        
-        // Используем функцию для выбора локальной иконки
-        selectLocalIcon(iconData.letter, iconData.color, iconData.name || subscription.name);
-      } catch (e) {
-        console.error('Ошибка при парсинге данных локальной иконки:', e);
-        resetAppIcon();
-      }
-    } else {
-      // Для обычных иконок из API
-      selectAppIcon(subscription.iconUrl);
-    }
+    selectAppIcon(subscription.iconUrl);
   } else {
     resetAppIcon();
   }
@@ -2091,149 +1725,48 @@ async function handleFormSubmit(e) {
   const isWeekly = document.getElementById('weekly').checked;
   const color = colorInput.value;
   const iconUrl = document.getElementById('app-icon-url').value;
-  const id = subscriptionIdInput.value;
   
   if (!name || (!isTrial && (isNaN(price) || price < 0)) || !billingDate) {
     alert('Пожалуйста, заполните все обязательные поля формы');
     return;
   }
   
-  // Подготовка объекта подписки
-  const subscription = {
-    id: id || 'local_' + Date.now(), // Если нет ID, создаем временный локальный ID
-    name,
-    price,
-    isTrial,
-    billingDate,
-    color,
-    isYearly,
-    isWeekly,
-    iconUrl
-  };
-  
-  // Сохранение подписки
-  let savedSubscription;
-  let index = -1;
-  
-  if (currentUserId) {
-    // Если пользователь авторизован, пробуем сохранить в Supabase
-    savedSubscription = await window.saveSubscription(currentUserId, subscription);
+  if (formMode === 'add') {
+    // Добавление новой подписки
+    const newSubscription = {
+      id: Date.now(),
+      name,
+      price,
+      isTrial,
+      billingDate,
+      color,
+      isYearly,
+      isWeekly,
+      iconUrl
+    };
     
-    if (formMode === 'edit') {
-      // Для редактирования находим индекс подписки в массиве
-      index = subscriptions.findIndex(sub => sub.id === id);
-      if (index !== -1 && savedSubscription) {
-        // Заменяем существующую подписку на обновленную
-        subscriptions[index] = savedSubscription;
-      }
-    } else {
-      // Для новой подписки просто добавляем в массив
-      if (savedSubscription) {
-        subscriptions.push(savedSubscription);
-      }
-    }
-    
-    // Обязательно сохраняем в localStorage даже при успешном сохранении в Supabase
-    await saveSubscriptionsToLocalStorage();
+    subscriptions.push(newSubscription);
   } else {
-    // Локальный режим без Supabase
-    if (formMode === 'edit') {
-      index = subscriptions.findIndex(sub => sub.id === id);
-      if (index !== -1) {
-        subscriptions[index] = subscription;
-      }
-    } else {
-      subscriptions.push(subscription);
-    }
+    // Редактирование существующей подписки
+    const id = parseInt(subscriptionIdInput.value);
+    const index = subscriptions.findIndex(sub => sub.id === id);
     
-    // Сохраняем в localStorage
-    await saveSubscriptionsToLocalStorage();
+    if (index !== -1) {
+      subscriptions[index] = {
+        ...subscriptions[index],
+        name,
+        price,
+        isTrial,
+        billingDate,
+        color,
+        isYearly,
+        isWeekly,
+        iconUrl
+      };
+    }
   }
   
+  await saveSubscriptions();
   closeSubscriptionForm();
   updateUI();
-}
-
-// Функция для миграции локальных подписок в Supabase
-async function migrateLocalSubscriptions() {
-  try {
-    const storedData = localStorage.getItem('subscriptions');
-    if (storedData && currentUserId) {
-      let localSubscriptions = [];
-      try {
-        localSubscriptions = JSON.parse(storedData);
-        logDebug('Загружены подписки для миграции', localSubscriptions.length);
-      } catch (parseError) {
-        logDebug('Ошибка при парсинге данных для миграции', parseError.message);
-        return;
-      }
-      
-      // Преобразуем строковые даты в объекты Date
-      const formattedSubscriptions = localSubscriptions.map(sub => {
-        const newSub = {...sub};
-        
-        if (typeof sub.billingDate === 'string') {
-          newSub.billingDate = new Date(sub.billingDate);
-        } else if (sub.billing_date && typeof sub.billing_date === 'string') {
-          // Для совместимости с форматом Supabase
-          newSub.billingDate = new Date(sub.billing_date);
-        }
-        
-        // Добавляем совместимые поля
-        newSub.isYearly = sub.is_yearly || sub.isYearly || false;
-        newSub.isWeekly = sub.is_weekly || sub.isWeekly || false;
-        newSub.isTrial = sub.is_trial || sub.isTrial || false;
-        newSub.iconUrl = sub.icon_url || sub.iconUrl || null;
-        
-        return newSub;
-      });
-      
-      if (formattedSubscriptions.length > 0) {
-        logDebug('Мигрируем ' + formattedSubscriptions.length + ' подписок из localStorage в Supabase');
-        
-        // Сохраняем каждую подписку в Supabase
-        const savedSubscriptions = [];
-        let allSuccessful = true;
-        
-        for (const sub of formattedSubscriptions) {
-          try {
-            const saved = await window.saveSubscription(currentUserId, sub);
-            if (saved) {
-              savedSubscriptions.push(saved);
-            } else {
-              allSuccessful = false;
-              logDebug('Не удалось сохранить подписку в Supabase');
-            }
-          } catch (e) {
-            allSuccessful = false;
-            logDebug('Ошибка при сохранении подписки в Supabase', e.message);
-          }
-        }
-        
-        if (savedSubscriptions.length > 0) {
-          subscriptions = savedSubscriptions;
-          logDebug('Миграция завершена, сохранено ' + savedSubscriptions.length + ' подписок');
-          
-          // Обновляем данные в localStorage
-          await saveSubscriptionsToLocalStorage();
-          
-          // Очищаем устаревшие данные, только если всё сохранилось успешно
-          if (allSuccessful && savedSubscriptions.length === formattedSubscriptions.length) {
-            localStorage.removeItem('subscriptions_old');
-            localStorage.setItem('subscriptions_old', storedData); // сохраняем резервную копию
-            logDebug('Создана резервная копия в localStorage (subscriptions_old)');
-          }
-        } else {
-          // Если ничего не удалось сохранить, используем локальные данные
-          subscriptions = formattedSubscriptions;
-          logDebug('Миграция в Supabase не удалась, используем локальные данные');
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Ошибка при миграции подписок:', error);
-    logDebug('Ошибка при миграции подписок', error.message);
-    // В случае ошибки загружаем из локального хранилища
-    await loadSubscriptionsFromLocalStorage();
-  }
 } 
