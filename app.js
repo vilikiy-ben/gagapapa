@@ -8,6 +8,34 @@
 // - window.saveSubscription - сохранение подписки
 // - window.deleteSubscription - удаление подписки
 
+// Функция для логирования
+function logDebug(message, data) {
+  console.log(`[App Debug] ${message}`, data || '');
+  
+  // Создаем элемент для вывода на страницу
+  if (document.body) {
+    const logDiv = document.createElement('div');
+    logDiv.style.background = 'rgba(0, 128, 0, 0.6)';
+    logDiv.style.color = 'white';
+    logDiv.style.padding = '5px';
+    logDiv.style.margin = '2px';
+    logDiv.style.fontFamily = 'monospace';
+    logDiv.style.fontSize = '10px';
+    logDiv.style.position = 'fixed';
+    logDiv.style.bottom = '0';
+    logDiv.style.left = '0';
+    logDiv.style.right = '0';
+    logDiv.style.zIndex = '9998';
+    logDiv.textContent = message + (data ? ` ${JSON.stringify(data).slice(0, 100)}...` : '');
+    document.body.appendChild(logDiv);
+    
+    // Удаляем через 5 секунд
+    setTimeout(() => {
+      document.body.removeChild(logDiv);
+    }, 5000);
+  }
+}
+
 // Глобальная переменная для хранения ID пользователя
 let currentUserId = null;
 
@@ -266,165 +294,235 @@ let subscriptionToDeleteId = null;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
-  initApp();
+  logDebug('DOMContentLoaded вызван');
+  
+  if (window.Telegram && window.Telegram.WebApp) {
+    logDebug('Telegram WebApp объект доступен');
+    
+    // Сообщаем Telegram, что приложение готово
+    window.Telegram.WebApp.ready();
+    
+    // Устанавливаем обработчик события готовности
+    window.Telegram.WebApp.onEvent('mainButtonClicked', function() {
+      logDebug('Telegram MainButton нажата');
+    });
+  } else {
+    logDebug('Telegram WebApp объект не найден');
+  }
+  
+  // Пробуем инициализировать приложение
+  initApp().catch(error => {
+    console.error('Ошибка при инициализации приложения:', error);
+    logDebug('Ошибка при инициализации приложения', error.message);
+    
+    // Скрываем экран загрузки в случае ошибки
+    const loadingElement = document.querySelector('.loading');
+    if (loadingElement) {
+      loadingElement.style.opacity = '0';
+      setTimeout(() => {
+        loadingElement.style.display = 'none';
+      }, 300);
+    }
+  });
 });
 
 // Функция инициализации приложения
 async function initApp() {
-  // Инициализация элементов для работы с иконками
-  nameInput = document.getElementById('name');
-  searchDropdown = document.getElementById('search-dropdown');
-  iconPreview = document.getElementById('icon-preview');
+  logDebug('Запуск initApp');
   
-  // Инициализация элементов для Trial-функционала
-  trialCheckbox = document.getElementById('trial-checkbox');
-  priceInput = document.getElementById('price');
-  
-  // Авторизация пользователя через Telegram
-  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    try {
-      // Сохраняем профиль пользователя в Supabase
-      currentUserId = await window.saveUserProfile(tg.initDataUnsafe.user);
-      console.log('Пользователь авторизован:', currentUserId);
+  try {
+    // Проверка библиотеки Supabase
+    if (typeof window.supabaseClient === 'undefined') {
+      logDebug('Ошибка: supabaseClient не определен');
+      throw new Error('Supabase client не инициализирован');
+    }
+    
+    // Инициализация элементов для работы с иконками
+    nameInput = document.getElementById('name');
+    searchDropdown = document.getElementById('search-dropdown');
+    iconPreview = document.getElementById('icon-preview');
+    
+    // Инициализация элементов для Trial-функционала
+    trialCheckbox = document.getElementById('trial-checkbox');
+    priceInput = document.getElementById('price');
+    
+    // Авторизация пользователя через Telegram
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+      logDebug('Получены данные пользователя Telegram', window.Telegram.WebApp.initDataUnsafe.user.id);
       
-      // Загружаем подписки пользователя из Supabase
-      if (currentUserId) {
-        const userSubscriptions = await window.loadUserSubscriptions(currentUserId);
-        if (userSubscriptions && userSubscriptions.length > 0) {
-          subscriptions = userSubscriptions;
-          console.log('Загружены подписки из Supabase:', subscriptions.length);
-        } else {
-          // Если в Supabase нет подписок, попробуем использовать локальные
-          await migrateLocalSubscriptions();
+      try {
+        // Сохраняем профиль пользователя в Supabase
+        currentUserId = await window.saveUserProfile(window.Telegram.WebApp.initDataUnsafe.user);
+        logDebug('Пользователь авторизован', currentUserId);
+        
+        // Загружаем подписки пользователя из Supabase
+        if (currentUserId) {
+          const userSubscriptions = await window.loadUserSubscriptions(currentUserId);
+          if (userSubscriptions && userSubscriptions.length > 0) {
+            subscriptions = userSubscriptions;
+            logDebug('Загружены подписки из Supabase', subscriptions.length);
+          } else {
+            // Если в Supabase нет подписок, попробуем использовать локальные
+            logDebug('В Supabase нет подписок, проверяем локальное хранилище');
+            await migrateLocalSubscriptions();
+          }
         }
+      } catch (error) {
+        console.error('Ошибка при авторизации пользователя:', error);
+        logDebug('Ошибка при авторизации пользователя', error.message);
+        // В случае ошибки используем локальное хранилище
+        await loadSubscriptionsFromLocalStorage();
       }
-    } catch (error) {
-      console.error('Ошибка при авторизации пользователя:', error);
-      // В случае ошибки используем локальное хранилище
+    } else {
+      logDebug('Пользователь не авторизован или запущено локально');
       await loadSubscriptionsFromLocalStorage();
     }
-  } else {
-    console.log('Пользователь не авторизован или запущено локально, используем localStorage');
-    await loadSubscriptionsFromLocalStorage();
-  }
-  
-  // Обработчик событий для поиска иконок при вводе
-  if (nameInput) {
-    nameInput.addEventListener('input', () => {
-      // Отменяем предыдущий таймер, если он есть
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-      
-      const query = nameInput.value.trim();
-      
-      // Если поле ввода пустое, скрываем выпадающий список
-      if (!query) {
-        searchDropdown.classList.remove('active');
-        searchDropdown.innerHTML = '';
-        return;
-      }
-      
-      // Устанавливаем новый таймер для задержки поиска
-      searchTimeout = setTimeout(() => {
-        searchAppIcons(query);
-      }, SEARCH_DELAY);
-    });
     
-    // Скрываем выпадающий список при клике вне его
-    document.addEventListener('click', (e) => {
-      if (!searchDropdown.contains(e.target) && e.target !== nameInput) {
-        searchDropdown.classList.remove('active');
-      }
-    });
-    
-    // При фокусе на поле ввода, показываем выпадающий список, если в нем есть результаты
-    nameInput.addEventListener('focus', () => {
-      if (searchDropdown.innerHTML.trim() !== '') {
-        searchDropdown.classList.add('active');
-      }
-    });
-  }
-
-  // Улучшение работы поля выбора даты
-  document.addEventListener('click', (e) => {
-    // Если клик был по input[type="date"] или его родительскому элементу с классом form-group для даты
-    if ((e.target.classList.contains('date-field-container') || 
-         e.target.closest('.date-field-container')) && 
-        !e.target.matches('input[type="date"]')) {
-      // Находим input даты и имитируем клик
-      const dateInput = e.target.querySelector('input[type="date"]') || 
-                        e.target.closest('.date-field-container').querySelector('input[type="date"]');
-      if (dateInput) {
-        dateInput.click();
-        dateInput.focus();
-      }
-    }
-  });
-
-  // Обработчик для чекбокса Trial
-  if (trialCheckbox && priceInput) {
-    trialCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        // Запоминаем текущее значение цены
-        priceInput.dataset.previousValue = priceInput.value;
-        
-        // Блокируем поле и устанавливаем "Бесплатно"
-        priceInput.disabled = true;
-        priceInput.value = '';
-        priceInput.placeholder = 'Бесплатно';
-      } else {
-        // Восстанавливаем поле и предыдущее значение
-        priceInput.disabled = false;
-        
-        // Восстанавливаем предыдущее значение, если оно было
-        if (priceInput.dataset.previousValue) {
-          priceInput.value = priceInput.dataset.previousValue;
+    // Обработчик событий для поиска иконок при вводе
+    if (nameInput) {
+      nameInput.addEventListener('input', () => {
+        // Отменяем предыдущий таймер, если он есть
+        if (searchTimeout) {
+          clearTimeout(searchTimeout);
         }
         
-        // Восстанавливаем placeholder
-        priceInput.placeholder = 'например, 20';
-      }
-    });
-  }
-
-  // Примечание: loadSubscriptions() больше не вызывается здесь, т.к. загрузка происходит выше через Supabase
-  setupEventListeners();
-  renderCalendar(selectedDate);
-  updateUI();
-  
-  // Удаляем загрузочный экран, если он есть
-  const loadingElement = document.querySelector('.loading');
-  if (loadingElement) {
-    loadingElement.style.opacity = '0';
-    setTimeout(() => {
-      loadingElement.style.display = 'none';
-    }, 300);
-  }
-  
-  // Принудительная установка размеров логотипа, особенно для мобильных устройств
-  try {
-    const logoImg = document.querySelector('.app-logo img');
-    if (logoImg) {
-      logoImg.style.height = '30px';
-      logoImg.style.width = '30px';
-      logoImg.style.objectFit = 'contain';
-    }
-  } catch (error) {
-    console.error("Error resizing logo via JS:", error);
-  }
-  
-  // Исправляем стили для мобильной версии после инициализации
-  if (tg) {
-    setTimeout(() => {
-      document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
-        label.style.backgroundColor = '#4a90e2';
-        label.style.color = 'white';
+        const query = nameInput.value.trim();
+        
+        // Если поле ввода пустое, скрываем выпадающий список
+        if (!query) {
+          searchDropdown.classList.remove('active');
+          searchDropdown.innerHTML = '';
+          return;
+        }
+        
+        // Устанавливаем новый таймер для задержки поиска
+        searchTimeout = setTimeout(() => {
+          searchAppIcons(query);
+        }, SEARCH_DELAY);
       });
       
-      // Вызываем функцию принудительного применения стилей
-      forceMobileStyles();
-    }, 500);
+      // Скрываем выпадающий список при клике вне его
+      document.addEventListener('click', (e) => {
+        if (!searchDropdown.contains(e.target) && e.target !== nameInput) {
+          searchDropdown.classList.remove('active');
+        }
+      });
+      
+      // При фокусе на поле ввода, показываем выпадающий список, если в нем есть результаты
+      nameInput.addEventListener('focus', () => {
+        if (searchDropdown.innerHTML.trim() !== '') {
+          searchDropdown.classList.add('active');
+        }
+      });
+    }
+
+    // Улучшение работы поля выбора даты
+    document.addEventListener('click', (e) => {
+      // Если клик был по input[type="date"] или его родительскому элементу с классом form-group для даты
+      if ((e.target.classList.contains('date-field-container') || 
+           e.target.closest('.date-field-container')) && 
+          !e.target.matches('input[type="date"]')) {
+        // Находим input даты и имитируем клик
+        const dateInput = e.target.querySelector('input[type="date"]') || 
+                          e.target.closest('.date-field-container').querySelector('input[type="date"]');
+        if (dateInput) {
+          dateInput.click();
+          dateInput.focus();
+        }
+      }
+    });
+
+    // Обработчик для чекбокса Trial
+    if (trialCheckbox && priceInput) {
+      trialCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          // Запоминаем текущее значение цены
+          priceInput.dataset.previousValue = priceInput.value;
+          
+          // Блокируем поле и устанавливаем "Бесплатно"
+          priceInput.disabled = true;
+          priceInput.value = '';
+          priceInput.placeholder = 'Бесплатно';
+        } else {
+          // Восстанавливаем поле и предыдущее значение
+          priceInput.disabled = false;
+          
+          // Восстанавливаем предыдущее значение, если оно было
+          if (priceInput.dataset.previousValue) {
+            priceInput.value = priceInput.dataset.previousValue;
+          }
+          
+          // Восстанавливаем placeholder
+          priceInput.placeholder = 'например, 20';
+        }
+      });
+    }
+
+    logDebug('Настройка обработчиков событий');
+    
+    // Примечание: loadSubscriptions() больше не вызывается здесь, т.к. загрузка происходит выше через Supabase
+    setupEventListeners();
+    
+    logDebug('Рендеринг календаря');
+    renderCalendar(selectedDate);
+    
+    logDebug('Обновление UI');
+    updateUI();
+    
+    // Удаляем загрузочный экран, если он есть
+    const loadingElement = document.querySelector('.loading');
+    if (loadingElement) {
+      logDebug('Скрытие экрана загрузки');
+      loadingElement.style.opacity = '0';
+      setTimeout(() => {
+        loadingElement.style.display = 'none';
+      }, 300);
+    } else {
+      logDebug('Элемент загрузки не найден');
+    }
+    
+    // Принудительная установка размеров логотипа, особенно для мобильных устройств
+    try {
+      const logoImg = document.querySelector('.app-logo img');
+      if (logoImg) {
+        logoImg.style.height = '30px';
+        logoImg.style.width = '30px';
+        logoImg.style.objectFit = 'contain';
+      }
+    } catch (error) {
+      console.error("Error resizing logo via JS:", error);
+      logDebug('Ошибка при изменении размера логотипа', error.message);
+    }
+    
+    // Исправляем стили для мобильной версии после инициализации
+    if (tg) {
+      setTimeout(() => {
+        document.querySelectorAll('.toggle-container input[type="radio"]:checked + label').forEach(label => {
+          label.style.backgroundColor = '#4a90e2';
+          label.style.color = 'white';
+        });
+        
+        // Вызываем функцию принудительного применения стилей
+        forceMobileStyles();
+      }, 500);
+    }
+    
+    logDebug('Инициализация приложения завершена');
+    return true; // Успешная инициализация
+  } catch (error) {
+    console.error('Ошибка при инициализации приложения:', error);
+    logDebug('Ошибка при инициализации приложения', error.message);
+    
+    // Скрываем экран загрузки в случае ошибки
+    const loadingElement = document.querySelector('.loading');
+    if (loadingElement) {
+      loadingElement.style.opacity = '0';
+      setTimeout(() => {
+        loadingElement.style.display = 'none';
+      }, 300);
+    }
+    
+    throw error; // Пробрасываем ошибку для обработки в вызывающем коде
   }
 }
 
