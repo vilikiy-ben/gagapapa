@@ -41,7 +41,11 @@ export function initStatusMonitor() {
 async function checkConnection() {
   try {
     // Простой запрос к базе данных для проверки подключения
-    const { data, error } = await supabase.from('subscriptions').select('count()', { count: 'exact' }).limit(1);
+    // Не используем агрегатную функцию count(), а просто запрашиваем 1 запись
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .limit(1);
     
     if (error) {
       throw error;
