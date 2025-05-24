@@ -41,6 +41,12 @@
       opacity: 0.7 !important;
     }
     
+    /* Увеличенный размер для иконки домика */
+    .tab-btn[data-tab="tab-overview"] svg {
+      width: 36px !important;
+      height: 36px !important;
+    }
+    
     /* Стили для локальных иконок */
     .local-icon {
       border-radius: 8px;
@@ -174,7 +180,7 @@
       <div class="tab-nav">
         <button class="tab-btn active" data-tab="tab-overview" title="Обзор">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5L19 11V20H14V14H10V20H5V11L12 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M12 5L19 10.5V18.5C19 19.3284 18.3284 20 17.5 20H14V14.5C14 14.2239 13.7761 14 13.5 14H10.5C10.2239 14 10 14.2239 10 14.5V20H6.5C5.67157 20 5 19.3284 5 18.5V10.5L12 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </button>
         <button class="fab-button" id="add-subscription-btn" title="Добавить подписку">

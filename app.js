@@ -226,7 +226,8 @@ let trialCheckbox = null;
 let priceInput = null;
 
 // Добавим переменную для ключа API Brand Search
-const BRAND_SEARCH_API_TOKEN = API_TOKEN; // Используем тот же ключ для начала, но может потребоваться другой
+// Для Brand Search API требуется специальный секретный ключ, который начинается с 'sk_'
+const BRAND_SEARCH_API_TOKEN = "sk_ZLMtq5JcR-Kiw28z9gh5VQ"; // Секретный ключ для Brand Search API
 
 // DOM элементы
 const subscriptionFormModal = document.getElementById('subscription-form-modal');
@@ -1369,6 +1370,59 @@ function renderDailySubscriptions() {
   }
 }
 
+// Функция для поиска брендов через Brand Search API
+async function searchBrands(query) {
+  if (!query || query.trim() === '') {
+    return [];
+  }
+  
+  try {
+    console.log('Выполняется поиск брендов для:', query);
+    
+    // Формируем URL запроса к Brand Search API точно как в примере
+    const apiUrl = `https://api.logo.dev/search?q=${encodeURIComponent(query)}`;
+    
+    console.log('Запрос к Brand Search API:', apiUrl);
+    console.log('Используемый токен:', BRAND_SEARCH_API_TOKEN);
+    
+    // Используем точно тот же формат запроса, что и в примере
+    const response = await fetch(apiUrl, {
+      headers: {
+        "Authorization": `Bearer: ${BRAND_SEARCH_API_TOKEN}`
+      }
+    });
+    
+    // Проверяем успешность запроса и логируем результаты
+    console.log('Статус ответа от Brand Search API:', response.status, response.statusText);
+    console.log('Заголовки ответа:', Object.fromEntries([...response.headers.entries()]));
+    
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.error('Ошибка в ответе Brand Search API:', responseText);
+      throw new Error(`Brand Search API returned status: ${response.status}, текст: ${responseText}`);
+    }
+    
+    // Получаем результаты
+    const results = await response.json();
+    console.log('Получены результаты Brand Search:', results);
+    
+    // Проверяем, что результаты имеют правильный формат
+    if (Array.isArray(results) && results.length > 0) {
+      // Результаты от Brand Search API должны содержать name и domain
+      if (results[0].name && results[0].domain) {
+        return results;
+      } else {
+        console.warn('Brand Search API вернул результаты в неожиданном формате:', results);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Ошибка при поиске брендов:', error.message);
+    return []; // Возвращаем пустой массив в случае ошибки
+  }
+}
+
 // Поиск иконок приложений через API logo.dev
 async function searchAppIcons(query) {
   console.log('Запуск поиска иконок для:', query);
@@ -1400,42 +1454,70 @@ async function searchAppIcons(query) {
     let searchResults = [];
     let apiAccessible = true;
     
-    // Прямое использование API для получения логотипов по домену
+    // Сначала пробуем использовать Brand Search API для получения точных доменов
     try {
-      console.log('Использую прямой доступ к изображениям через img.logo.dev');
+      console.log('Используем Brand Search API для поиска брендов');
+      const brandResults = await searchBrands(query);
       
-      // Предполагаемые домены на основе поискового запроса
-      const searchTerms = query.toLowerCase().trim();
-      const domains = [
-        `${searchTerms}.com`,
-        `${searchTerms}.ru`,
-        `${searchTerms}.io`,
-        `${searchTerms}.app`,
-        `${searchTerms}.net`
-      ];
-      
-      // Добавляем домены без пробелов и с дефисами для мультисловных запросов
-      if (searchTerms.includes(' ')) {
-        const withoutSpaces = searchTerms.replace(/\s+/g, '');
-        const withDashes = searchTerms.replace(/\s+/g, '-');
+      if (brandResults && brandResults.length > 0) {
+        console.log('Найдены бренды через Brand Search API:', brandResults);
         
-        domains.push(`${withoutSpaces}.com`);
-        domains.push(`${withDashes}.com`);
+        // Преобразуем результаты Brand Search в формат для отображения
+        searchResults = brandResults.map(brand => ({
+          url: `https://img.logo.dev/${brand.domain}?token=${API_TOKEN}`,
+          domain: brand.domain,
+          name: brand.name
+        }));
+        
+        console.log('Созданы результаты на основе Brand Search:', searchResults);
+      } else {
+        console.log('Brand Search API не вернул результатов. API_TOKEN:', API_TOKEN);
       }
-      
-      console.log('Пробуем домены:', domains);
-      
-      // Создаем результаты для всех возможных доменов
-      searchResults = domains.map(domain => ({
-        url: `https://img.logo.dev/${domain}?token=${API_TOKEN}`,
-        domain: domain,
-        name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
-      }));
-      
-      console.log('Созданы результаты для доменов:', searchResults);
     } catch (error) {
-      console.warn('Ошибка при создании URL для img.logo.dev:', error.message);
-      apiAccessible = false;
+      console.warn('Ошибка при использовании Brand Search API:', error.message);
+      console.error('Полная информация об ошибке:', error);
+      
+      // Продолжим с другими методами, если Brand Search не сработал
+    }
+    
+    // Если Brand Search не дал результатов, используем прямое получение логотипов по домену
+    if (searchResults.length === 0) {
+      try {
+        console.log('Использую прямой доступ к изображениям через img.logo.dev');
+        
+        // Предполагаемые домены на основе поискового запроса
+        const searchTerms = query.toLowerCase().trim();
+        const domains = [
+          `${searchTerms}.com`,
+          `${searchTerms}.ru`,
+          `${searchTerms}.io`,
+          `${searchTerms}.app`,
+          `${searchTerms}.net`
+        ];
+        
+        // Добавляем домены без пробелов и с дефисами для мультисловных запросов
+        if (searchTerms.includes(' ')) {
+          const withoutSpaces = searchTerms.replace(/\s+/g, '');
+          const withDashes = searchTerms.replace(/\s+/g, '-');
+          
+          domains.push(`${withoutSpaces}.com`);
+          domains.push(`${withDashes}.com`);
+        }
+        
+        console.log('Пробуем домены:', domains);
+        
+        // Создаем результаты для всех возможных доменов
+        searchResults = domains.map(domain => ({
+          url: `https://img.logo.dev/${domain}?token=${API_TOKEN}`,
+          domain: domain,
+          name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
+        }));
+        
+        console.log('Созданы результаты для доменов:', searchResults);
+      } catch (error) {
+        console.warn('Ошибка при создании URL для img.logo.dev:', error.message);
+        apiAccessible = false;
+      }
     }
     
     // Если API недоступен или результатов нет, используем локальную генерацию иконок
@@ -1535,11 +1617,11 @@ async function searchAppIcons(query) {
     }
     
     // Очищаем контейнер
-    searchDropdown.innerHTML = '';
+    searchDropdown.innerHTML = ``;
     
     if (searchResults.length === 0) {
       console.log('Нет результатов для отображения');
-      searchDropdown.innerHTML = '<div class="search-empty">Сервисы не найдены</div>';
+      searchDropdown.innerHTML += '<div class="search-empty">Сервисы не найдены</div>';
       return;
     }
     
@@ -1582,6 +1664,13 @@ async function searchAppIcons(query) {
           <div class="search-item-name">${result.name}</div>
           <div class="search-item-domain">${displayDomain}</div>
         </div>
+        <div class="search-item-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 7V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+          </svg>
+        </div>
       `;
       
       // Обработчик выбора сервиса
@@ -1603,7 +1692,18 @@ async function searchAppIcons(query) {
   } catch (error) {
     console.error('Ошибка при поиске иконок:', error.message, error.stack);
     searchDropdown.innerHTML = '<div class="search-empty">Ошибка при поиске сервисов</div>';
-    console.log('API Token:', API_TOKEN, 'BRAND_SEARCH_API_TOKEN:', BRAND_SEARCH_API_TOKEN);
+    console.log('API Token:', API_TOKEN, 'BRAND_SEARCH_API_TOKEN используется:', BRAND_SEARCH_API_TOKEN ? 'да' : 'нет');
+    
+    // Создаем локальную иконку в случае ошибки
+    const query = nameInput.value.trim();
+    if (query) {
+      const firstLetter = query.charAt(0).toUpperCase();
+      const randomColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
+      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      
+      console.log('Создаем локальную иконку из-за ошибки API');
+      selectLocalIcon(firstLetter, randomColor, capitalizeFirstLetter(query));
+    }
   }
 }
 
@@ -1670,8 +1770,16 @@ function selectAppIcon(iconUrl) {
   // Обновляем скрытое поле с URL иконки
   document.getElementById('app-icon-url').value = iconUrl;
   
-  // Обновляем превью с размером, подходящим для превью
-  const previewUrl = `${iconUrl}&format=png&size=64`;
+  // Проверяем, содержит ли URL уже параметры (токен)
+  let previewUrl;
+  if (iconUrl.includes('?')) {
+    // URL уже содержит параметры, добавляем только размер и формат
+    previewUrl = `${iconUrl}&format=png&size=64`;
+  } else {
+    // URL без параметров, добавляем токен, размер и формат
+    previewUrl = `${iconUrl}?token=${API_TOKEN}&format=png&size=64`;
+  }
+  
   const selectedIcon = document.getElementById('selected-icon');
   
   if (selectedIcon) {
@@ -1686,22 +1794,43 @@ function selectAppIcon(iconUrl) {
     };
     
     img.onerror = function() {
-      // Ошибка загрузки, создаем локальную иконку
-      console.log('Не удалось загрузить иконку из API, создаем локальную');
+      // Если первая попытка не удалась, попробуем еще раз с другим форматом URL
+      console.log('Ошибка загрузки иконки, пробуем альтернативный формат URL');
       
-      // Получаем имя сервиса из поля ввода
-      const serviceName = document.getElementById('name').value.trim();
-      const firstLetter = serviceName.charAt(0).toUpperCase();
+      // Создаем альтернативный URL с явным указанием токена
+      const altUrl = iconUrl.includes('?') 
+        ? `${iconUrl.split('?')[0]}?token=${API_TOKEN}&format=png&size=64`
+        : `${iconUrl}?token=${API_TOKEN}&format=png&size=64`;
       
-      // Выбираем случайный цвет
-      const randomColors = [
-        '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
-        '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
-      ];
-      const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+      // Пробуем загрузить с альтернативным URL
+      const altImg = new Image();
+      altImg.onload = function() {
+        const iconPreviewContainer = document.getElementById('icon-preview');
+        iconPreviewContainer.innerHTML = `
+          <img id="selected-icon" src="${altUrl}" alt="Иконка сервиса" style="display: block; width: 32px; height: 32px; border-radius: 8px; object-fit: contain;">
+        `;
+      };
       
-      // Создаем локальную иконку
-      selectLocalIcon(firstLetter, randomColor, serviceName);
+      altImg.onerror = function() {
+        // Если и альтернативный URL не работает, создаем локальную иконку
+        console.log('Не удалось загрузить иконку из API, создаем локальную');
+        
+        // Получаем имя сервиса из поля ввода
+        const serviceName = document.getElementById('name').value.trim();
+        const firstLetter = serviceName.charAt(0).toUpperCase();
+        
+        // Выбираем случайный цвет
+        const randomColors = [
+          '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', 
+          '#1abc9c', '#d35400', '#c0392b', '#16a085', '#8e44ad'
+        ];
+        const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+        
+        // Создаем локальную иконку
+        selectLocalIcon(firstLetter, randomColor, serviceName);
+      };
+      
+      altImg.src = altUrl;
     };
     
     // Начинаем загрузку изображения
@@ -1890,7 +2019,14 @@ function openEditSubscriptionForm(subscription) {
       }
     } else {
       // Для обычных иконок из API
-      selectAppIcon(subscription.iconUrl);
+      // Проверяем, содержит ли URL токен API
+      const iconUrl = subscription.iconUrl.includes('token=') 
+        ? subscription.iconUrl 
+        : (subscription.iconUrl.includes('?') 
+            ? `${subscription.iconUrl}&token=${API_TOKEN}` 
+            : `${subscription.iconUrl}?token=${API_TOKEN}`);
+      
+      selectAppIcon(iconUrl);
     }
   } else {
     resetAppIcon();
@@ -1967,6 +2103,16 @@ async function handleFormSubmit(e) {
 
 // Это пустой код-эдит, который будет удалять функцию migrateLocalSubscriptions
 // ... existing code ...
+  
+  // ... existing code ...
+  
+  // ... existing code ...
+  
+  // ... existing code ...
+  
+  // ... existing code ...
+  
+  // ... existing code ...
   
   // ... existing code ...
   

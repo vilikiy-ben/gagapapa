@@ -1111,7 +1111,7 @@ body.telegram-app {
   padding: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  gap: 36px;
+  gap: 70px; /* Увеличили расстояние между вкладками с 36px до 70px */
 }
 
 .tab-btn {
@@ -1131,8 +1131,8 @@ body.telegram-app {
 }
 
 .tab-btn svg {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   opacity: 0.7;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -1544,10 +1544,10 @@ input[type="date"]:focus {
   }
   
   .tab-nav {
-    bottom: 16px;
+    bottom: 26px;
     height: 56px;
     padding: 0;
-    gap: 24px;
+    gap: 40px;
   }
   
   .fab-button {
@@ -1570,8 +1570,8 @@ input[type="date"]:focus {
   }
   
   .tab-btn svg {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
   
   .calendar-grid {
@@ -1817,12 +1817,12 @@ input[type="date"]:focus {
 .search-dropdown {
   display: none;
   flex-direction: column;
-  max-height: 250px;
+  max-height: 138px; /* Высота для 2 элементов (54px * 2) + небольшой запас для скролла */
   overflow-y: auto;
   background-color: #000000;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  z-index: 2;
+  z-index: 100; /* Увеличиваем z-index, чтобы был выше других элементов */
   position: absolute;
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1834,14 +1834,30 @@ input[type="date"]:focus {
   display: flex;
 }
 
+.search-dropdown-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: none; /* Скрываем заголовок */
+}
+
+.search-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+}
+
 .search-item {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
+  padding: 14px 16px;
   cursor: pointer;
   transition: background-color 0.2s;
   gap: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 
@@ -1873,6 +1889,23 @@ input[type="date"]:focus {
   flex: 1;
   justify-content: space-between;
   align-items: center;
+}
+
+.search-item-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #888;
+  transition: color 0.2s;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.search-item-info:hover {
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .search-item-name {
