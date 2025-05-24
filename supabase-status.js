@@ -1,5 +1,5 @@
 // Мониторинг статуса подключения к Supabase
-import { supabase } from './supabase.js';
+import { getSupabase } from './supabase.js';
 
 // Элементы DOM
 let statusIndicator;
@@ -40,12 +40,18 @@ export function initStatusMonitor() {
 // Проверка подключения к Supabase
 async function checkConnection() {
   try {
+    // Получаем клиент Supabase
+    const client = await getSupabase();
+    if (!client) {
+      throw new Error('Не удалось получить клиент Supabase');
+    }
+    
     // Запрос к версии сервера - самый простой способ проверить соединение
-    const { data, error } = await supabase.rpc('version');
+    const { data, error } = await client.rpc('version');
     
     if (error) {
       // Запасной способ - проверим наличие таблицы с указанием схемы
-      const { data: tableData, error: tableError } = await supabase
+      const { data: tableData, error: tableError } = await client
         .from('subsviewer.users')
         .select('id')
         .limit(1);

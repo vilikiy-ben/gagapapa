@@ -20,4 +20,8 @@ preload.js
 windows-utils.js
 renderer.js
 widget.html
-server.js 
+server.js
+
+# Локальные конфигурации (не индексируются, но не удаляются при деплое на GitHub Pages)
+config.local.js
+.env* 

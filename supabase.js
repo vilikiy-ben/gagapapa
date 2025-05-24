@@ -1,12 +1,42 @@
 // Конфигурация для Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0/+esm';
+import { decodeConfig } from './config.js';
 
-// Замените эти URL и ключ на ваши собственные из проекта Supabase
-const SUPABASE_URL = 'https://cuqcomkbqvqqaozfgors.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cWNvbWticXZxcWFvemZnb3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxMTIzMTgsImV4cCI6MjA2MzY4ODMxOH0.apTetvrQskgi_StDKXfmdVmX900HPbBylhV92f-t0RU';
+// Переменные для хранения клиента Supabase
+let supabase = null;
 
-// Создаем клиент Supabase
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Инициализация Supabase клиента
+export async function initSupabase() {
+  if (supabase) {
+    return supabase;
+  }
+
+  try {
+    // Получаем URL и ключ из конфигурации
+    const { supabaseUrl, supabaseKey } = await decodeConfig();
+
+    // Проверяем, что конфигурация загружена успешно
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Не удалось загрузить конфигурацию Supabase');
+      return null;
+    }
+
+    // Создаем клиент Supabase
+    supabase = createClient(supabaseUrl, supabaseKey);
+    return supabase;
+  } catch (error) {
+    console.error('Ошибка при инициализации Supabase:', error);
+    return null;
+  }
+}
+
+// Получить инстанс клиента Supabase
+export async function getSupabase() {
+  if (!supabase) {
+    return await initSupabase();
+  }
+  return supabase;
+}
 
 // Функция для создания или обновления пользователя
 export async function createOrUpdateUser(telegramUser) {
@@ -16,8 +46,13 @@ export async function createOrUpdateUser(telegramUser) {
   }
 
   try {
+    const client = await getSupabase();
+    if (!client) {
+      throw new Error('Supabase клиент не инициализирован');
+    }
+
     // Используем функцию из схемы public (куда мы добавили обертку)
-    const { data, error } = await supabase.rpc('create_user_if_not_exists', {
+    const { data, error } = await client.rpc('create_user_if_not_exists', {
       p_telegram_id: telegramUser.id,
       p_username: telegramUser.username || null,
       p_first_name: telegramUser.first_name || null,
@@ -40,8 +75,13 @@ export async function createOrUpdateUser(telegramUser) {
 // Получить подписки пользователя
 export async function getUserSubscriptions() {
   try {
+    const client = await getSupabase();
+    if (!client) {
+      throw new Error('Supabase клиент не инициализирован');
+    }
+
     // Указываем схему subsviewer для таблицы subscriptions
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('subsviewer.subscriptions')
       .select('*')
       .order('billing_date', { ascending: true });
@@ -72,6 +112,11 @@ export async function getUserSubscriptions() {
 // Сохранить подписку
 export async function saveSubscription(subscription, userId) {
   try {
+    const client = await getSupabase();
+    if (!client) {
+      throw new Error('Supabase клиент не инициализирован');
+    }
+
     // Преобразуем данные в формат БД
     const subData = {
       user_id: userId,
@@ -88,7 +133,7 @@ export async function saveSubscription(subscription, userId) {
     // Если есть ID, обновляем существующую подписку
     if (subscription.id && subscription.id.length > 10) { // Проверка на UUID
       // Указываем схему subsviewer для таблицы subscriptions
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('subsviewer.subscriptions')
         .update(subData)
         .eq('id', subscription.id)
@@ -103,7 +148,7 @@ export async function saveSubscription(subscription, userId) {
     } else {
       // Иначе создаем новую
       // Указываем схему subsviewer для таблицы subscriptions
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('subsviewer.subscriptions')
         .insert(subData)
         .select();
@@ -124,8 +169,13 @@ export async function saveSubscription(subscription, userId) {
 // Удалить подписку
 export async function deleteSubscription(subscriptionId) {
   try {
+    const client = await getSupabase();
+    if (!client) {
+      throw new Error('Supabase клиент не инициализирован');
+    }
+
     // Указываем схему subsviewer для таблицы subscriptions
-    const { error } = await supabase
+    const { error } = await client
       .from('subsviewer.subscriptions')
       .delete()
       .eq('id', subscriptionId);

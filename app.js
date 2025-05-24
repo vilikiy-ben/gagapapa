@@ -3,7 +3,7 @@
 
 // Импортируем функции для работы с Supabase
 import { 
-  supabase, 
+  initSupabase,
   createOrUpdateUser, 
   getUserSubscriptions, 
   saveSubscription, 
@@ -289,6 +289,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   
   // Запускаем инициализацию приложения
   try {
+    // Сначала инициализируем Supabase
+    await initSupabase();
+    
     await initApp();
   } catch (error) {
     console.error('Ошибка при инициализации приложения:', error.message);
