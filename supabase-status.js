@@ -40,15 +40,19 @@ export function initStatusMonitor() {
 // Проверка подключения к Supabase
 async function checkConnection() {
   try {
-    // Простой запрос к базе данных для проверки подключения
-    // Не используем агрегатную функцию count(), а просто запрашиваем 1 запись
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .limit(1);
+    // Запрос к версии сервера - самый простой способ проверить соединение
+    const { data, error } = await supabase.rpc('version');
     
     if (error) {
-      throw error;
+      // Запасной способ - проверим наличие таблицы с указанием схемы
+      const { data: tableData, error: tableError } = await supabase
+        .from('subsviewer.users')
+        .select('id')
+        .limit(1);
+        
+      if (tableError) {
+        throw tableError;
+      }
     }
     
     // Подключение успешно

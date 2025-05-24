@@ -3,7 +3,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // Замените эти URL и ключ на ваши собственные из проекта Supabase
 const SUPABASE_URL = 'https://cuqcomkbqvqqaozfgors.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cWNvbWticXZxcWFvemZnb3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxMTIzMTgsImV4cCI6MjA2MzY4ODMxOH0.apTetvrQskgi_StDKXfmdVmX900HPbBylhV92f-t0RU';
 
 // Создаем клиент Supabase
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -16,7 +16,8 @@ export async function createOrUpdateUser(telegramUser) {
   }
 
   try {
-    const { data, error } = await supabase.rpc('subsviewer.create_user_if_not_exists', {
+    // Используем функцию из схемы public (куда мы добавили обертку)
+    const { data, error } = await supabase.rpc('create_user_if_not_exists', {
       p_telegram_id: telegramUser.id,
       p_username: telegramUser.username || null,
       p_first_name: telegramUser.first_name || null,
@@ -39,8 +40,9 @@ export async function createOrUpdateUser(telegramUser) {
 // Получить подписки пользователя
 export async function getUserSubscriptions() {
   try {
+    // Указываем схему subsviewer для таблицы subscriptions
     const { data, error } = await supabase
-      .from('subscriptions')
+      .from('subsviewer.subscriptions')
       .select('*')
       .order('billing_date', { ascending: true });
 
@@ -85,8 +87,9 @@ export async function saveSubscription(subscription, userId) {
 
     // Если есть ID, обновляем существующую подписку
     if (subscription.id && subscription.id.length > 10) { // Проверка на UUID
+      // Указываем схему subsviewer для таблицы subscriptions
       const { data, error } = await supabase
-        .from('subscriptions')
+        .from('subsviewer.subscriptions')
         .update(subData)
         .eq('id', subscription.id)
         .select();
@@ -99,8 +102,9 @@ export async function saveSubscription(subscription, userId) {
       return data[0];
     } else {
       // Иначе создаем новую
+      // Указываем схему subsviewer для таблицы subscriptions
       const { data, error } = await supabase
-        .from('subscriptions')
+        .from('subsviewer.subscriptions')
         .insert(subData)
         .select();
 
@@ -120,8 +124,9 @@ export async function saveSubscription(subscription, userId) {
 // Удалить подписку
 export async function deleteSubscription(subscriptionId) {
   try {
+    // Указываем схему subsviewer для таблицы subscriptions
     const { error } = await supabase
-      .from('subscriptions')
+      .from('subsviewer.subscriptions')
       .delete()
       .eq('id', subscriptionId);
 
