@@ -6,7 +6,7 @@ export const APP_CONFIG = {
   // Закодированные данные Supabase - НЕ ИСПОЛЬЗУЙТЕ этот подход для реальных секретов!
   // Для продакшн-версии лучше использовать серверное API или аутентификацию через OAuth
   encodedSupabaseUrl: "aHR0cHM6Ly9jdXFjb21rYnF2cXFhb3pmZ29ycy5zdXBhYmFzZS5jbw==", // Base64
-  encodedAnonKey: "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKemRYQmhZbUZ6WlNJc0luSmxaaUk2SW1OMWNXTnZiV3RpY1haeGNXRnZlbVpuYjNKeklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakUzTkRneE1USXpNVGdzSW1WNGNDSTZNakEyTXpZNE9ETXhPSDAuYXBUZXR2clFza2dpX1N0REtYZm1kVm1YOTAwSFBiQnlsaFY5MmYtdDBSVQ===", // Base64
+  encodedAnonKey: "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKemRYQmhZbUZ6WlNJc0luSmxaaUk2SW1OMWNXTnZiV3RpY1had2NYRmhiM3BtWjI5eWN5SXNJbkp2YkdVaU9pSmhibTl1SWl3aWFXRjBJam94TnpRNE1URXlNekU0TENKbGVIQWlPakl3TmpNMk9EZ3pNVGg5LmFwVGV0dnJRc2tnaV9TdERLWGZtZFZtWDkwMEhQYkJ5bGhWOTJmLXQwUlU=", // Base64
   
   // Другие настройки приложения
   appName: "SubsViewer",
@@ -40,6 +40,8 @@ export async function decodeConfig() {
     // Если локальной конфигурации нет, используем закодированные данные
     const url = atob(APP_CONFIG.encodedSupabaseUrl);
     const key = atob(APP_CONFIG.encodedAnonKey);
+    
+    console.log('Использую закодированные данные, URL:', url);
     
     return { 
       supabaseUrl: url, 
