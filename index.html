@@ -84,33 +84,6 @@
       line-height: 1;
     }
     
-    /* Стили для статуса подключения к Supabase */
-    .supabase-status {
-      position: fixed;
-      bottom: 60px;
-      right: 10px;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: #ff9800;
-    }
-    .status-indicator.connected {
-      background-color: #4CAF50;
-    }
-    .status-indicator.error {
-      background-color: #F44336;
-    }
 
   </style>
 </head>
@@ -129,7 +102,7 @@
           <div class="app-logo"><img src="logo.png" alt="App Logo"></div>
           <h1 class="app-title">SubsViewer</h1>
         </div>
-        <div class="app-version">beta v2.0.2</div>
+        <div class="app-version">beta v2.0.0</div>
       </div>
       
       <!-- Общая сумма -->
@@ -311,16 +284,10 @@
           </div>
         </div>
       </div>
-      
-      <!-- Индикатор статуса подключения к Supabase -->
-      <div class="supabase-status" id="supabase-status">
-        <div class="status-indicator" id="status-indicator"></div>
-        <span id="status-text">Подключение...</span>
-      </div>
     </div>
   </div>
 
-  <!-- Используем ES модули для Supabase -->
+  
   <script src="app.js" type="module"></script>
 </body>
 </html> 

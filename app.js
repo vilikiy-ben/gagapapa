@@ -1,23 +1,8 @@
 // SubsViewer - мини-приложение для Telegram
 // Инициализация Telegram Mini App
 
-// Импортируем функции для работы с Supabase
-import { 
-  initSupabase,
-  createOrUpdateUser, 
-  getUserSubscriptions, 
-  saveSubscription, 
-  deleteSubscription,
-  migrateFromLocalStorage 
-} from './supabase.js';
-
-// Импортируем мониторинг статуса подключения к Supabase
-import { initStatusMonitor, setConnectionStatus } from './supabase-status.js';
-
 // Глобальная переменная для хранения ID пользователя
 let currentUserId = null;
-// Глобальная переменная для хранения UUID пользователя в Supabase
-let supabaseUserId = null;
 
 // Функция для принудительного применения стилей на мобильных устройствах
 // Глобальная функция для использования во всем приложении
@@ -284,18 +269,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
   
-  // Инициализируем мониторинг подключения к Supabase
-  initStatusMonitor();
-  
   // Запускаем инициализацию приложения
   try {
-    // Сначала инициализируем Supabase
-    await initSupabase();
-    
     await initApp();
   } catch (error) {
     console.error('Ошибка при инициализации приложения:', error.message);
-    setConnectionStatus('error', 'Ошибка инициализации');
   }
 });
 
@@ -304,34 +282,13 @@ async function initApp() {
   console.log('Запуск initApp');
   
   try {
+    // Загружаем данные из localStorage
+    await loadSubscriptionsFromLocalStorage();
+    
     // Сохраняем ID пользователя из Telegram (если доступен)
     if (window.Telegram && window.Telegram.WebApp.initDataUnsafe.user) {
       currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
       console.log('Получены данные пользователя Telegram:', currentUserId);
-      
-      // Создаем или обновляем пользователя в Supabase
-      supabaseUserId = await createOrUpdateUser(window.Telegram.WebApp.initDataUnsafe.user);
-      console.log('ID пользователя в Supabase:', supabaseUserId);
-      
-      if (supabaseUserId) {
-        // Проверяем наличие данных в localStorage для миграции
-        const hasLocalData = localStorage.getItem('subscriptions');
-        if (hasLocalData) {
-          console.log('Обнаружены данные в localStorage, выполняем миграцию');
-          await migrateFromLocalStorage(supabaseUserId);
-        }
-        
-        // Загружаем подписки из Supabase
-        await loadSubscriptionsFromSupabase();
-      } else {
-        // Если не удалось получить ID из Supabase, используем localStorage
-        console.warn('Не удалось получить ID пользователя из Supabase, используем локальное хранилище');
-        await loadSubscriptionsFromLocalStorage();
-      }
-    } else {
-      // Если нет данных пользователя, используем localStorage
-      console.log('Нет данных пользователя Telegram, используем локальное хранилище');
-      await loadSubscriptionsFromLocalStorage();
     }
   } catch (error) {
     console.error('Ошибка при загрузке данных:', error.message);
@@ -383,40 +340,7 @@ async function initApp() {
   console.log('Инициализация приложения завершена');
 }
 
-// Функция для загрузки подписок из Supabase
-async function loadSubscriptionsFromSupabase() {
-  console.log('Загрузка подписок из Supabase');
-  
-  try {
-    if (!supabaseUserId) {
-      console.error('ID пользователя Supabase не определен');
-      setConnectionStatus('error', 'ID пользователя не определен');
-      return;
-    }
-    
-    // Обновляем статус подключения
-    setConnectionStatus('connecting', 'Загрузка данных...');
-    
-    // Получаем подписки из Supabase
-    const subs = await getUserSubscriptions();
-    
-    if (subs && subs.length > 0) {
-      subscriptions = subs;
-      console.log('Данные успешно загружены из Supabase', subscriptions.length + ' подписок');
-      setConnectionStatus('connected', 'Данные загружены');
-    } else {
-      console.log('В Supabase нет данных о подписках');
-      subscriptions = [];
-      setConnectionStatus('connected', 'Нет данных');
-    }
-  } catch (error) {
-    console.error('Ошибка при загрузке подписок из Supabase:', error);
-    subscriptions = [];
-    setConnectionStatus('error', 'Ошибка загрузки данных');
-  }
-}
-
-// Функция для загрузки подписок из localStorage (сохраняем для обратной совместимости)
+// Функция для загрузки подписок из localStorage
 async function loadSubscriptionsFromLocalStorage() {
   console.log('Загрузка подписок из localStorage');
   
@@ -456,27 +380,7 @@ async function loadSubscriptionsFromLocalStorage() {
   }
 }
 
-// Функция для сохранения подписок в Supabase
-async function saveSubscriptionsToSupabase() {
-  console.log('Сохранение подписок в Supabase', subscriptions.length + ' подписок');
-  
-  if (!supabaseUserId) {
-    console.warn('ID пользователя Supabase не определен, сохраняем в localStorage');
-    return saveSubscriptionsToLocalStorage();
-  }
-  
-  try {
-    // Для Supabase сохранение происходит по одной подписке за раз
-    // через функции saveSubscription и deleteSubscription
-    return true;
-  } catch (error) {
-    console.error('Ошибка при сохранении подписок в Supabase:', error);
-    // В случае ошибки сохраняем в localStorage
-    return saveSubscriptionsToLocalStorage();
-  }
-}
-
-// Функция для сохранения подписок в localStorage (сохраняем для обратной совместимости)
+// Функция для сохранения подписок в localStorage
 async function saveSubscriptionsToLocalStorage() {
   console.log('Сохранение подписок в localStorage', subscriptions.length + ' подписок');
   
@@ -2017,18 +1921,9 @@ function closeConfirmDeleteModal() {
 // Подтверждение удаления
 async function confirmDelete() {
   if (subscriptionToDeleteId !== null) {
-    if (supabaseUserId) {
-      // Удаляем через Supabase
-      const success = await deleteSubscription(subscriptionToDeleteId);
-      if (success) {
-        // Удаляем локально после успешного удаления в БД
-        subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-      }
-    } else {
-      // Удаляем локально
-      subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
-      await saveSubscriptionsToLocalStorage();
-    }
+    // Удаляем локально
+    subscriptions = subscriptions.filter(sub => sub.id !== subscriptionToDeleteId);
+    await saveSubscriptionsToLocalStorage();
     
     closeConfirmDeleteModal();
     updateUI();
@@ -2187,64 +2082,20 @@ async function handleFormSubmit(e) {
   };
   
   // Сохранение подписки
-  if (supabaseUserId) {
-    // Сохраняем в Supabase
-    const savedSub = await saveSubscription(subscription, supabaseUserId);
-    
-    if (savedSub) {
-      if (formMode === 'edit') {
-        // Для редактирования находим индекс подписки в массиве
-        const index = subscriptions.findIndex(sub => sub.id === id);
-        if (index !== -1) {
-          // Заменяем существующую подписку на обновленную
-          subscriptions[index] = {
-            ...savedSub,
-            billingDate: new Date(savedSub.billing_date),
-            isTrial: savedSub.is_trial,
-            isYearly: savedSub.is_yearly,
-            isWeekly: savedSub.is_weekly,
-            iconUrl: savedSub.icon_url
-          };
-        }
-      } else {
-        // Для новой подписки просто добавляем в массив
-        subscriptions.push({
-          id: savedSub.id,
-          name: savedSub.name,
-          price: parseFloat(savedSub.price),
-          isTrial: savedSub.is_trial,
-          billingDate: new Date(savedSub.billing_date),
-          color: savedSub.color,
-          isYearly: savedSub.is_yearly,
-          isWeekly: savedSub.is_weekly,
-          iconUrl: savedSub.icon_url
-        });
-      }
-    } else {
-      console.error('Не удалось сохранить подписку в Supabase');
-      // Сохраняем локально в случае ошибки
-      if (formMode === 'edit') {
-        const index = subscriptions.findIndex(sub => sub.id === id);
-        if (index !== -1) {
-          subscriptions[index] = subscription;
-        }
-      } else {
-        subscriptions.push(subscription);
-      }
-      await saveSubscriptionsToLocalStorage();
+  if (formMode === 'edit') {
+    // Для редактирования находим индекс подписки в массиве
+    const index = subscriptions.findIndex(sub => sub.id === id);
+    if (index !== -1) {
+      // Заменяем существующую подписку на обновленную
+      subscriptions[index] = subscription;
     }
   } else {
-    // Сохраняем локально, если нет подключения к Supabase
-    if (formMode === 'edit') {
-      const index = subscriptions.findIndex(sub => sub.id === id);
-      if (index !== -1) {
-        subscriptions[index] = subscription;
-      }
-    } else {
-      subscriptions.push(subscription);
-    }
-    await saveSubscriptionsToLocalStorage();
+    // Для новой подписки просто добавляем в массив
+    subscriptions.push(subscription);
   }
+  
+  // Сохраняем в localStorage
+  await saveSubscriptionsToLocalStorage();
   
   closeSubscriptionForm();
   updateUI();
